@@ -76,7 +76,7 @@ uint8_t print_buf[RDB_SIZE];
 /*******************************************************************************
     Function Declarations
 ********************************************************************************/
-#define		SERIAL_INVALID		// RD8001å¯¾å¿œï¼šã‚·ãƒªã‚¢ãƒ«æ©Ÿèƒ½ç„¡åŠ¹(CPUé–“é€šä¿¡ã¨ç«¶åˆ)
+#define		SERIAL_INVALID		// RD8001‘Î‰FƒVƒŠƒAƒ‹‹@”\–³Œø(CPUŠÔ’ÊM‚Æ‹£‡)
 
 #ifndef	SERIAL_INVALID
 static void console_rx_done( void );
@@ -310,11 +310,11 @@ bool console_can_sleep(void)
 #if 0
     return is_sleepable;
 #else
-	__no_operation();		// RD8001æš«å®šï¼šãƒ–ãƒ¬ã‚¤ã‚¯è²¼ã‚Šç”¨
-	__no_operation();		// RD8001æš«å®šï¼šãƒ–ãƒ¬ã‚¤ã‚¯è²¼ã‚Šç”¨
-	__no_operation();		// RD8001æš«å®šï¼šãƒ–ãƒ¬ã‚¤ã‚¯è²¼ã‚Šç”¨
-	__no_operation();		// RD8001æš«å®šï¼šãƒ–ãƒ¬ã‚¤ã‚¯è²¼ã‚Šç”¨
-	__no_operation();		// RD8001æš«å®šï¼šãƒ–ãƒ¬ã‚¤ã‚¯è²¼ã‚Šç”¨
+	__no_operation();		// RD8001b’èFƒuƒŒƒCƒN“\‚è—p
+	__no_operation();		// RD8001b’èFƒuƒŒƒCƒN“\‚è—p
+	__no_operation();		// RD8001b’èFƒuƒŒƒCƒN“\‚è—p
+	__no_operation();		// RD8001b’èFƒuƒŒƒCƒN“\‚è—p
+	__no_operation();		// RD8001b’èFƒuƒŒƒCƒN“\‚è—p
     return true;
 #endif
 }
@@ -327,6 +327,9 @@ bool console_can_sleep(void)
 *******************************************************************************/
 void Printf(char *fmt, ...)
 {
+//maeda FW update delete
+# if 0
+
 #ifdef  _USE_IAR_RL78
     va_list args;
 #else
@@ -347,7 +350,6 @@ void Printf(char *fmt, ...)
     vsprintf((char *)stream_buffer, fmt, args);
     va_end(args);
 
-#ifndef	SERIAL_INVALID
     is_write_blocked = true;
 
     serial_write((uint8_t *)stream_buffer, strlen((char *)stream_buffer));

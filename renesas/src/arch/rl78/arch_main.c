@@ -85,6 +85,7 @@ extern bool peak_init(uint16_t  peak_time);
 extern void FW_Update_push_sw_int(void);
 extern void input_rand_value(uint16_t val, uint32_t uinfo_top);
 
+
 extern const evt_ptr_t ke_evt_hdlr_ent[];
 extern const struct ke_task_desc TASK_DESC_ent[];
 extern const uint16_t clk_table_ent[];
@@ -211,6 +212,7 @@ typedef void (* RESET_FUNC )( void );
     ASSERT_ERR(0);
 }
 
+	
 /**
  ****************************************************************************************
  * @brief Main BLE Ref IP entry point.
@@ -359,7 +361,6 @@ void arch_main_ent(void)
     // And loop forever
     for (;;)
     {
-
         //LED activity
         led_blink();
 

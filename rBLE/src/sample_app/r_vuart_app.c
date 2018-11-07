@@ -550,14 +550,16 @@ static void at_print_con_intv(const char *arg)
     switch (app.state) {
     case APP_ADVERTISER:
     case APP_SCANNER:
-        sprintf(str, "-CI: %d", app.req_con_intv);
+//maeda FW update
+//        sprintf(str, "-CI: %d", app.req_con_intv);
         at_print_response(str);
         at_print_response("OK");
         break;
 
     case APP_CONNECT_SLAVE:
     case APP_CONNECT_MASTER:
-        sprintf(str, "-CI: %d", app.cur_con_intv);
+//maeda FW update
+//        sprintf(str, "-CI: %d", app.cur_con_intv);
         at_print_response(str);
         at_print_response("OK");
         break;
@@ -938,7 +940,7 @@ static void app_gap_reset_result(RBLE_GAP_EVENT *event)
 
     CHECK_OK(RBLE_VS_Enable(app_vs_callback));
 
-    // RD8001???
+    // RD8001‘Î‰ž
 //    app.addr_state = APP_ADDR_INITIAL_SELF;
     app.addr_state = APP_ADDR_INITIAL_REMOTE;
 

@@ -21,6 +21,7 @@
 
 #define EEP_ACCESS_ONCE_SIZE	256					// アクセスサイズ１回
 
+#define EEP_PAGE_CNT_MAX		( EEP_DATA_SIZE_ALL / EEP_ACCESS_ONCE_SIZE )		//ページ数最大
 
 
 // データ数

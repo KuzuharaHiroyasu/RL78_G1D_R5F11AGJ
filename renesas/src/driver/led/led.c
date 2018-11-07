@@ -230,12 +230,6 @@ void led_blink(void)
 #endif
 }
 
-void timer_10ms_set(void)
-{
-    led_env.timer_flag = 1;
-    led_env.tick_10ms++;
-    led_env.tick_10ms_sec++;
-}
 
 
 #ifdef CONFIG_EMBEDDED
@@ -260,3 +254,11 @@ __IRQ void led_timer_isr (void)
 #endif
 
 /// @} module
+
+//#pragma section text    CNT_CODE
+void timer_10ms_set(void)
+{
+    led_env.timer_flag = 1;
+    led_env.tick_10ms++;
+    led_env.tick_10ms_sec++;
+}

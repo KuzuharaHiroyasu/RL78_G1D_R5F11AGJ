@@ -103,7 +103,7 @@
 #define CFG_PLF_INIT        (PLF_PCLBUZ_16KHZ)
 #define CFG_SCA_SET         SCA_50PPM
 #elif defined(CLK_SUB_EX_OT)
-// RD8001�Ή�
+// RD8001???
 #define RF_SLOW_CLK_SET     RF_EXT_16KHZ
 #define CFG_PLF_INIT        (PLF_PCLBUZ_16KHZ)
 //#define RF_SLOW_CLK_SET     RF_INT_32KHZ

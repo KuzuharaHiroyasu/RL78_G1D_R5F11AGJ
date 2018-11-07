@@ -220,6 +220,22 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 //void err_info( ERR_ID id )
 void err_info( int id )
 {
+	// ログ出力
+	UB tx[CPU_COM_SND_DATA_SIZE_PC_LOG];
+	
+	memset( &tx[0], 0x20, sizeof(tx) );
+	
+	
+	tx[0] = 'G';
+	tx[1] = '1';
+	tx[2] = 'E';
+	tx[3] = 'R';
+	tx[4] = 'R';
+	tx[5] = (id / 10 ) + 0x30;
+	tx[6] = (id % 10 ) + 0x30;
+	
+	main_cpu_com_snd_pc_log( (UB*)&tx[0], CPU_COM_SND_DATA_SIZE_PC_LOG );		// デバッグ
+	
 	s_unit.err_cnt++;
 #if 0
 	while(1){

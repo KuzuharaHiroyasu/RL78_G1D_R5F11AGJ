@@ -130,6 +130,7 @@ STATIC const T_CPU_COM_CMD_INFO s_tbl_cmd_info[CPU_COM_CMD_MAX] = {
 	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送データ		*/
 	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送結果		*/
 	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				5,					0	},	/* プログラム転送確認		*/
+	{	0xB2,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 表示指示					*/
 };
 
 
@@ -184,7 +185,8 @@ void cpu_com_read_comp( void )
 // 書き込み完了(コールバック)
 void cpu_com_write_comp( void )
 {
-	s_cpu_com_snd_flg = OFF;
+	drv_o_port_h1d_int( OFF );
+
 }
 
 void cpu_com_error_comp( void )
@@ -939,6 +941,7 @@ UH cpu_com_dle_extension( UB* data, UH size )
 
 STATIC void cpu_com_send_data( UB* data, UH len )
 {
+	drv_o_port_h1d_int( ON );
 	s_cpu_com_snd_flg = ON;
 	serial_write( data, len );
 }

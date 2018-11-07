@@ -51,19 +51,11 @@ const struct ke_state_handler cpu_com_default_handler = KE_STATE_HANDLER_NONE;
 /************************************************************/
 /* ユーザー定義												*/
 /************************************************************/
-
-
-
-
-
 /* バージョン表記の注意事項 */
-
-
-
-const B		version_product_tbl[]= {1, 9, 2, 0};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 0, 6};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
-/* ①、②変更時はformat_num_init_settingを合わせる事 */			/* ①メジャーバージョン：[0 ～ 99] */
-																/* ②マイナーバージョン：[0 ～ 9] ※初期設定フォーマットの関係で1桁のみ */
+																/* ①メジャーバージョン：[0 ～ 99] */
+																/* ②マイナーバージョン：[0 ～ 9] */
 																/* ③リビジョン：[0 ～ 99] */
 																/* ④ビルドバージョン：[0 ～ 99] */
 
@@ -83,23 +75,21 @@ STATIC const CPU_COM_RCV_CMD_TBL s_cpu_com_rcv_func_tbl[CPU_COM_CMD_MAX] = {
 	{	0xD0,			main_cpu_com_rcv_prg_hd_data,		OFF	},	/* 【CPU間通信コマンド】プログラム転送データ		*/
 	{	0xD1,			main_cpu_com_rcv_prg_hd_reslut,		OFF	},	/* 【CPU間通信コマンド】プログラム転送結果		*/
 	{	0xD3,			main_cpu_com_rcv_prg_hd_check,		OFF	},	/* 【CPU間通信コマンド】プログラム転送確認		*/
+	{	0xB2,			main_cpu_com_rcv_disp_order,		OFF	},	/* 【CPU間通信コマンド】表示指示				*/
 };
 
 
 /* モード別処理 */
-#if 0
-STATIC void	(* const p_user_main_mode_func[SYSTEM_MODE_MAX])() 		= {	user_main_mode_idle			,	// SYSTEM_MODE_IDLE			アイドル
-																		user_main_mode_sensing		,	// SYSTEM_MODE_SENSING		センシング
-																		user_main_mode_move			,	// SYSTEM_MODE_MOVE			移行
-																		user_main_mode_get			,	// SYSTEM_MODE_GET			データ取得
-																		user_main_mode_prg_hd			// SYSTEM_MODE_PRG_HD		プログラム更新
+STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,			// SYSTEM_MODE_INITAL			イニシャル
+																			user_main_mode_idle_rest,		// SYSTEM_MODE_IDLE_REST		アイドル_残量表示
+																			user_main_mode_idle_com,		// SYSTEM_MODE_IDLE_COM			アイドル_通信待機
+																			user_main_mode_sensing,			// SYSTEM_MODE_SENSING			センシング
+																			user_main_mode_get,				// SYSTEM_MODE_GET				データ取得
+																			user_main_mode_prg_h1d,			// SYSTEM_MODE_PRG_H1D			H1Dプログラム更新
+																			user_main_mode_prg_g1d,			// SYSTEM_MODE_PRG_G1D			G1Dプログラム更新
+																			user_main_mode_self_check,		// SYSTEM_MODE_PRG_SELF_CHECK	自己診断
+																			user_main_mode_move,			// SYSTEM_MODE_MOVE				移行
+																			dummy,							// SYSTEM_MODE_NON				なし
 };
-#endif
 
-STATIC void	(* const p_user_main_mode_func[])()						= {	user_main_mode_idle			,	// SYSTEM_MODE_IDLE			アイドル
-																		user_main_mode_sensing		,	// SYSTEM_MODE_SENSING		センシング
-																		user_main_mode_move			,	// SYSTEM_MODE_MOVE			移行
-																		user_main_mode_get			,	// SYSTEM_MODE_GET			データ取得
-																		user_main_mode_prg_hd			// SYSTEM_MODE_PRG_HD		プログラム更新
-};
 

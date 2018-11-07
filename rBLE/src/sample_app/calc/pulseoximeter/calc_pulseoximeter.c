@@ -5,10 +5,9 @@
 /* 変更履歴     : 2018.01.11 Axia Soft Design 和田 初版作成				*/
 /* 注意事項     : なし													*/
 /************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include "calc_pulseoximeter.h"
+#include "pulse_param.h"
 #include "../calc_data.h"
 #include "../libfft/r_fft_int16.h"		// FFTライブラリ
 
@@ -16,8 +15,6 @@
 /* プロトタイプ宣言											*/
 /************************************************************/
 static	void	proc(const double *data1, int len, int* psnpk, double* pmk);
-static	void	bandpass(const double input[], double output[], int size, double samplerate, double freq, double bw);
-
 extern	int		peak_modify	( double in_data[] , H in_res[] , double ot_data[] , double ot_hz[] , int size , double delta );	/* ☆ */
 extern	void 	peak_vallay	( double in[] , H ot[] , int size, int width , double th , int peak );
 extern	void	cal_sp1		( double mx1 , double mx2 , int *sp );
@@ -26,137 +23,6 @@ extern	void	ifft(double ar[] ,int N ,double ot[]);
 /************************************************************/
 /* 定数定義													*/
 /************************************************************/
-static const double test_data[DATA_SIZE_SPO2] = {
-0.771562	,
-0.7867	,
-0.773816	,
-0.755779	,
-0.753524	,
-0.76061	,
-0.787666	,
-0.799906	,
-0.799906	,
-0.795396	,
-0.808602	,
-0.803127	,
-0.798939	,
-0.791531	,
-0.778326	,
-0.777359	,
-0.785412	,
-0.789599	,
-0.77285	,
-0.755135	,
-0.764153	,
-0.788632	,
-0.816332	,
-0.834692	,
-0.850474	,
-0.869478	,
-0.881395	,
-0.878818	,
-0.884938	,
-0.888159	,
-0.892668	,
-0.895567	,
-0.892346	,
-0.870122	,
-0.83598	,
-0.819231	,
-0.824063	,
-0.831471	,
-0.839523	,
-0.839523	,
-0.835014	,
-0.838235	,
-0.838557	,
-0.845321	,
-0.849508	,
-0.848219	,
-0.850152	,
-0.862069	,
-0.875275	,
-0.87914	,
-0.872054	,
-0.867867	,
-0.864968	,
-0.858848	,
-0.854983	,
-0.85595	,
-0.854661	,
-0.858204	,
-0.863036	,
-0.865935	,
-0.86368	,
-0.864002	,
-0.877852	,
-0.893312	,
-0.906518	,
-0.906518	,
-0.898788	,
-0.889769	,
-0.879784	,
-0.879784	,
-0.882361	,
-0.895567	,
-0.910061	,
-0.919402	,
-0.926166	,
-0.927132	,
-0.927776	,
-0.92681	,
-0.928098	,
-0.927776	,
-0.927132	,
-0.921978	,
-0.922945	,
-0.919402	,
-0.896855	,
-0.88365	,
-0.89138	,
-0.898144	,
-0.906518	,
-0.903297	,
-0.897177	,
-0.903297	,
-0.91296	,
-0.921656	,
-0.930997	,
-0.937117	,
-0.940338	,
-0.945491	,
-0.937761	,
-0.938083	,
-0.934218	,
-0.93293	,
-0.922623	,
-0.909739	,
-0.894601	,
-0.893957	,
-0.895889	,
-0.890736	,
-0.884294	,
-0.889125	,
-0.889447	,
-0.889125	,
-0.88687	,
-0.896533	,
-0.905552	,
-0.911349	,
-0.91296	,
-0.918435	,
-0.929065	,
-0.921656	,
-0.906518	,
-0.909417	,
-0.917147	,
-0.922623	,
-0.930031	,
-0.930997	,
-0.930997	,
-0.934218	,
-};
-
 // FFTに与える窓のデータ ハニング関数
 static const int16_t window_data[DATA_SIZE_SPO2] = {
 2621.44	,
@@ -292,9 +158,6 @@ static const int16_t window_data[DATA_SIZE_SPO2] = {
 /************************************************************/
 /* 変数定義													*/
 /************************************************************/
-double*	p4;
-double*	f1;
-
 static double	mx1_;
 static double	mx2_;
 static int	snpk1_;
@@ -326,7 +189,7 @@ void calculator_pulse_oximeter_red(const signed long* pdata1)
 	{
 		tmp = (double)pdata1[i];
 		// -3～3Vの24bit分解能AD値
-		temp_dbl_buf2[i] = (double)(tmp * 3 / 32767);
+		temp_dbl_buf2[i] = tmp;
 	}
 //	proc(test_data, DATA_SIZE_SPO2, &snpk1_, &mx1_);
 	proc(temp_dbl_buf2, DATA_SIZE_SPO2, &snpk1_, &mx1_);
@@ -357,7 +220,7 @@ void calculator_pulse_oximeter_inf(const signed long* pdata1)
 	for (i = 0; i<DATA_SIZE_SPO2; i++)
 	{
 		tmp = (double)pdata1[i];
-		temp_dbl_buf2[i] = (double)(tmp * 3 / 32767);
+		temp_dbl_buf2[i] = tmp;
 	}
 	proc(temp_dbl_buf2, DATA_SIZE_SPO2, &snpk2_, &mx2_);
 	if((0 > snpk2_) || (snpk2_ > 200)){
@@ -398,19 +261,30 @@ static void	proc(const double *data1, int len, int* psnpk, double* pmk)
 	double* ar2;
 	double* ai2;
 	double* p3;
+	double*	p4;
+	double*	f1;
 	int16_t* peak1;
 	
-	const int loop = len * 2;
-	const int start = 9;
-	const int end   = 92 + start;
-	const double coeff = 0.30172;
+	const int loop = len + _PULSE_PARAM_END;
+	const int start = _PULSE_PARAM_START;
+	const int end   = _PULSE_PARAM_END + start;
+	const double coeff = _PULSE_PARAM_SNPK_COEF;
 	
 	int size;
 	double max;
+	double min = data1[0];
 	
-	/*- フィルタ処理 -----------------------------------------------------------------*/
+	/*- DC成分除去 -----------------------------------------------------------------*/
 	ph11 = &temp_dbl_buf0[0];
-	bandpass(data1, ph11, len, 20, 2, 2);
+	for(ii=1;ii<len;++ii){
+		if(min > data1[ii]){
+			min = data1[ii];
+		}
+	}
+	for(ii=0;ii<len;++ii){
+		ph11[ii] = (data1[ii] - min);
+		ph11[ii] *= 0.0001;
+	}
 	
 	/*- fft --------------------------------------------------------------------*/
 	pfft_in = &temp_int_buf0[0];
@@ -477,54 +351,6 @@ static void	proc(const double *data1, int len, int* psnpk, double* pmk)
 	/*- HR --------------------------------------------------------------*/
 	*psnpk = 60 / (f1[0] * coeff);
 	*pmk   = p4[0];
-}
-
-/*==============================================================================*/
-/*	bandpass																	*/
-/*==============================================================================*/
-/**
-	float input[]  …入力信号の格納されたバッファ。
-	flaot output[] …フィルタ処理した値を書き出す出力信号のバッファ。
-	int   size     …入力信号・出力信号のバッファのサイズ。
-	float samplerate … サンプリング周波数
-	float freq … カットオフ周波数
-	float bw   … 帯域幅
-**/
-/*==============================================================================*/
-static void bandpass(const double input[], double output[], int size, double samplerate, double freq, double bw)
-{
-	// フィルタ係数を計算する
-	double omega = 2.0f * 3.14159265f *  freq/samplerate;
-	double ctmp = log(2.0f) / 2.0 * bw * omega / sin(omega);
-	double alpha = sin(omega) * sinh(ctmp);
- 
-	double a0 =  1.0f + alpha;
-	double a1 = -2.0f * cos(omega);
-	double a2 =  1.0f - alpha;
-	double b0 =  alpha;
-	double b1 =  0.0f;
-	double b2 = -alpha;
-
-	// フィルタ計算用のバッファ変数。
-	double in1  = 0.0f;
-	double in2  = 0.0f;
-	double out1 = 0.0f;
-	double out2 = 0.0f;
-	int i;
-	
-	// フィルタを適用
-	for(i = 0; i < size; i++)
-	{
-		// 入力信号にフィルタを適用し、出力信号として書き出す。
-		output[i] = b0/a0 * input[i] + b1/a0 * in1  + b2/a0 * in2
-		                             - a1/a0 * out1 - a2/a0 * out2;
- 
-		in2  = in1;       // 2つ前の入力信号を更新
-		in1  = input[i];  // 1つ前の入力信号を更新
- 
-		out2 = out1;      // 2つ前の出力信号を更新
-		out1 = output[i]; // 1つ前の出力信号を更新
-	}
 }
 
 // 心拍数(赤色)

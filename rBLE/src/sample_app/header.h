@@ -41,6 +41,7 @@
 #if FUNC_DEBUG_CALC_NON == OFF
 #include "calc/pulseoximeter/calc_pulseoximeter.h"
 #include "calc/apnea/calc_apnea.h"
+#include "calc/apnea/calc_snore.h"
 #endif
 
 #endif /*_HEADER_H */

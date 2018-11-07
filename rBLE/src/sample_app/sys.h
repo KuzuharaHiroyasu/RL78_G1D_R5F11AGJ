@@ -318,6 +318,7 @@ INT write_ring_buf( RING_BUF* p_ring ,UB data );
 void dummy( void );
 UH crc16( UB* p_in, int len );
 void wait_ms( int ms );
+UB ke_time_check_elapsed( W now_time, W last_time, W val );
 
 
 #endif

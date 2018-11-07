@@ -76,16 +76,33 @@ extern ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ];
 // ============================================================
 // ==================ユーザーアプリケーション==================
 // ============================================================
-
-// システムモード
+// システムモード ※共通
 typedef enum{
-	SYSTEM_MODE_IDLE = 0,					// アイドル
+	// 仕様上の状態下限
+	SYSTEM_MODE_INITAL = 0,						// イニシャル
+	SYSTEM_MODE_IDLE_REST,					// アイドル_残量表示 ※RD8001暫定：IDLEを統合するか要検討
+	SYSTEM_MODE_IDLE_COM,					// アイドル_通信待機 ※RD8001暫定：IDLEを統合するか要検討
 	SYSTEM_MODE_SENSING,					// センシング
-	SYSTEM_MODE_MOVE,						// 移行
 	SYSTEM_MODE_GET,						// データ取得
-	SYSTEM_MODE_PRG_HD,						// プログラム更新
+	SYSTEM_MODE_PRG_H1D,					// H1Dプログラム更新
+	SYSTEM_MODE_PRG_G1D,					// G1Dプログラム更新
+	SYSTEM_MODE_SELF_CHECK,					// 自己診断
+	// 仕様上の状態上限
+	SYSTEM_MODE_MOVE,						// 移行
+	SYSTEM_MODE_NON,					// なし
 	SYSTEM_MODE_MAX
 }SYSTEM_MODE;
+
+// RD8001暫定：削除予定　※システムモード統合
+#if 0
+#define			SYSTEM_MODE_HD_CHG_NON				0		// なし
+#define			SYSTEM_MODE_HD_CHG_SENSING			1		// あり(センシング)
+#define			SYSTEM_MODE_HD_CHG_IDLE				2		// あり(アイドル)
+#endif
+
+
+
+
 
 // プログラムシーケンス
 typedef enum{
@@ -98,17 +115,17 @@ typedef enum{
 
 
 
-//#define			MAIN_STATUS_REQ_TIME			50		// ステータス要求時間[500ms]
-#define			MAIN_STATUS_REQ_TIME			100		// ステータス要求時間[1s]
+#define			MAIN_STATUS_REQ_TIME			50		// ステータス要求時間[500ms]
+//#define			MAIN_STATUS_REQ_TIME			100		// ステータス要求時間[1s]
 
-#define			SENSING_END_JUDGE_TIME				100		// ステータス要求時間[1s]
+#define			SENSING_END_JUDGE_TIME				100		// センシングなし[1s]
 
 
 
-#define			SYSTEM_MODE_HD_CHG_NON				0		// なし
-#define			SYSTEM_MODE_HD_CHG_SENSING			1		// あり(センシング)
-#define			SYSTEM_MODE_HD_CHG_IDLE				2		// あり(アイドル)
 
+
+#define		TIME_CNT_DISP_SELF_CHECK_ERR			(300)		/* 自己診断異常表示(3秒) */
+#define		TIME_CNT_DISP_SELF_CHECK_FIN			(300)		/* 自己診断異常表示(3秒) */
 
 
 
@@ -138,7 +155,6 @@ typedef enum{
 //#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)((3276*2)-1)
 #define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
 
-
 typedef enum program_ver{
 	VERSION_MAJOR = 0,
 	VERSION_MINOR,
@@ -155,8 +171,8 @@ typedef struct{
 	union{
 		UB	byte[CPU_COM_SND_DATA_SIZE_SENSOR_DATA];
 		struct{
-			H	sekigaival;		// 差動入力の為に符号あり
-			H	sekishoku_val;	// 差動入力の為に符号あり
+			W	sekigaival;		// 差動入力の為に符号あり
+			W	sekishoku_val;	// 差動入力の為に符号あり
 			UH	kokyu_val;		
 			UH	ibiki_val;		
 			B acl_x;
@@ -199,17 +215,26 @@ typedef struct{
 	union{
 		UB	byte[EEP_ALARM_SIZE];
 		struct{
-			UH	valid;			// アラーム機能有効/無効
+			UB	valid;			// アラーム機能有効/無効
 			UB	ibiki;			// いびきアラーム
 			UB	ibiki_sens;		// いびきアラーム感度
 			UB	low_kokyu;		// 低呼吸アラーム
 			UB	delay;			// アラーム遅延
 			UB	stop;			// 体動停止
 			UB	time;			// 鳴動時間
+			UB	dummy;			// 境界値調整用
 		}dat;
 	}info;
 }ALARM;
 
+
+// 自己診断
+typedef struct{
+	ke_time_t	last_time;
+	UH	eep_cnt;		// EEP消去回数
+	UB	seq;			// シーケンス
+	UB	com_flg;		// 通信での自己診断フラグ
+}SELF_CHECK;
 
 typedef struct{
 	
@@ -220,6 +245,7 @@ typedef struct{
 	
 	ke_time_t last_time;			//前回時間
 	ke_time_t last_sensing_data_rcv;		//前回センシングデータ受信
+	UB sensing_flg;					// センシング中フラグ
 	
 	UB denchi_sts;			// 電池状態
 	
@@ -243,12 +269,12 @@ typedef struct{
 	// 機器データ(演算前)回数
 	UB	sekigai_cnt;
 	UB	sekishoku_cnt;	// 差動入力の為に符号あり
-	UB	kokyu_cnt;		
-	UB	ibiki_cnt;		
+	UB	kokyu_cnt;
+	UB	ibiki_cnt;
 	UB	acl_cnt;
 	
 	
-	ALARM alarm;			// 警告機能
+	ALARM	alarm;			// 警告機能
 	
 	UW	timer_sec;			// タイマー[秒]　※カウントダウン
 	
@@ -268,6 +294,14 @@ typedef struct{
 	UB prg_hd_update_state;							// プログラム更新状態
 	UB prg_hd_seq;									// プログラム更新状態
 	UB prg_hd_version[VERSION_NUM];			// プログラムバージョン
+	
+	// プログラム書き換え(G1D)
+	UB prg_g1d_send_ver_flg;				// G1Dバージョン送信
+	UB prg_g1d_send_ver_sec;				// G1Dバージョン送信秒
+	
+	// 自己診断
+	SELF_CHECK	self_check;
+	
 	
 	UW err_cnt;			//異常回数(デバッグ用途)
 }T_UNIT;
@@ -322,6 +356,12 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 #define	VUART_CMD_DATA_CALC		0xE3	// 演算データ
 #define	VUART_CMD_PRG_RESULT	0xD1
 #define	VUART_CMD_PRG_CHECK		0xD3
+#define	VUART_CMD_PRG_G1D_START	0xF0
+#define	VUART_CMD_PRG_G1D_VER	0xF9
+
+#define	VUART_CMD_ALARM_SET		0xC0
+#define	VUART_CMD_ALARM_INFO	0xC4
+
 
 // データ長
 #define	VUART_CMD_LEN_MODE_CHG		2
@@ -335,6 +375,11 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 #define	VUART_CMD_LEN_PRG_RESULT	5
 #define	VUART_CMD_LEN_PRG_DATA		20
 #define	VUART_CMD_LEN_PRG_CHECK		1
+#define	VUART_CMD_LEN_PRG_G1D_START	1
+#define	VUART_CMD_LEN_PRG_G1D_VER	1
+
+#define	VUART_CMD_LEN_ALARM_SET		3
+
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
@@ -371,5 +416,6 @@ extern void ds_set_vuart_data( UB *p_data, UB len );
 extern void ds_set_vuart_send_status( UB status );
 extern void user_system_init( void );
 extern void user_main_init( void );
+void main_cpu_com_snd_pc_log( UB* data, UB size );
 
 #endif // __MAIN_USR_INC__

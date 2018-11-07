@@ -29,15 +29,13 @@ void peak_vallay
 	int		peak		/* IN：1=極大値抽出、else=極小処理抽出					*/
 )
 {
-	int		w = (width/2);
-	int 		i;
 	int		ii;
 	int		loop;
 
 	/*--------------------------------------------------------------------------*/
-	for( i = 0 ; i < size ; i++ )
+	for( ii = 0 ; ii < size ; ii++ )
 	{
-		ot[i] = 0;
+		ot[ii] = 0;
 	}
 
 	// width = 3 -> w = 1 前提のコード

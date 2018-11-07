@@ -46,9 +46,10 @@ extern void codeptr app_evt_usr0(void);
 /******************/
 #define CPU_COM_SND_DATA_SIZE_STATUS_REQ			4				/* ステータス要求			*/
 #define CPU_COM_SND_DATA_SIZE_MODE_CHG				1				/* 状態変更(G1D)			*/
-#define CPU_COM_SND_DATA_SIZE_PC_LOG				7				/* PCログ送信(内部コマンド)	*/
-#define CPU_COM_SND_DATA_SIZE_SENSOR_DATA			11				/* センサーデータサイズ		*/
+#define CPU_COM_SND_DATA_SIZE_PC_LOG				10				/* PCログ送信(内部コマンド)	*/
+#define CPU_COM_SND_DATA_SIZE_SENSOR_DATA			15				/* センサーデータサイズ		*/
 #define CPU_COM_SND_DATA_SIZE_DATE_SET				7				/* 時刻設定					*/
+#define CPU_COM_SND_DATA_SIZE_DISP_ORDER			1				/* 表示指示					*/
 
 /* データ長範囲 */
 #define CPU_COM_DATA_SIZE_MAX					(262+1)		/* データの最大長 */
@@ -103,6 +104,7 @@ typedef enum _CPU_COM_CMD_ID{
 	CPU_COM_CMD_PRG_DOWNLORD_DATA,				/* 【CPU間通信コマンド】プログラム転送データ	*/
 	CPU_COM_CMD_PRG_DOWNLORD_RESLUT,			/* 【CPU間通信コマンド】プログラム転送結果		*/
 	CPU_COM_CMD_PRG_DOWNLORD_CHECK,				/* 【CPU間通信コマンド】プログラム転送確認		*/
+	CPU_COM_CMD_DISP_ORDER,						/* 【CPU間通信コマンド】表示指示				*/
 //	CPU_COM_CMD_FILE_REQ,						/* 【CPU間通信コマンド】ファイル転送開始		*/
 //	CPU_COM_CMD_FILE,							/* 【CPU間通信コマンド】ファイル転送			*/
 //	CPU_COM_CMD_FILE_BLOCK_RESULT_REQ,			/* 【CPU間通信コマンド】ブロック転送結果要求	*/
@@ -145,6 +147,16 @@ typedef enum{
 #define CPU_COM_MSG_TOP_POS_SEQ					3				/* シーケンス */
 #define CPU_COM_MSG_TOP_POS_DATA				4				/* データ部 */
 
+
+
+
+// =========================
+// データ種別
+// =========================
+// 表示指示
+#define CPU_COM_DISP_ORDER_NON				0	// 表示なし
+#define CPU_COM_DISP_ORDER_SELF_CHECK_ERR	1	// 異常
+#define CPU_COM_DISP_ORDER_SELF_CHECK_FIN	2	// 完了
 
 
 /******************/

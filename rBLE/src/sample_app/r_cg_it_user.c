@@ -56,6 +56,7 @@ Global variables and functions
 * Return Value : None
 ***********************************************************************************************************************/
 extern void timer_10ms_set(void);
+//#pragma section text    CNT_CODE
 static void __near r_it_interrupt(void)
 {
     /* Start user code. Do not edit comment generated here */

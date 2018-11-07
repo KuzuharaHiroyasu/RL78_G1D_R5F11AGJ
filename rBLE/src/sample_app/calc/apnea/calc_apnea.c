@@ -5,16 +5,14 @@
 /* 変更履歴     : 2018.01.11 Axia Soft Design 和田 初版作成				*/
 /* 注意事項     : なし													*/
 /************************************************************************/
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include "calc_apnea.h"
+#include "apnea_param.h"
 #include "../calc_data.h"
 
 // 演算を軽量化するための定義
 #define LIGHT_PROC
-
+//#define SNORE_PROC
 
 /************************************************************/
 /* プロトタイプ宣言											*/
@@ -22,7 +20,7 @@
 #ifndef LIGHT_PROC
 void calc_pp(const double* pData, int DSize, double Param1);
 #endif
-void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3);
+void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3, double Param4);
 void calc_snore(const double* pData, int DSize, double Param);
 extern int	peak_modify_a(const double in_data[] , H in_res[] , double ot_data[] , double ot_hz[] , int size , double delta, double th);
 extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int peak );
@@ -30,208 +28,6 @@ extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int
 /************************************************************/
 /* 定数定義													*/
 /************************************************************/
-double testdata[200] = {
-2.13E-09	,
-0.00175	,
-0.001177	,
-0.001252	,
-0.001058	,
-0.000919	,
-0.000846	,
-0.000692	,
-0.00073	,
-0.000747	,
-0.00085	,
-0.000778	,
-0.000895	,
-0.000532	,
-0.000653	,
-0.000663	,
-0.000523	,
-0.000371	,
-0.000395	,
-0.000442	,
-0.000485	,
-0.000409	,
-0.000313	,
-0.000385	,
-0.000303	,
-0.000424	,
-0.000229	,
-0.000331	,
-0.000358	,
-0.000647	,
-0.003076	,
-0.000976	,
-0.003477	,
-0.007533	,
-0.004274	,
-0.001841	,
-0.001855	,
-0.00491	,
-0.005161	,
-0.001699	,
-0.006384	,
-0.010133	,
-0.007526	,
-0.008098	,
-0.008439	,
-0.010036	,
-0.020092	,
-0.015954	,
-0.022169	,
-0.009964	,
-0.016372	,
-0.019976	,
-0.024601	,
-0.018608	,
-0.011553	,
-0.01562	,
-0.012082	,
-0.012445	,
-0.015959	,
-0.0131	,
-0.013951	,
-0.016809	,
-0.011544	,
-0.005925	,
-0.010148	,
-0.006467	,
-0.000885	,
-0.001294	,
-0.00177	,
-0.000786	,
-0.000357	,
-0.000285	,
-0.00071	,
-0.000555	,
-0.000948	,
-0.001025	,
-0.001031	,
-0.001049	,
-0.001734	,
-0.001295	,
-0.001216	,
-0.001169	,
-0.000986	,
-0.000954	,
-0.001214	,
-0.001439	,
-0.001188	,
-0.000676	,
-0.000989	,
-0.000804	,
-0.000597	,
-0.000459	,
-0.000555	,
-0.000554	,
-0.000562	,
-0.000414	,
-0.000427	,
-0.00052	,
-0.000302	,
-0.000405	,
-0.000337	,
-0.000435	,
-0.000378	,
-0.000407	,
-0.000291	,
-0.000372	,
-0.000307	,
-0.000267	,
-0.000422	,
-0.000382	,
-0.000333	,
-0.000508	,
-0.000904	,
-0.00225	,
-0.001633	,
-0.003458	,
-0.006366	,
-0.006567	,
-0.004072	,
-0.003156	,
-0.002344	,
-0.003789	,
-0.002523	,
-0.011624	,
-0.011585	,
-0.006825	,
-0.012725	,
-0.011001	,
-0.011634	,
-0.015454	,
-0.011612	,
-0.020081	,
-0.023051	,
-0.034028	,
-0.016602	,
-0.014532	,
-0.016364	,
-0.014282	,
-0.020808	,
-0.017404	,
-0.011535	,
-0.00961	,
-0.011874	,
-0.011798	,
-0.010825	,
-0.010439	,
-0.007177	,
-0.005823	,
-0.005814	,
-0.003869	,
-0.002658	,
-0.002349	,
-0.000775	,
-0.001449	,
-0.000352	,
-0.000411	,
-0.000629	,
-0.001271	,
-0.001094	,
-0.001115	,
-0.001671	,
-0.00093	,
-0.001544	,
-0.001069	,
-0.001628	,
-0.002096	,
-0.001503	,
-0.001267	,
-0.000836	,
-0.00161	,
-0.001324	,
-0.001352	,
-0.001152	,
-0.001076	,
-0.000602	,
-0.000541	,
-0.000611	,
-0.000587	,
-0.000809	,
-0.000512	,
-0.000449	,
-0.000522	,
-0.000389	,
-0.00049	,
-0.000386	,
-0.000418	,
-0.00052	,
-0.000369	,
-0.000451	,
-0.000506	,
-0.000356	,
-0.000421	,
-0.000336	,
-0.000354	,
-0.000338	,
-0.000341	,
-0.000439	,
-0.000349	,
-0.000429	,
-0.000311
-};
 
 /************************************************************/
 /* 変数定義													*/
@@ -241,7 +37,9 @@ double	result_peak[BUF_SIZE];			// 結果ピーク間隔
 int		result_peak_size;
 #endif
 static int		apnea_ = APNEA_NONE;	// 呼吸状態
+#ifdef SNORE_PROC
 static int		snore_ = SNORE_OFF;		// いびき
+#endif
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -260,36 +58,35 @@ void calculator_apnea(const UH *data)
 {
 	UW datasize;						// 波形データのバイト数
 	double* ptest1;
-	int ii;
+	int ii, jj;
 	
 	//データサイズ制限
 	datasize = DATA_SIZE_APNEA;
+	
+	// 移動平均
 	ptest1 = &temp_dbl_buf0[0];							//calloc
 	for(ii=0;ii<datasize;++ii){
-		ptest1[ii] = (double)data[ii];
+		ptest1[ii]=0;
+		for(jj=0;jj<APNEA_PARAM_AVE_NUM;++jj){
+			if((ii-jj)>=0){
+				ptest1[ii]+=data[ii-jj];
+			}
+		}
+		ptest1[ii] /= (double)APNEA_PARAM_AVE_NUM;
+		ptest1[ii] /= APNEA_PARAM_RAW;
 	}
-
-	for (ii = 0; ii<datasize; ++ii) {
-		//ptest1[ii] = (ptest1[ii] - 512) * 64;	// 10bitカウント値を0中心にし、16bit幅に拡張
-		ptest1[ii] = ptest1[ii] * 16;	// 16bit幅に拡張
-	}
-
-	for (ii = 0; ii<datasize; ++ii) {
-		ptest1[ii] = (double)ptest1[ii] * 0.0000305;
-	}
-
-	// (21) - (34)
 #ifndef LIGHT_PROC
-	calc_pp(ptest1, datasize, 0.003f);
+	// (21) - (34)
+	calc_pp(ptest1, datasize, APNEA_PARAM_PEAK_THRE);
 #endif
 	
 	// (35) - (47)
-	calc_apnea(ptest1, datasize, 450, 0.0015f, 0.002f);
-//	calc_apnea(testdata, 200, 450, 0.0015f, 0.002f);
+	calc_apnea(ptest1, datasize, APNEA_PARAM_AVE_CNT, APNEA_PARAM_AVE_THRE, APNEA_PARAM_BIN_THRE, APNEA_PARAM_APNEA_THRE);
 	
+#ifdef SNORE_PROC
 	// (48) - (56)
-	calc_snore(ptest1, datasize, 0.0125f);
-//	calc_snore(testdata, 200, 0.0125f);
+	calc_snore(ptest1, datasize, APNEA_PARAM_SNORE);
+#endif
 	
 	// (57)
 	
@@ -430,7 +227,7 @@ void calc_pp(const double* pData, int DSize, double Param1)
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3)
+void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3, double Param4)
 {
 	double* pave;
 	int datasize;
@@ -507,7 +304,7 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 		apnea_ = APNEA_NORMAL;
 	}
 	else if(datasize > 9){
-		apnea_ = APNEA_ERROR;
+		apnea_ = APNEA_WARN;
 		loop = datasize - 9;
 		for(ii=0;ii<loop;++ii){
 			apnea = 0;
@@ -521,8 +318,20 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	}else{
 		apnea_ = APNEA_NORMAL;
 	}
+	
+	// 完全無呼吸の判定
+	if(apnea_ == APNEA_WARN){
+		apnea_ = APNEA_ERROR;
+		for(ii=0;ii<datasize;++ii){
+			if(pData[ii] > Param4){
+				apnea_ = APNEA_WARN;
+				break;
+			}
+		}
+	}
 }
 
+#ifdef SNORE_PROC
 /************************************************************************/
 /* 関数     : calc_snore												*/
 /* 関数名   : いびき演算処理											*/
@@ -617,13 +426,16 @@ void calc_snore(const double* pData, int DSize, double Param)
 	// (56)
 	// snorecnt = intervalsize2 * 2;
 }
+#endif
 
 // 状態を取得
 UB get_state(void)
 {
 	UB ret = 0;
 	ret |= ((apnea_ << 6) & 0xC0);
+#ifdef SNORE_PROC
 	ret |= (snore_ & 0x01);
+#endif
 	
 	return ret;
 }
