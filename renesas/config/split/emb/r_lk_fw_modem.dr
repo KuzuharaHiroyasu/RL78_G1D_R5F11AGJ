@@ -1,0 +1,260 @@
+;/*
+;******************************************************************************
+;* Copyright(C) 2010, 2011 Renesas Electronics Corporation
+;* RENESAS ELECTRONICS CONFIDENTIAL AND PROPRIETARY
+;* This program must be used solely for the purpose for which
+;* it was furnished by Renesas Electronics Corporation. No part of this
+;* program may be reproduced or disclosed to others, in any
+;* form, without the prior written permission of Renesas Electronics
+;* Corporation.
+;*
+;* This device driver was created by CodeGenerator for RL78/G13
+;* 16-Bit Single-Chip Microcontrollers
+;* Filename:	r_lk.dr
+;* Abstract:	This is the link file.
+;* APIlib:	CodeGenerator for RL78/G13 V1.01.00 [31 May 2011]
+;* Device:	R5F100PJ
+;* Compiler:	CARL78
+;* Creation date:	2011/09/12
+;******************************************************************************
+;*/
+; [Sample of Link Directive File]
+; *************************************************************
+; Link Directive File is created by users when memory or segment
+; location needs to be changed from the default as the following
+; cases, for instance:
+;    1. In case the stack area should be in fixed area
+;    2. In case the external memory should be used
+;
+; Please change the start address, the size of memory, 
+; and the name of memory or segment according to your system,
+; and link this file with -D linker option if necessary.
+;
+;   MEMORY directive : Declares an address in installed memory.
+;                      Devides memory into two or more areas and
+;                      specifies a memory area
+;   MERGE directive  : Specifies location of a segment
+; *************************************************************
+
+; <Example on how to specify the stack area>
+;  Please specify the linker option -SSTK.
+;  The stack area should be in the internal RAM area.
+;
+;      START ADDRESS, STACK SIZE
+;memory STK : ( 0FB000H, 100H )
+; <Example of locating data in external memory>
+; The section name output by C compiler can be changed with
+; #pragma section function.
+;
+; If the name of ROMization-related section which has global
+; variables with initial values is changed, the modification of
+; C start-up routine will be required. 
+; Please refer the CC78K0R C Compiler Language User's Manual 
+; Language Chap.11 in detail.
+;
+; ex. This is the example of renaming the @@DATAL segment.
+;   #pragma section @@DATAL EXTDATA
+;
+;   By the following directives, "EXTDATA" segment is located in EXMEM area.
+;
+;        START ADDRESS, MEMORY SIZE
+
+
+; ----------------------------------------------------------
+; Redefined default code segment ROM
+; ----------------------------------------------------------
+
+MEMORY ROM       : ( 000000H, 001000H )
+
+; ----------------------------------------------------------
+; Defined code segment for Boot1
+; ----------------------------------------------------------
+MEMORY ROM_BOOT  : ( 001000H, 001000H )
+
+; ----------------------------------------------------------
+; Defined code segment for Standard function
+; ----------------------------------------------------------
+MEMORY ROM_STD   : ( 002000H, 001000H )
+
+; ----------------------------------------------------------
+; Defined const segment for Host Stack (fixed area)
+; ----------------------------------------------------------
+MEMORY ROMHCNST  : ( 003000H, 001400H )
+
+; ----------------------------------------------------------
+; Defined const segment for aplication
+; ----------------------------------------------------------
+MEMORY ROM_CNST  : ( 004400H, 006400H )
+
+; ----------------------------------------------------------
+; Defined const segment for Host Stack (update area)
+; ----------------------------------------------------------
+MEMORY ROM_TBL   : ( 00A800H, 000800H )
+
+; ----------------------------------------------------------
+; Defined init segment for aplication
+; ----------------------------------------------------------
+MEMORY ROM_INIT  : ( 00B000H, 003000H )
+
+MEMORY ROMDFCNS  : ( 00E000H, 002000H )
+
+MEMORY ROM_HOST  : ( 010000H, 023C00H )
+
+MEMORY ROM_APP   : ( 033C00H, 00C000H )
+
+; ----------------------------------------------------------
+; Define new memory entry for Self-RAM
+; ----------------------------------------------------------
+
+MEMORY SELFRAM   : ( 0FAF00H, 000410H )
+
+; ----------------------------------------------------------
+; Defined data segment for Host or Controller stack
+; ----------------------------------------------------------
+
+MEMORY RAM_HOST  : ( 0FB310H, 000F00H )
+
+; ----------------------------------------------------------
+; Redefined default data segment RAM
+; ----------------------------------------------------------
+
+MEMORY RAM       : ( 0FC210H, 003C10H )
+
+; ----------------------------------------------------------
+; Define new memory entry for saddr area
+; ----------------------------------------------------------
+
+MEMORY RAM_SADDR : ( 0FFE20H, 0001E0H )
+
+
+; -----------------------------------------------------------
+; @@LCODE and @@CNST segments are located inside ROM
+; -----------------------------------------------------------
+MERGE @@LCODE:=ROM
+MERGE @@CNSTL:=ROM
+
+; -----------------------------------------------------------
+; @@CODELL segments are located inside ROM_STD
+; -----------------------------------------------------------
+MERGE @@LCODEL:=ROM_STD
+
+; -----------------------------------------------------------
+; HDB_CNST HST_CNST, CNT_CNST, RBL_CNST and MAINCNST
+; segments are located inside ROM_STD
+; -----------------------------------------------------------
+MERGE HDB_CNST:=ROMHCNST
+MERGE HST_CNST:=ROMHCNST
+MERGE CNT_CNST:=ROMHCNST
+MERGE RBL_CNST:=ROMHCNST
+MERGE MAINCNST:=ROMHCNST
+
+; -----------------------------------------------------------
+; CNT_NEAR, CNT_BASE, HST_BASE, RBLE_BASE segments are located inside ROMDFCNS
+; -----------------------------------------------------------
+MERGE CNT_NEAR:=ROMDFCNS
+MERGE CNT_BASE:=ROMDFCNS
+MERGE HST_BASE:=ROMDFCNS
+MERGE RBL_BASE:=ROMDFCNS
+;MERGE UARTBASE:=ROMDFCNS
+
+; -----------------------------------------------------------
+; DFL_CNST, EEL_CNST and FDL_CNST segments are located inside ROMDFCNS
+; -----------------------------------------------------------
+MERGE EEL_CNST:=ROMDFCNS
+MERGE FDL_CNST:=ROMDFCNS
+MERGE DFL_CNST:=ROMDFCNS
+
+; -----------------------------------------------------------
+; MAIN_CN0 segment is located at 000FFEH
+; -----------------------------------------------------------
+MERGE MAIN_CN0:AT(00FFEH)
+
+; -----------------------------------------------------------
+; MAIN_CN1 segment is located at 001FFEH
+; -----------------------------------------------------------
+MERGE MAIN_CN1:AT(01FFEH)
+
+; -----------------------------------------------------------
+; @@CNST segment is located inside ROM_CNST
+; -----------------------------------------------------------
+MERGE @@CNST :=ROM_CNST
+
+; -----------------------------------------------------------
+; ACS_TBL, CLK_TBL and TSK_DESC segments are located at 0A800(ROM_TBL)
+; -----------------------------------------------------------
+MERGE ACS_TBL :AT(0A800H)
+MERGE CLK_TBL :AT(0A850H)
+MERGE TSK_DESC:AT(0A880H)
+
+; -----------------------------------------------------------
+; @@RLINIT, @@R_INIS, @@R_INIT and @@BASE segments are located inside ROM_INIT
+; -----------------------------------------------------------
+MERGE @@RLINIT:=ROM_INIT
+MERGE @@R_INIS:=ROM_INIT
+MERGE @@R_INIT:=ROM_INIT
+MERGE @@CODE  :=ROM_INIT
+MERGE @@BASE  :=ROM_INIT
+MERGE UARTBASE:=ROM_INIT
+
+; -----------------------------------------------------------
+; MAINCODE, HST_CODE, CNT_CODE and RBL_CODE segments are located inside ROM_HOST
+; -----------------------------------------------------------
+MERGE MAINCODE:=ROM_HOST
+MERGE HST_CODE:=ROM_HOST
+MERGE CNT_CODE:=ROM_HOST
+MERGE RBL_CODE:=ROM_HOST
+
+; -----------------------------------------------------------
+; Driver Code segments are located inside ROM_HOST
+; -----------------------------------------------------------
+MERGE FDL_CODE:=ROM_HOST
+MERGE EEL_CODE:=ROM_HOST
+MERGE DFL_CODE:=ROM_HOST
+
+MERGE FSL_FCD :=ROM_HOST
+MERGE FSL_BCD :=ROM_HOST
+MERGE FSL_BECD:=ROM_HOST
+MERGE FSL_RCD :=ROM_HOST
+MERGE CFL_CODE:=ROM_HOST
+
+MERGE PLF_CODE:=ROM_HOST
+MERGE UARTCODE:=ROM_HOST
+
+; -----------------------------------------------------------
+; @@CODEL segment is located inside ROM_APP
+; -----------------------------------------------------------
+MERGE  @@CODEL:=ROM_APP
+
+; -----------------------------------------------------------
+; CNT_DATA, HDB_DATA, MAINDATA, HST_DATA and RBL_DATA segments are located inside RAM_HOST
+; -----------------------------------------------------------
+MERGE HST_DATA:=RAM_HOST
+MERGE CNT_DATA:=RAM_HOST
+MERGE RBL_DATA:=RAM_HOST
+MERGE HDB_DATA:=RAM_HOST
+MERGE MAINDATA:=RAM_HOST
+MERGE CFL_DATA:=RAM_HOST
+MERGE UARTDATA:=RAM_HOST
+
+; -----------------------------------------------------------
+; DFL_DATA segments are located inside RAM_HOST
+; -----------------------------------------------------------
+MERGE DFL_DATA:=RAM_HOST
+
+; -----------------------------------------------------------
+; Other Data segments are located inside RAM
+; -----------------------------------------------------------
+MERGE @@DATA :=RAM
+MERGE @@INIT :=RAM
+MERGE @@INIS :=RAM
+MERGE @@DATS :=RAM
+MERGE @@INITL:=RAM
+MERGE @@DATAL:=RAM
+
+; -----------------------------------------------------------
+; EEL_SDAT segment is located inside RAM
+; -----------------------------------------------------------
+
+;MERGE EEL_SDAT:=RAM
+
+

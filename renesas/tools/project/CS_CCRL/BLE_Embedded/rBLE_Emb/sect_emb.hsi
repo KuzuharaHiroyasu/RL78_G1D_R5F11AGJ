@@ -1,0 +1,5 @@
+[Section Information]
+Version=1.0
+Entry=2
+Group1=FDL_CNST*,EEL_CNST*,FDL_CODE*,EEL_CODE*(01000)
+Group2=FDL_SDAT*,EEL_SDAT*(ffe20)
