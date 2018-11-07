@@ -1383,6 +1383,8 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
 	
+	s_unit.self_check.seq = 0;
+	
 	return system_mode;
 }
 
@@ -2351,7 +2353,7 @@ void main_vuart_rcv_date( void )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_date										*/
+/* 関数     : main_vuart_rcv_alarm_set									*/
 /* 関数名   : VUART受信(アラーム設定)									*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2364,23 +2366,27 @@ void main_vuart_rcv_date( void )
 /************************************************************************/
 void main_vuart_rcv_alarm_set( void )
 {
-	s_unit.alarm.info.dat.valid = s_ds.vuart.input.rcv_data[1];
-	s_unit.alarm.info.dat.ibiki = s_ds.vuart.input.rcv_data[2];
-	s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[3];
-	s_unit.alarm.info.dat.low_kokyu = s_ds.vuart.input.rcv_data[4];
-	s_unit.alarm.info.dat.delay = s_ds.vuart.input.rcv_data[5];
-	s_unit.alarm.info.dat.stop = s_ds.vuart.input.rcv_data[6];
-	s_unit.alarm.info.dat.time = s_ds.vuart.input.rcv_data[7];
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
 	
-	eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
-
-	{
-		UB tx[VUART_DATA_SIZE_MAX] = {0};
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		result = VUART_DATA_RESULT_NG;
+	}else{
+		s_unit.alarm.info.dat.valid = s_ds.vuart.input.rcv_data[1];
+		s_unit.alarm.info.dat.ibiki = s_ds.vuart.input.rcv_data[2];
+		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[3];
+		s_unit.alarm.info.dat.low_kokyu = s_ds.vuart.input.rcv_data[4];
+		s_unit.alarm.info.dat.delay = s_ds.vuart.input.rcv_data[5];
+		s_unit.alarm.info.dat.stop = s_ds.vuart.input.rcv_data[6];
+		s_unit.alarm.info.dat.time = s_ds.vuart.input.rcv_data[7];
 		
-		tx[0] = VUART_CMD_ALARM_SET;
-		tx[1] = 0;
-		main_vuart_send( &tx[0], 2 );
+		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
 	}
+	
+	tx[0] = VUART_CMD_ALARM_SET;
+	tx[1] = result;
+	main_vuart_send( &tx[0], 2 );
 }
 
 /************************************************************************/
