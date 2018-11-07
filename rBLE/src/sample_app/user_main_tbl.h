@@ -35,7 +35,7 @@ const struct ke_state_handler user_main_default_handler = KE_STATE_HANDLER_NONE;
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 0, 11};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 0, 12};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
@@ -77,9 +77,9 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DATA_FRAME,	VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
 	{	VUART_CMD_DATA_CALC,	VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
 	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// 機器データ[受信はSET時]
-	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_vuart_prg_rcv_hd_record	},	// プログラム転送(データ)
-	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_vuart_prg_rcv_hd_result	},	// プログラム転送結果
-	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_vuart_prg_rcv_hd_update	},	// プログラム更新完了確認
+	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_vuart_rcv_prg_hd_record	},	// プログラム転送(データ)
+	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_vuart_rcv_prg_hd_result	},	// プログラム転送結果
+	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_vuart_rcv_prg_hd_update	},	// プログラム更新完了確認
 	{	VUART_CMD_ALARM_SET,	VUART_CMD_LEN_ALARM_SET,	main_vuart_rcv_alarm_set		},	// アラーム設定変更
 	{	VUART_CMD_ALARM_INFO,	0,							NULL							},	// アラーム通知[送信専用]
 };
@@ -104,9 +104,9 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW(短)		*/	{ evt_idle_rest,	evt_sensing,		evt_sensing_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW押下(長)	*/	{ evt_non,			evt_initial,		evt_initial_chg,	evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*充電検知ポートON	*/	{ evt_idle_com,		evt_idle_com,		evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*充電検知ポートON	*/	{ evt_idle_com,		evt_idle_com,		evt_non,			evt_idle_com,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*電池残量低下		*/	{ evt_non,			evt_non,			evt_initial,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電池残量低下		*/	{ evt_non,			evt_non,			evt_initial,		evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電完了			*/	{ evt_non,			evt_non,			evt_initial,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*データ取得		*/	{ evt_non,			evt_get,			evt_get,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*プログラム(H1D)	*/	{ evt_non,			evt_h1d_prg_denchi,	evt_h1d_prg_denchi,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },

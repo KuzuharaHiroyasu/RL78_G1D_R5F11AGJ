@@ -126,10 +126,10 @@ typedef enum{
 
 
 // 電池残量状態 ※H1D/G1D共通
-#define DENCH_ZANRYO_STS_MAX					1	// 充電満タン
-#define DENCH_ZANRYO_STS_HIGH					2	// 数日持つ
-#define DENCH_ZANRYO_STS_LOW					3	// 残り１日持たない
-#define DENCH_ZANRYO_STS_MIN					4	// 電池残量なし
+#define DENCH_ZANRYO_STS_MAX					0	// 充電満タン
+#define DENCH_ZANRYO_STS_HIGH					1	// 数日持つ
+#define DENCH_ZANRYO_STS_LOW					2	// 残り１日持たない
+#define DENCH_ZANRYO_STS_MIN					3	// 電池残量なし
 
 
 // プログラムシーケンス
@@ -143,16 +143,21 @@ typedef enum{
 }PRG_SEQ;
 
 
-
+// タイマー関連
 #define			MAIN_STATUS_REQ_TIME			50		// ステータス要求時間[500ms]
 //#define			MAIN_STATUS_REQ_TIME			100		// ステータス要求時間[1s]
 
 #define			SENSING_END_JUDGE_TIME				100		// センシングなし[1s]
 
-
-
 #define		TIME_CNT_DISP_SELF_CHECK_ERR			(300)		/* 自己診断異常表示(3秒) */
 #define		TIME_CNT_DISP_SELF_CHECK_FIN			(300)		/* 自己診断完了表示(3秒) */
+
+
+#define		TIME_CNT_DENCH_ZANRYO_MIN_INTERVAL		(100)		/* 電池残量低下通知インターバル(1秒) */
+
+
+
+
 
 #define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
 
@@ -180,6 +185,10 @@ typedef enum{
 #define		TIME_OUT_SYSTEM_MODE_H1D_PRG		( 60000 )		
 
 
+
+
+
+
 #define	OK_NOW_UPDATING					0		//更新未了
 #define	OK_UPDATE_FIX					1		//正常完了(成功)
 #define	NG_UPDATE_FAILURE				2		//異常完了(失敗)
@@ -191,7 +200,7 @@ typedef enum{
 
 
 
-#define	BD_ADRS_NUM						6
+#define	BD_ADRS_NUM						6			// BLEアドレス数
 
 
 ///10ms timer
@@ -383,6 +392,9 @@ typedef struct{
 	UH tick_10ms;
 	UH tick_10ms_sec;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
+	
+	UW last_time_dench_zanryou_min;			// 電池残量低下時間[10ms]
+	
 	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント

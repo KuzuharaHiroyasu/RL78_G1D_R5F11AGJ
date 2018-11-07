@@ -175,7 +175,7 @@
 /* 機能の有効無効 */
 /*----------------*/
 // RD8001暫定：デバッグ機能 ※最終リリース時はOFFする事
-#define		FUNC_DEBUG_LOG							ON					/* PCへのログ通信機能 */
+#define		FUNC_DEBUG_LOG							OFF					/* PCへのログ通信機能 */
 #define		FUNC_DEBUG_CPU_COM						OFF					/* CPU間通信をログ通信でデバッグする機能 */
 																		/* 使用する時はログ通信もOFFする事 */
 #define		FUNC_DEBUG_SLEEP_NON					OFF					/* G1DにSLEEPなしでデバッグする機能 */

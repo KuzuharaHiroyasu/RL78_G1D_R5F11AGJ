@@ -78,9 +78,9 @@ STATIC void user_main_eep_read_pow_on(void);
 //STATIC void eep_all_erase( void );		//未使用関数
 STATIC void eep_part_erase( void );
 STATIC void main_vuart_send( UB *p_data, UB len );
-STATIC void main_vuart_prg_rcv_hd_record( void );
-STATIC void main_vuart_prg_rcv_hd_result(void);
-STATIC void main_vuart_prg_rcv_hd_update(void);
+STATIC void main_vuart_rcv_prg_hd_record( void );
+STATIC void main_vuart_rcv_prg_hd_result(void);
+STATIC void main_vuart_rcv_prg_hd_update(void);
 STATIC void main_cpu_com_rcv_prg_hd_ready(void);
 STATIC void main_cpu_com_rcv_prg_hd_start(void);
 STATIC void main_cpu_com_rcv_prg_hd_erase(void);
@@ -91,7 +91,7 @@ STATIC void main_prg_hd_read_eep_record( void );
 STATIC void main_cpu_com_rcv_date_set( void );
 STATIC void main_cpu_com_rcv_disp_order( void );
 STATIC void main_cpu_com_rcv_version( void );
-void main_vuart_rcv_set_mode( void );
+void main_vuart_set_mode( void );
 void main_vuart_rcv_data_frame( void );
 void main_vuart_rcv_data_calc( void );
 void main_vuart_rcv_data_end( void );
@@ -1640,6 +1640,8 @@ STATIC void main_cpu_com_rcv_date_set( void )
 /************************************************************************/
 STATIC void main_cpu_com_rcv_sts_res( void )
 {
+	UW now_time;
+	
 	// H1Dイベント処理
 	if( EVENT_NON != s_ds.cpu_com.input.rcv_data[0] ){
 		// 以降状態へ変更
@@ -1682,6 +1684,14 @@ STATIC void main_cpu_com_rcv_sts_res( void )
 
 	// 電池状態更新
 	s_unit.denchi_sts = s_ds.cpu_com.input.rcv_data[10];
+	
+	now_time = time_get_elapsed_time();
+	
+	if(( DENCH_ZANRYO_STS_MIN == s_unit.denchi_sts ) &&
+	   (( now_time - s_unit.last_time_dench_zanryou_min ) > TIME_CNT_DENCH_ZANRYO_MIN_INTERVAL )){
+		evt_act( EVENT_DENCH_LOW );			// 電池残量低下
+		s_unit.last_time_dench_zanryou_min = now_time;
+	}
 }
 
 /************************************************************************/
@@ -1999,7 +2009,7 @@ STATIC void main_vuart_send( UB *p_data, UB len )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_set_mode									*/
+/* 関数     : main_vuart_set_mode									*/
 /* 関数名   : VUART通信データセット										*/
 /* 引数     : VUART通信データ格納ポインタ								*/
 /*          : データ長													*/
@@ -2011,7 +2021,7 @@ STATIC void main_vuart_send( UB *p_data, UB len )
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-void main_vuart_rcv_set_mode( void )
+void main_vuart_set_mode( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	
@@ -2027,7 +2037,7 @@ void main_vuart_rcv_set_mode( void )
 
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_set_mode									*/
+/* 関数     : main_vuart_rcv_mode_chg									*/
 /* 関数名   : VUART通信データセット										*/
 /* 引数     : VUART通信データ格納ポインタ								*/
 /*          : データ長													*/
@@ -2049,7 +2059,7 @@ STATIC void main_vuart_rcv_mode_chg( void )
 	}else if( 3 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_GET_DATA );
 	}else if( 4 == s_ds.vuart.input.rcv_data[1] ){
-		main_vuart_rcv_set_mode();		// RD8001暫定：デバッグ用データ設定(SETコマンド_最終必要？)
+		main_vuart_set_mode();		// RD8001暫定：デバッグ用データ設定(SETコマンド_最終必要？)
 	}else if( 5 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_G1D_PRG );
 	}else if( 6 == s_ds.vuart.input.rcv_data[1] ){
@@ -2166,7 +2176,7 @@ void main_set_bd_adrs( UB* bda)
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_version									*/
+/* 関数     : main_vuart_rcv_device_info								*/
 /* 関数名   : VUART受信(デバイス情報)									*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2319,15 +2329,25 @@ STATIC void main_vuart_rcv_data_fin( void )
 /************************************************************************/
 void main_vuart_rcv_date( void )
 {
-	s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
-	s_ds.cpu_com.order.snd_data[0] = s_ds.vuart.input.rcv_data[1];
-	s_ds.cpu_com.order.snd_data[1] = s_ds.vuart.input.rcv_data[2];
-	s_ds.cpu_com.order.snd_data[2] = s_ds.vuart.input.rcv_data[3];
-	s_ds.cpu_com.order.snd_data[3] = s_ds.vuart.input.rcv_data[4];
-	s_ds.cpu_com.order.snd_data[4] = s_ds.vuart.input.rcv_data[5];
-	s_ds.cpu_com.order.snd_data[5] = s_ds.vuart.input.rcv_data[6];
-	s_ds.cpu_com.order.snd_data[6] = s_ds.vuart.input.rcv_data[7];
-	s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		tx[0] = VUART_CMD_DATE_SET;
+		tx[1] = VUART_DATA_RESULT_NG;
+		main_vuart_send( &tx[0], 2 );
+	}else{
+		// CPU間通信でブリッジ送信
+		s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
+		s_ds.cpu_com.order.snd_data[0] = s_ds.vuart.input.rcv_data[1];
+		s_ds.cpu_com.order.snd_data[1] = s_ds.vuart.input.rcv_data[2];
+		s_ds.cpu_com.order.snd_data[2] = s_ds.vuart.input.rcv_data[3];
+		s_ds.cpu_com.order.snd_data[3] = s_ds.vuart.input.rcv_data[4];
+		s_ds.cpu_com.order.snd_data[4] = s_ds.vuart.input.rcv_data[5];
+		s_ds.cpu_com.order.snd_data[5] = s_ds.vuart.input.rcv_data[6];
+		s_ds.cpu_com.order.snd_data[6] = s_ds.vuart.input.rcv_data[7];
+		s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
+	}
 }
 
 /************************************************************************/
@@ -2809,7 +2829,7 @@ STATIC void eep_part_erase( void )
 // =====================================
 
 /************************************************************************/
-/* 関数     : main_vuart_prg_rcv_hd_record								*/
+/* 関数     : main_vuart_rcv_prg_hd_record								*/
 /* 関数名   : H1Dプログラム書き換え(レコード書き込み)					*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2820,7 +2840,7 @@ STATIC void eep_part_erase( void )
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-STATIC void main_vuart_prg_rcv_hd_record( void )
+STATIC void main_vuart_rcv_prg_hd_record( void )
 {
 	UW adr;
 	
@@ -2842,7 +2862,7 @@ STATIC void main_vuart_prg_rcv_hd_record( void )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_prg_rcv_hd_result								*/
+/* 関数     : main_vuart_rcv_prg_hd_result								*/
 /* 関数名   : H1Dプログラム書き換え(転送結果)							*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2853,7 +2873,7 @@ STATIC void main_vuart_prg_rcv_hd_record( void )
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-STATIC void main_vuart_prg_rcv_hd_result(void)
+STATIC void main_vuart_rcv_prg_hd_result(void)
 {
 	//サム値組立
 	UB ret;
@@ -2897,7 +2917,7 @@ STATIC void main_vuart_prg_rcv_hd_result(void)
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_prg_rcv_hd_update								*/
+/* 関数     : main_vuart_rcv_prg_hd_update								*/
 /* 関数名   : H1Dプログラム書き換え(完了確認)							*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2908,7 +2928,7 @@ STATIC void main_vuart_prg_rcv_hd_result(void)
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-STATIC void main_vuart_prg_rcv_hd_update(void)
+STATIC void main_vuart_rcv_prg_hd_update(void)
 {
 #if FUNC_DEBUG_PRG_H1D_U == ON
 	// デバッグ用処理
