@@ -35,10 +35,10 @@
 
 /* for Profile Selection (Set to 0 if the profile is not selected.) */
 #ifndef USE_SAMPLE_PROFILE
-#define PRF_SEL_PXPM    1   /* Proximity Profile Monitor role */
-#define PRF_SEL_PXPR    1   /* Proximity Profile Reporter role */
-#define PRF_SEL_FMPL    1   /* Find Me Profile Locator role */
-#define PRF_SEL_FMPT    1   /* Find Me Profile Target role */
+#define PRF_SEL_PXPM    0   /* Proximity Profile Monitor role */
+#define PRF_SEL_PXPR    0   /* Proximity Profile Reporter role */
+#define PRF_SEL_FMPL    0   /* Find Me Profile Locator role */
+#define PRF_SEL_FMPT    0   /* Find Me Profile Target role */
 #define PRF_SEL_HTPC    0   /* Health Thermometer Profile Collector role */
 #define PRF_SEL_HTPT    0   /* Health Thermometer Profile Thermometer role */
 #define PRF_SEL_BLPC    0   /* Blood Pressure Profile Collector role */
@@ -58,8 +58,8 @@
 #define PRF_SEL_CPPS    0   /* Cycling Power Profile Sensor role */
 #define PRF_SEL_TIPC    0   /* Time Profile Client role */
 #define PRF_SEL_TIPS    0   /* Time Profile Server role */
-#define PRF_SEL_ANPC    1   /* Alert Notification Profile Client role */
-#define PRF_SEL_ANPS    1   /* Alert Notification Profile Server role */
+#define PRF_SEL_ANPC    0   /* Alert Notification Profile Client role */
+#define PRF_SEL_ANPS    0   /* Alert Notification Profile Server role */
 #define PRF_SEL_LNPS    0   /* Location and Navigation Profile Sensor role */
 #define PRF_SEL_LNPC    0   /* Location and Navigation Profile Collector role */
 #define PRF_SEL_PASC    0   /* Phone Alert Status Profile Client role */

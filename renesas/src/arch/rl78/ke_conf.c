@@ -213,7 +213,8 @@
 #include "rble_rwke.h"
 #ifdef CONFIG_EMBEDDED
 #include "rble_app.h"
-#include "..\sample_app\console.h"
+#include "..\sample_app\r_vuart_app.h"
+extern void codeptr r_console_in(void);
 #else
 #include "rscip_api.h"
 #endif
@@ -270,7 +271,7 @@ _TSK_DESC const evt_ptr_t ke_evt_hdlr_ent[32] =
     DESGN(KE_EVT_HCI_TX_DONE)  NULL,
 #endif
 
-    DESGN(KE_EVT_USR_0      )  NULL,	// place holder for user event (high priority)
+    DESGN(KE_EVT_USR_0      )  r_console_in,	// place holder for user event (high priority)
     DESGN(KE_EVT_USR_1      )  NULL,	// place holder for user event
     DESGN(KE_EVT_KE_TIMER   )  &ke_timer_schedule,
     DESGN(KE_EVT_KE_MESSAGE )  &ke_task_schedule,
@@ -285,6 +286,7 @@ _TSK_DESC const evt_ptr_t ke_evt_hdlr_ent[32] =
 #else
     DESGN(KE_EVT_HCI_RX_DONE)  NULL,
 #endif
+	//RD8001ëŒâû
     DESGN(KE_EVT_USR_2)  app_evt_usr_2,	// place holder for user event
     DESGN(KE_EVT_USR_3)  app_evt_usr_3,	// place holder for user event (low priority)
 };
@@ -370,7 +372,7 @@ _TSK_DESC const struct ke_task_desc TASK_DESC_ent[] =
     #if	__DTM2WIRE_UART_USE__
     DESGN(TASK_USR_0)  { MDT2Wire_state_handler, &MDT2Wire_default_handler, DTM2Wire_State, DTM2RBLE_STATE_MAX, DTM2RBLE_IDX_MAX },
     #else
-    DESGN(TASK_USR_0)  { cpu_com_state_handler, &cpu_com_default_handler, cpu_com_state, CPU_COM_STATE_MAX, CPU_COM_IDX_MAX },				//RD8001ÔøΩŒâÔøΩ
+    DESGN(TASK_USR_0)  { cpu_com_state_handler, &cpu_com_default_handler, cpu_com_state, CPU_COM_STATE_MAX, CPU_COM_IDX_MAX },				//RD8001ÅEΩŒâÔøΩ
     #endif
     DESGN(TASK_USR_1)  { NULL, NULL, NULL, 0, 0 },
     /* PLACE HOLDER FOR EMBEDDED USER TASKS : END */

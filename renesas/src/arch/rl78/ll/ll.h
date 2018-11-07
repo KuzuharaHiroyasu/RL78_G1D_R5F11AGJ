@@ -134,7 +134,11 @@
  *****************************************************************************************
  */
 #if defined(_USE_CCRL_RL78)
+#if 0		//RD8001ébíËÅFHALTî≈
  #define WFI()  __stop();
+#else
+ #define WFI()  __halt();
+#endif
 #else
  #define WFI()  __asm("stop");
 #endif

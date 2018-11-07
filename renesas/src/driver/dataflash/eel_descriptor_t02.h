@@ -40,7 +40,8 @@
 /* data id for descriptor */
 enum
 {
-    EEL_ID_BDA = 0x01,
+    EEL_ID_BDA = 0x1,
+    EEL_ID_REMOTE_BDA,
     EEL_ID_END
 };
 

@@ -122,9 +122,13 @@
 #elif defined(CLK_FCLK_8MHZ)
 #define UART_VAL_SPS_1MHZ   0x03U
 #define UART_VAL_SPS_2MHZ   0x02U
+#define UART_VAL_SPS_4MHZ   0x01U
+#define UART_VAL_SPS_8MHZ   0x00U
 #elif defined(CLK_FCLK_16MHZ)
 #define UART_VAL_SPS_1MHZ   0x04U
 #define UART_VAL_SPS_2MHZ   0x03U
+#define UART_VAL_SPS_4MHZ   0x02U
+#define UART_VAL_SPS_8MHZ   0x01U
 #elif defined(CLK_FCLK_32MHZ)
 #define UART_VAL_SPS_1MHZ   0x05U
 #define UART_VAL_SPS_2MHZ   0x04U
@@ -397,7 +401,8 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
         write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
         #else /*CONFIG_EMBEDDED*/
         /* MCK = fclk/n = 2MHz */
-        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_2MHZ)));
+//        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_2MHZ)));
+        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));
 		
 		//RD8001ëŒâû:É{Å[ÉåÅ[ÉgïœçX
 		#if 0
@@ -406,8 +411,14 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
         write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#else
         /* baudrate 250000bps(when MCK = 2MHz) */
-        write_sfrp(UART_TXD_SDR, (uint16_t)0x0600U);
-        write_sfrp(UART_RXD_SDR, (uint16_t)0x0600U);
+		#if defined(CLK_FCLK_8MHZ)
+		// 19200bps
+		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
+		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
+		#else
+		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
+		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
+		#endif
 		#endif
         #endif /*CONFIG_EMBEDDED*/
       #else
@@ -429,7 +440,7 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
       stop_flg = true;
       #else /*CONFIG_EMBEDDED*/
       /* if baudrate is over than 4800bps, set disable */
-      stop_flg = false;
+      stop_flg = true;		//RD8001ébíË
       #endif /*CONFIG_EMBEDDED*/
     #else
     /* if baudrate is over than 4800bps, set disable */
@@ -612,7 +623,7 @@ _UARTCODE void serial_write(const uint8_t *bufptr, const uint16_t size)
 
     GLOBAL_INT_RESTORE();
 #else
-	// ÔøΩfÔøΩoÔøΩbÔøΩO0xAAÔøΩÔøΩÔøΩM
+	// ÅEΩfÅEΩoÅEΩbÅEΩO0xAAÅEΩÅEΩÅEΩM
 	TXD0 = 0xAA;
 
 

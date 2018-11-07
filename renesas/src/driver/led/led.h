@@ -53,9 +53,11 @@
 //#define OFF          1
 
 ///10ms timer
+#define PERIOD_5SEC     500U
 #define PERIOD_1SEC     100U
-#define PERIOD_10MSEC   1U		//RD8001蟇ｾ蠢懶ｼ壼ｮ夂ｾｩ霑ｽ蜉
-#define PERIOD_50MSEC   5U		//RD8001蟇ｾ蠢懶ｼ壼ｮ夂ｾｩ霑ｽ蜉
+#define PERIOD_10MSEC   1U		//RD8001対応：定義追加
+#define PERIOD_20MSEC   2U		//RD8001対応：定義追加
+#define PERIOD_50MSEC   5U		//RD8001対応：定義追加
 #define PERIOD_100MSEC   10U
 
 ///TAU Configuration channel 00

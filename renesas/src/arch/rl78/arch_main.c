@@ -50,7 +50,7 @@ extern RBLE_STATUS RBLE_Application( void );
 #include "rble_modem_config.h"
 #else
 #include "rble_app.h"
-#include "console.h"
+#include "r_vuart_console.h"
 #endif
 #ifdef CFG_SAMPLE_BEACON
 #include "beacon_app.h"
@@ -68,6 +68,7 @@ extern RBLE_STATUS RBLE_Application( void );
 
 //RD8001対応
 #include	"header.h"		//ユーザー定義
+
 
 void arch_main_ent(void);
 void variables_init(void);
@@ -354,7 +355,9 @@ void arch_main_ent(void)
 	//RD8001対応：初期化
 	cpu_com_init();
 	eep_init();
-	
+	user_main_init();
+
+
     // And loop forever
     for (;;)
     {
@@ -373,18 +376,19 @@ void arch_main_ent(void)
             // check CPU can sleep
             if ((uint16_t)sleep_check_enable() != false)
             {
-                #ifndef CONFIG_EMBEDDED
-                /* Before CPU enters stop mode, this function must be called */
+                 /* Before CPU enters stop mode, this function must be called */
                 if ((uint16_t)wakeup_ready() != false)
-                #endif // #ifndef CONFIG_EMBEDDED
-                {
+                 {
                     // Wait for interrupt
+                    __no_operation();		// RD8001暫定：ブレイク貼り用
+                    __no_operation();		// RD8001暫定：ブレイク貼り用
+                    __no_operation();		// RD8001暫定：ブレイク貼り用
                     WFI();
-
-                    #ifndef CONFIG_EMBEDDED
+					__no_operation();		// RD8001暫定：ブレイク貼り用
+					__no_operation();		// RD8001暫定：ブレイク貼り用
+					__no_operation();		// RD8001暫定：ブレイク貼り用
                     /* After CPU is released stop mode, this function must be called immediately */
                     wakeup_finish();
-                    #endif // #ifndef CONFIG_EMBEDDED
                 }
             }
         }
@@ -454,12 +458,15 @@ static void host_db_init(void)
 /* User Sample */
 bool sleep_check_enable(void)
 {
-	//RD8001暫定：スリープ条件を入れる
-	//むやみにスリープに入れると正常に動作しない事があった　※デファインとの組み合わせ
 #if 0
 	return true;
 #else
-    return false;
+	bool ret;
+	//RD8001暫定：スリープ条件を入れる
+	//むやみにスリープに入れると正常に動作しない事があった　※デファインとの組み合わせ
+	ret = user_main_sleep();
+	
+	return ret;
 #endif
 }
 

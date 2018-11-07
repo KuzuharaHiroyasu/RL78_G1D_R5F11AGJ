@@ -158,8 +158,6 @@ void led2_set(int value)
 #endif
 }
 #endif //#ifdef _NO_USE
-char_t			Stream_Buffer2[ 10 ];
-char_t			Stream_Buffer_Read2[ 5 ];
 
 void led_init(void)
 {
@@ -181,90 +179,40 @@ void led_init(void)
     led_env.tick_10ms   = 0;
     led_env.tick_10ms_sec = 0;
     #endif
-
-	//RD8001暫定:定期起動
-//	ke_timer_set(CPU_COM_TIMER_API, TASK_USR_0, 2);
-
 }
 
-extern void serial_write(const uint8_t *bufptr, const uint16_t size);
-extern void serial_read(uint8_t *bufptr, const uint16_t size);
 
 
-int  dbg_cnt = 0;
 void led_blink(void)
 {
-
-	if( dbg_cnt == 0 ){
-		dbg_cnt = 99;
-		// テストコード
-		{
-////			uint8_t *ke_msg;
-
-//		    ke_msg = ke_msg_alloc( USER_MAIN_CYC_ACT, TASK_USR_0, TASK_USR_0, 0 );
-
-//		    ke_msg_send(ke_msg);
-
-//			ke_timer_clear(CPU_COM_TIMER_API, USER_MAIN_ID );
-//			ke_timer_set(CPU_COM_TIMER_API, USER_MAIN_ID, 1);
-
-
-//		    ke_msg = ke_msg_alloc( CPU_COM_TIMER_API, TASK_USR_0, TASK_USR_0, 0 );
-
-//		    ke_msg_send(ke_msg);
-
-		}
-		{
-			
-#if 0
-			cpu_com_proc();
-			Stream_Buffer2[0] = 0x30;
-			Stream_Buffer2[1] = 0x31;
-			Stream_Buffer2[2] = 0x32;
-			Stream_Buffer2[3] = 0x33;
-			Stream_Buffer2[4] = 0x34;
-			Stream_Buffer2[5] = 0x35;
-			Stream_Buffer2[6] = 0x36;
-			Stream_Buffer2[7] = 0x37;
-			Stream_Buffer2[8] = 0x38;
-			Stream_Buffer2[9] = 0x39;
-
-			serial_write( ( uint8_t * )&Stream_Buffer2[ 0 ], sizeof( Stream_Buffer2 ) );
-			serial_read( ( uint8_t * )&Stream_Buffer_Read2[ 0 ], sizeof( Stream_Buffer_Read2 ) );
-			__no_operation();
-			__no_operation();
-			__no_operation();
-			__no_operation();
-
-			
-			
-#endif
-      	}	
-	}
+	
 	
 #ifdef CONFIG_EMBEDDED
     //new time tick
-    if ((uint16_t)led_env.timer_flag == 1)
-    {
-      //clear timer flag
-      led_env.timer_flag = 0;
+	if ((uint16_t)led_env.timer_flag == 1)
+	{
+		//clear timer flag
+		led_env.timer_flag = 0;
+		
+		//RD8001暫定：時間は要検討
+		if(led_env.tick_10ms >= (uint16_t)PERIOD_20MSEC)
+		{
+			//toggle led1
+			//          toggle1_sfrbit(LED01);
+			//toggle led2
+			//          toggle1_sfrbit(LED02);
 
-      if(led_env.tick_10ms >= (uint16_t)PERIOD_50MSEC)
-      {
-          //toggle led1
-//          toggle1_sfrbit(LED01);
-          //toggle led2
-//          toggle1_sfrbit(LED02);
-          
-          ke_evt_set(KE_EVT_USR_3_BIT);
-          	
-          led_env.tick_10ms = 0;
-      }
-    if( led_env.tick_10ms_sec >= (uint16_t)PERIOD_1SEC)
-    {
-		led_env.tick_10ms_sec -= PERIOD_1SEC;
-        ke_evt_set(KE_EVT_USR_2_BIT);
-	}
+			ke_evt_set(KE_EVT_USR_3_BIT);
+
+			led_env.tick_10ms = 0;
+		}
+		if( led_env.tick_10ms_sec >= (uint16_t)PERIOD_1SEC)
+		{
+			led_env.tick_10ms_sec -= PERIOD_1SEC;
+			ke_evt_set(KE_EVT_USR_2_BIT);
+
+//			R_APP_VUART_Send_Char( &tx[0], 6 );
+		}
 	}
 #endif
 }
@@ -283,7 +231,7 @@ __IRQ void led_timer_isr (void)
 {
     led_env.timer_flag = 1;
     led_env.tick_10ms++;
-	led_env.tick_10ms_sec++;
+    led_env.tick_10ms_sec++;
 }
 #endif
 

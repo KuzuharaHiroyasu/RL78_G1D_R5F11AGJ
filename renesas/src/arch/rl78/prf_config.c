@@ -25,6 +25,8 @@
 #include "db_handle.h"
 #include "rble_api.h"
 
+#include "..\sample_profile\vuart\vuart.h"
+
 /**
  * VARIABLE DECLARATIONS
  ****************************************************************************************
@@ -124,6 +126,29 @@ const ke_task_id_t rscpc_task_id = TASK_RSCPC;
 #if PRF_SEL_RSCS
 const ke_task_id_t rscps_task_id = TASK_RSCPS;
 #endif
+
+/** Virtual UART Service */
+static const uint8_t vuart_svc[RBLE_GATT_128BIT_UUID_OCTET] = RBLE_SVC_VUART;
+
+/** Virtual UART Service Indication Characteristic */
+static const struct atts_char128_desc vuart_indication_char = {RBLE_GATT_CHAR_PROP_IND,
+                                                               {(uint8_t)(VUART_HDL_INDICATION_VAL & 0xFF), (uint8_t)(VUART_HDL_INDICATION_VAL >> 8) & 0xFF},
+                                                               RBLE_CHAR_VUART_INDICATION};
+
+uint8_t vuart_indication_char_val[20] = {0};
+struct atts_elmt_128 vuart_indication_char_val_elmt = {RBLE_CHAR_VUART_INDICATION,
+                                                       RBLE_GATT_128BIT_UUID_OCTET,
+                                                       &vuart_indication_char_val[0]};
+
+/** Virtual UART Service Write Characteristic */
+static const struct atts_char128_desc vuart_write_char = {RBLE_GATT_CHAR_PROP_WR,
+                                                          {(uint8_t)(VUART_HDL_WRITE_VAL & 0xFF), (uint8_t)(VUART_HDL_WRITE_VAL >> 8) & 0xFF},
+                                                          RBLE_CHAR_VUART_WRITE};
+uint8_t vuart_write_char_val[20] = {0};
+struct atts_elmt_128 vuart_write_char_val_elmt = {RBLE_CHAR_VUART_WRITE,
+                                                  RBLE_GATT_128BIT_UUID_OCTET,
+                                                  &vuart_write_char_val[0]};
+uint16_t vuart_indication_enable = 0x0000u;
 
 #if (USE_LINK_LOSS_SERVICE)
 /*********************************
@@ -1195,46 +1220,6 @@ struct atts_elmt_128 scps_ind_len_char_val_elmt = { RBLE_CHAR_SCP_IND_LEN,
 													&scps_ind_len_char_val };
 #endif /* #ifdef USE_SAMPLE_PROFILE */
 
-#ifdef USE_SIMPLE_SAMPLE_PROFILE
-
-#include "sam/sam.h"
-
-/*******************************
- * Simple Sample Service       *
- *******************************/
-/* Service (sams) */
-static const uint8_t sams_svc[RBLE_GATT_128BIT_UUID_OCTET] = RBLE_SVC_SAMPLE_CUSTOM_SVC;
-
-/* Characteristic(sams:switch_state) */
-static const struct atts_char128_desc switch_state_char = {
-	RBLE_GATT_CHAR_PROP_NTF,
-	{(uint8_t)(SAMS_HDL_SWITCH_STATE_VAL & 0xff),(uint8_t)((SAMS_HDL_SWITCH_STATE_VAL >> 8) & 0xff)},
-	RBLE_CHAR_SAMS_SWITCH_STATE};
-
-uint8_t switch_state_char_val[RBLE_ATTM_MAX_VALUE] = {0};
-
-struct atts_elmt_128 switch_state_char_val_elmt = {
-	RBLE_CHAR_SAMS_SWITCH_STATE,
-	RBLE_GATT_128BIT_UUID_OCTET,
-	&switch_state_char_val[0] };
-
-uint16_t switch_state_cccd = 0x0000u;
-
-/* Characteristic(sams:led_control) */
-static const struct atts_char128_desc led_control_char = {
-	RBLE_GATT_CHAR_PROP_RD | RBLE_GATT_CHAR_PROP_WR,
-	{(uint8_t)(SAMS_HDL_LED_CONTROL_VAL & 0xff),(uint8_t)((SAMS_HDL_LED_CONTROL_VAL >> 8) & 0xff)},
-	RBLE_CHAR_SAMS_LED_CONTROL};
-
-uint8_t led_control_char_val[1] = {0};
-
-struct atts_elmt_128 led_control_char_val_elmt = {
-	RBLE_CHAR_SAMS_LED_CONTROL,
-	RBLE_GATT_128BIT_UUID_OCTET,
-	&led_control_char_val[0] };
-
-#endif /* #ifdef USE_SIMPLE_SAMPLE_PROFILE */
-
 /** Attribute Database */
 const struct atts_desc atts_desc_list_prf[] =
 {
@@ -2113,30 +2098,24 @@ const struct atts_desc atts_desc_list_prf[] =
 		sizeof(scps_ind_len_char_val),		sizeof(scps_ind_len_char_val),	TASK_ATTID(TASK_RBLE, SCS_IDX_IND_LEN_VAL),			(RBLE_GATT_PERM_RD|RBLE_GATT_PERM_WR),	(void *)&scps_ind_len_char_val_elmt },
 	#endif /* #ifdef USE_SAMPLE_PROFILE */
 
-	#ifdef USE_SIMPLE_SAMPLE_PROFILE
 	/*********************************
-	 * Simple Sample Service         *
+	 * Virtual UART  service         *
 	 *********************************/
 	{ RBLE_DECL_PRIMARY_SERVICE,
-        sizeof(sams_svc),	sizeof(sams_svc),	TASK_ATTID(TASK_RBLE, SAMS_IDX_SVC),	RBLE_GATT_PERM_RD,	(void *)&sams_svc },
-	/* Characteristic: switch_state */
-	{ RBLE_DECL_CHARACTERISTIC,
-        sizeof(switch_state_char),	sizeof(switch_state_char),	TASK_ATTID(TASK_RBLE,SAMS_IDX_SWITCH_STATE_CHAR),	RBLE_GATT_PERM_RD,	(void *)&switch_state_char },
+		sizeof(vuart_svc),			sizeof(vuart_svc),			TASK_ATTID(TASK_RBLE, VUART_IDX_SVC),			RBLE_GATT_PERM_RD,			(void *)&vuart_svc },
+        { RBLE_DECL_CHARACTERISTIC,
+		sizeof(vuart_indication_char),		sizeof(vuart_indication_char),		TASK_ATTID(TASK_RBLE, VUART_IDX_INDICATION_CHAR),	RBLE_GATT_PERM_RD,			(void *)&vuart_indication_char },
 	{ DB_TYPE_128BIT_UUID,
-        sizeof(switch_state_char_val),	sizeof(switch_state_char_val),	TASK_ATTID(TASK_RBLE,SAMS_IDX_SWITCH_STATE_VAL),	(RBLE_GATT_PERM_NI),	(void *)&switch_state_char_val_elmt },
+		sizeof(vuart_indication_char_val),	sizeof(vuart_indication_char_val), 	TASK_ATTID(TASK_RBLE, VUART_IDX_INDICATION_VAL),	RBLE_GATT_PERM_NI,			(void *)&vuart_indication_char_val_elmt },
 	{ RBLE_DESC_CLIENT_CHAR_CONF,
-        sizeof(switch_state_cccd),	sizeof(switch_state_cccd),	TASK_ATTID(TASK_RBLE,SAMS_IDX_SWITCH_STATE_CCCD),	(RBLE_GATT_PERM_RD|RBLE_GATT_PERM_WR),	(void *)&switch_state_cccd },
-	/* Characteristic: led_control */
-	{ RBLE_DECL_CHARACTERISTIC,
-        sizeof(led_control_char),	sizeof(led_control_char),	TASK_ATTID(TASK_RBLE,SAMS_IDX_LED_CONTROL_CHAR),	RBLE_GATT_PERM_RD,	(void *)&led_control_char },
+		sizeof(vuart_indication_enable),	sizeof(vuart_indication_enable),	TASK_ATTID(TASK_RBLE, VUART_IDX_INDICATION_CFG),	(RBLE_GATT_PERM_RD|RBLE_GATT_PERM_WR),	(void *)&vuart_indication_enable },
+        { RBLE_DECL_CHARACTERISTIC,
+		sizeof(vuart_write_char),		sizeof(vuart_write_char),		TASK_ATTID(TASK_RBLE, VUART_IDX_WRITE_CHAR),		RBLE_GATT_PERM_RD,			(void *)&vuart_write_char },
 	{ DB_TYPE_128BIT_UUID,
-        sizeof(led_control_char_val),	sizeof(led_control_char_val),	TASK_ATTID(TASK_RBLE,SAMS_IDX_LED_CONTROL_VAL),	(RBLE_GATT_PERM_RD | RBLE_GATT_PERM_WR),	(void *)&led_control_char_val_elmt },
-	#endif /* #ifdef USE_SIMPLE_SAMPLE_PROFILE */
+		sizeof(vuart_write_char_val),		sizeof(vuart_write_char_val),		TASK_ATTID(TASK_RBLE, VUART_IDX_WRITE_VAL),		RBLE_GATT_PERM_WR,			(void *)&vuart_write_char_val_elmt },
 
 	/* Reserved */
 	{0,0,0,0,0,0}
 };
 
 const uint16_t ATT_PRF_DB_SIZE = sizeof(atts_desc_list_prf);
-
-

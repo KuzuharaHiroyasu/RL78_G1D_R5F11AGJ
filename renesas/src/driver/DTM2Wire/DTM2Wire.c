@@ -133,8 +133,6 @@ bool DTM2Wire_Check( void )
 	} else {
 		Ret = false;
 	}
-	//Ret = false;
-
 #else
 	/* VBUS CHECK */
 	write1_sfr( PM3, 0, PORT_INPUT );
