@@ -87,7 +87,7 @@
  * GAP Device name Characteristic
  * Default device name
  */
-#define GAP_DEV_NAME					"Renesas-BLE"
+#define GAP_DEV_NAME					"Sleeim"
 #define GAP_DEV_NAME_SIZE				(sizeof(GAP_DEV_NAME) - 1)
 
 /*
