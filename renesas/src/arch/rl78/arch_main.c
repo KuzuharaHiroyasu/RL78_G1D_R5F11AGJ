@@ -243,6 +243,7 @@ void arch_main_ent(void)
      * Platform initialization
      ************************************************************************************
      */
+     user_system_init();		// RD8001対応：ユーザーシステムドライバ初期化 ※BLE処理前に行う
      
     // init global variables
     variables_init();
@@ -352,11 +353,8 @@ void arch_main_ent(void)
 }
 #endif
 #endif
-	//RD8001対応：初期化
-	cpu_com_init();
-	eep_init();
+	//RD8001対応：ユーザーアプリ初期化
 	user_main_init();
-
 
     // And loop forever
     for (;;)
@@ -383,10 +381,12 @@ void arch_main_ent(void)
                     __no_operation();		// RD8001暫定：ブレイク貼り用
                     __no_operation();		// RD8001暫定：ブレイク貼り用
                     __no_operation();		// RD8001暫定：ブレイク貼り用
+					//write1_sfr(P1, 6, 1);		// 空きポートによるスリープ計測
                     WFI();
 					__no_operation();		// RD8001暫定：ブレイク貼り用
 					__no_operation();		// RD8001暫定：ブレイク貼り用
 					__no_operation();		// RD8001暫定：ブレイク貼り用
+					//write1_sfr(P1, 6, 0);		// 空きポートによるスリープ計測
                     /* After CPU is released stop mode, this function must be called immediately */
                     wakeup_finish();
                 }

@@ -13,7 +13,7 @@
 /************************************************************/
 // デバイス関連
 #define EEP_DEVICE_ADR			0xA0				// デバイスアドレス
-#define EEP_RECORD_SIZE			8					// 1レコードサイズ ※256の約数である必要がある
+#define EEP_RECORD_SIZE			8					// 1レコードサイズ ※256の約数とするページ跨ぎを行いたくない為
 #define EEP_ADRS_SIZE			2					// アドレスサイズ
 
 #define EEP_DATA_SIZE_ALL		131072				// EEP全サイズ
@@ -22,25 +22,32 @@
 #define EEP_ACCESS_ONCE_SIZE	256					// アクセスサイズ１回
 
 
-// 機能仕様
-#define EEP_CACL_DATA_SIZE			8		//ダミー含む
+
+// データ数
 #define EEP_CACL_DATA_NUM			1440
-
-#define EEP_FRAM_OTHER_SIZE			16		// その他御(時間,最高無呼吸,演算回数)
-
-#define EEP_FRAME_SIZE				(UW)(( EEP_CACL_DATA_SIZE * 1440 ) + EEP_FRAM_OTHER_SIZE )
-
 #define EEP_FRAME_MAX				10
 
+// EEPデータサイズ
+#define EEP_CACL_DATA_SIZE			8		//ダミー含む
+#define EEP_FRAM_ADD_SIZE			16		// フレーム用付加情報(時間,最高無呼吸,演算回数)
+#define EEP_FRAME_SIZE				(UW)(( EEP_CACL_DATA_SIZE * 1440 ) + EEP_FRAM_ADD_SIZE )
+#define EEP_SETTING_SIZE			2		
+#define EEP_ALARM_SIZE				8
+#define EEP_DATE_SIZE				7
 
-// EEPアドレスの先頭
+
+
+// 先頭アドレス
+#define EEP_ADRS_TOP_FRAME				0													// フレームの先頭
 #define EEP_ADRS_TOP_FRAME_CALC_CNT		(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 10 )
+#define EEP_ADRS_TOP_FRAME_DATE			(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 0 )
+#define EEP_ADRS_TOP_SETTING			(UW)( EEP_FRAME_SIZE * EEP_FRAME_MAX )				// 設定
+#define EEP_ADRS_TOP_ALARM				(UW)( EEP_ADRS_TOP_SETTING + EEP_SETTING_SIZE )		// 警告機能
+#define EEP_ADRS_DATA_TYPE				(UW)( EEP_DATA_SIZE_ALL - 1 )						// EEP種別(最終アドレス) ※通常時(0x00),プログラム転送(0xAA)
 
-#define EEP_ADRS_TOP_FRAME				0											//フレームの先頭
-#define EEP_ADRS_TOP_SETTING			(UW)( EEP_FRAME_SIZE * EEP_FRAME_MAX )		//設定
-
-
-
+// ラベル
+#define EEP_DATA_TYPE_NORMAL			0x00		// 通常時(0x00)
+#define EEP_DATA_TYPE_PRG				0xAA		// プログラム転送(0xAA)
 
 
 // RD8001暫定：デバッグコード

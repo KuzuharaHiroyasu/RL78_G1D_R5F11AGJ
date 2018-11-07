@@ -31,21 +31,6 @@
 #include	"port.h"
 
 
-/************************************************************************/
-/* システム名   : RD1402 パチンコ/パチスロ用呼び出しランプ				*/
-/* ファイル名   : cpu_com.c												*/
-/* 機能         : CPU間通信ミドル										*/
-/* 変更履歴     : 2014.05.08 Axia Soft Design 吉居		初版作成		*/
-/* 注意事項     : なし													*/
-/************************************************************************/
-//RD1508暫定：見直しが必要
-/********************/
-/*     include      */
-/********************/
-//#include	"header.h"
-
-
-
 /********************/
 /* プロトタイプ宣言 */
 /********************/
@@ -137,16 +122,14 @@ STATIC const T_CPU_COM_CMD_INFO s_tbl_cmd_info[CPU_COM_CMD_MAX] = {
 	{	0xA0,	CPU_COM_CMD_TYPE_ONESHOT_RCV,		0,				0,					0	},	/* センサーデータ更新		*/
 	{	0xB0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 状態変更(G1D)			*/
 	{	0xF0,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* PCログ送信(内部コマンド)	*/
-																								// プログラム更新
-	{	0xC0,	CPU_COM_CMD_TYPE_RETRY,				5,				3,					0	},	/* プログラム転送開始 */
-	{	0xC1,	CPU_COM_CMD_TYPE_RETRY,				5,				3,					0	},	/* プログラム転送データ要求 */
-	{	0xC2,	CPU_COM_CMD_TYPE_ONESHOT_RCV,		5,				3,					0	},	/* プログラム転送(受信)	*/
-	{	0xC3,	CPU_COM_CMD_TYPE_RETRY,				5,				3,					0	},	/* プログラム転送サム値要求 */
-	{	0xCF,	CPU_COM_CMD_TYPE_RETRY,				5,				3,					0	},	/* プログラム転送結果要求 */
-	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				5,				3,					0	},	/* ファイル転送開始 */
-	{	0xD1,	CPU_COM_CMD_TYPE_RENSOU,			0,				0,					3	},	/* ファイル転送(連送) */
-	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				5,				10,					0	},	/* ブロック転送結果要求 */
-	{	0xDF,	CPU_COM_CMD_TYPE_RETRY,				5,				10,					0	},	/* ファイル転送結果要求 *///SH側の結果が遅くなる事があった為
+	{	0xB1,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 日時設定					*/
+																								// 以降プログラム更新
+	{	0xD5,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送準備		*/
+	{	0xD2,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送開始		*/
+	{	0xD4,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送消去		*/
+	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送データ		*/
+	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送結果		*/
+	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				5,					0	},	/* プログラム転送確認		*/
 };
 
 
@@ -364,7 +347,7 @@ UB get_cpu_com_send_req( DS_CPU_COM_ORDER *order, DS_CPU_COM_INPUT *input )
 			/* 何もしない */
 		}
 		
-		/* RD1402暫定 リトライ待ち時間によってはWDTリフレッシュ処理必要 */
+		/* RD8001暫定 リトライ待ち時間によってはWDTリフレッシュ処理必要 */
 		//wdt_refresh();
 	}
 	
@@ -574,8 +557,7 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 /* 関数名   : 周期送信処理												*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
-/*          : 2016.03.10  Axia Soft Design 西島		シーケンスチェック削除(RD1508対応) */
+/* 変更履歴 : 2018.03.10  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 周期送信処理													*/
 /* 送信処理および送信ステータス(ミドル)の変更を行う						*/
@@ -595,7 +577,7 @@ STATIC void cpu_com_send_proc(void)
 	ke_time_t now_time;
 //	ke_time_t time;
 	UB send_status;
-//	UH res_seq_expect;	/* 前回送信時シーケンスNo *///RD1508削除予定：シーケンス
+//	UH res_seq_expect;	/* 前回送信時シーケンスNo *///RD8001削除予定：シーケンス
 	
 	/* ドライバの送信状態を取得 */
 	drv_cpu_com_get_send_status( &send_status );
@@ -607,9 +589,9 @@ STATIC void cpu_com_send_proc(void)
 	switch( s_cpu_com_snd_status ){
 		case CPU_COM_SND_STATUS_RCV_WAIT:
 			/* 受信待ち状態 */
-//			res_seq_expect = s_cpu_com_snd_seq_no-1;//RD1508削除予定：シーケンス
+//			res_seq_expect = s_cpu_com_snd_seq_no-1;//RD8001削除予定：シーケンス
 
-#if 1		//RD1508暫定	シーケンスチェックは無くす予定
+#if 1		//RD8001暫定	シーケンスチェックは無くす予定
 			if( s_cpu_com_snd_cmd == s_cpu_com_ds_input.rcv_cmd ){
 #else
 			if(( s_cpu_com_snd_cmd == s_cpu_com_ds_input.rcv_cmd ) &&
@@ -804,25 +786,6 @@ STATIC UB cpu_com_make_send_data(void)
 	s_cpu_com_snd_data[pos] = s_cpu_com_snd_seq_no;
 	pos += CPU_COM_SEQ_SIZE;
 
-	//RD1508暫定
-#if FUNC_DBG_CPU_COM_LOG_EVENT == ON
-	if( s_cpu_com_snd_cmd == 0xA0 ){
-		//RD1508暫定：CPU間通信デバッグ用処理
-#if 0
-		if( s_p_cpu_com_ds_order->snd_data[0] == 214 ){
-//			return FALSE;
-		}
-#endif
-		com_srv_printf(COM_SRV_LOG_COMMAND,(const B*)"CPUCOM 表示更新:%d\r\n",s_p_cpu_com_ds_order->snd_data[0] + ( s_p_cpu_com_ds_order->snd_data[1] << 8 ));
-	}
-	if( 0xA1 == s_cpu_com_snd_cmd ){
-		com_srv_printf(COM_SRV_LOG_DISP,(const B*)"CPUCOM イベント:%d\r\n",s_p_cpu_com_ds_order->snd_data[0] + ( s_p_cpu_com_ds_order->snd_data[1] << 8 ));
-	}
-	if( 0xA2 == s_cpu_com_snd_cmd ){
-		//ステータス要求
-		com_srv_puts(COM_SRV_LOG_COMMAND,(const B*)"CPUCOM ステータス要求\r\n");
-	}
-#endif
 	/* データのセット */
 	memcpy( &s_cpu_com_snd_data[pos], s_p_cpu_com_ds_order->snd_data, size );
 	pos += size;
@@ -985,149 +948,6 @@ UB cpu_com_get_busy( void )
 	return s_cpu_com_snd_flg;
 }
 
-
-#if 0
-/************************************************************************/
-/* 関数     : cpu_com_file_write										*/
-/* 関数名   : ファイル書込み											*/
-/* 引数     : *p_buf	書き込みデータ									*/
-/*          : size		サイズ											*/
-/*          : adrs		アドレス										*/
-/*          : file_no	ファイル番号									*/
-/* 戻り値   : TRUE		成功											*/
-/*          : FALSE		失敗											*/
-/* 変更履歴 : 2015.10.23 Axia Soft Design 西島		初版作成			*/
-/************************************************************************/
-/* 機能 : ファイル書込み												*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-UB cpu_com_file_write( UB* p_buf, UH size, UW adrs, UB file_no )
-{
-	UB ret;
-	DS_CPU_COM_ORDER	com_order;
-	DS_CPU_COM_INPUT	com_input;
-	UB adrs_num[4];
-	UB file_num[2];
-	UB size_num[2];
-
-	/* サブマイコン操作開始コマンド送信 */
-	com_order.snd_cmd_id = CPU_COM_CMD_FILE_WRITE;
-
-	/* ファイル番号のセット */
-	chg_uh_ub( file_no, &file_num[1], &file_num[0] );
-	com_order.snd_data[0] = file_num[0];
-	com_order.snd_data[1] = file_num[1];
-	// ブロック番号
-	
-	chg_uw_ub( adrs, &adrs_num[3], &adrs_num[2], &adrs_num[1], &adrs_num[0] );
-	com_order.snd_data[2] = adrs_num[0];
-	com_order.snd_data[3] = adrs_num[1];
-	com_order.snd_data[4] = adrs_num[2];
-	com_order.snd_data[5] = adrs_num[3];
-
-	chg_uh_ub( size, &size_num[1], &size_num[0] );
-	com_order.snd_data[6] = size_num[0];
-	com_order.snd_data[7] = size_num[1];
-	memcpy( &com_order.snd_data[8], p_buf, SD_MOVE_ACCESS_SIZE );
-	
-	com_order.data_size = SD_MOVE_ACCESS_SIZE + 8;
-	ret = get_cpu_com_send_req( &com_order, &com_input );
-	
-	//RD1508暫定：デバッグコード　相手側が有効になったら無効
-//	return TRUE;
-	
-	
-	if(( CPU_COM_SND_RES_OK != ret ) || ( 0 != com_input.rcv_data[0] )){
-		return FALSE;
-	}
-	if( CPU_COM_SND_STATUS_COMPLETE != com_input.cpu_com_send_status ){
-		return FALSE;
-	}
-	
-	return TRUE;
-}
-
-/************************************************************************/
-/* 関数     : cpu_com_file_read											*/
-/* 関数名   : ファイル読み出し											*/
-/* 引数     : *p_buf	書き込みデータ									*/
-/*          : size		サイズ											*/
-/*          : block		ブロック										*/
-/*          : file_no	ファイル番号									*/
-/* 戻り値   : TRUE		成功											*/
-/*          : FALSE		失敗											*/
-/* 変更履歴 : 2015.10.23 Axia Soft Design 西島		初版作成			*/
-/************************************************************************/
-/* 機能 : ファイル書込み												*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-UB cpu_com_file_read( UB* p_buf, UH read_size, UW adrs, UB file_no )
-{
-	UB ret;
-	DS_CPU_COM_ORDER	com_order;
-	DS_CPU_COM_INPUT	com_input;
-	UB adrs_num[4];
-	UB file_num[2];
-	UB size_num[2];
-	int i;
-	UB *p_data;
-	UH size;
-	
-	/* サブマイコン操作開始コマンド送信 */
-	com_order.snd_cmd_id = CPU_COM_CMD_FILE_READ;
-
-	/* ファイル番号のセット */
-	chg_uh_ub( file_no, &file_num[1], &file_num[0] );
-	com_order.snd_data[0] = file_num[0];
-	com_order.snd_data[1] = file_num[1];
-
-	/* ブロック番号のセット */
-	chg_uw_ub( adrs, &adrs_num[3], &adrs_num[2], &adrs_num[1], &adrs_num[0] );
-	com_order.snd_data[2] = adrs_num[0];
-	com_order.snd_data[3] = adrs_num[1];
-	com_order.snd_data[4] = adrs_num[2];
-	com_order.snd_data[5] = adrs_num[3];
-
-	chg_uh_ub( read_size, &size_num[1], &size_num[0] );
-	com_order.snd_data[6] = size_num[0];
-	com_order.snd_data[7] = size_num[1];
-
-	com_order.data_size = 8;
-	ret = get_cpu_com_send_req( &com_order, &com_input );
-	
-	//RD1508暫定：デバッグコード　相手側が有効になったら無効
-//	return TRUE;
-
-	if(( CPU_COM_SND_RES_OK != ret ) || ( 0 != com_input.rcv_data[0] )){
-		return FALSE;
-	}
-	if( CPU_COM_SND_STATUS_COMPLETE != com_input.cpu_com_send_status ){
-		return FALSE;
-	}
-	p_data = &com_input.rcv_data[0];
-	
-	p_data++;	// 結果読み飛ばし
-	
-	/* データ長 */
-	size = (*(UH*)p_data);
-	p_data++;	// データ長読み飛ばし
-	p_data++;	// データ長読み飛ばし
-	
-	// 指定サイズと読み出しサイズが違う
-	if( size != read_size ){
-		return FALSE;
-	}
-	
-	/* ファイル読み出し処理 */
-	for( i = 0;i < size ; i++ ){
-		p_buf[i] = p_data[i];
-	}
-	
-	return TRUE;
-}
-#endif
 
 STATIC UB			s_drv_cpu_com_snd_status;							/* CPU間通信送信ステータス */
 /************************************************************************/

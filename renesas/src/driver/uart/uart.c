@@ -402,7 +402,6 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
         #else /*CONFIG_EMBEDDED*/
         /* MCK = fclk/n = 2MHz */
 //        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_2MHZ)));
-        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));
 		
 		//RD8001対応:ボーレート変更
 		#if 0
@@ -413,9 +412,12 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
         /* baudrate 250000bps(when MCK = 2MHz) */
 		#if defined(CLK_FCLK_8MHZ)
 		// 19200bps
+        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));
 		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#else
+		//16MHz時
+        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_8MHZ)));
 		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#endif

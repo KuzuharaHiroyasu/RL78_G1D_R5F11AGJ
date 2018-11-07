@@ -71,21 +71,20 @@ const B		version_product_tbl[]= {1, 9, 2, 0};				/* ソフトウェアバージョン */
 /* 受信データ処理 関数テーブル */
 STATIC const CPU_COM_RCV_CMD_TBL s_cpu_com_rcv_func_tbl[CPU_COM_CMD_MAX] = {
 	/* コマンド */		/* 関数  */					/* 応答有無 */
-	{	0x00,			NULL,							OFF	},	/* 【CPU間通信コマンド】コマンド無し				*/
-	{	0xE0,			main_cpu_com_rcv_sts_res,		OFF	},	/* 【CPU間通信コマンド】ステータス要求				*/
-	{	0xA0,			main_cpu_com_rcv_sensor_res,	OFF	},	/* 【CPU間通信コマンド】センサーデータ更新			*/
-	{	0xB0,			main_cpu_com_rcv_mode_chg,		OFF	},	/* 【CPU間通信コマンド】状態変更(G1D)				*/
-	{	0xF0,			NULL,							OFF	},	/* 【CPU間通信コマンド】PCログ送信(内部コマンド)	*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】プログラム転送開始		*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】プログラム転送データ要求 */
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】プログラム転送(受信)	*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】プログラム転送サム値要求 */
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】プログラム転送結果要求	*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】ファイル転送開始		*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】ファイル転送			*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】ブロック転送結果要求	*/
-	{	0xFF,			NULL,							OFF	},	/* 【CPU間通信コマンド】ファイル転送結果要求	*/
+	{	0x00,			NULL,								OFF	},	/* 【CPU間通信コマンド】コマンド無し				*/
+	{	0xE0,			main_cpu_com_rcv_sts_res,			OFF	},	/* 【CPU間通信コマンド】ステータス要求				*/
+	{	0xA0,			main_cpu_com_rcv_sensor_res,		OFF	},	/* 【CPU間通信コマンド】センサーデータ更新			*/
+	{	0xB0,			main_cpu_com_rcv_mode_chg,			OFF	},	/* 【CPU間通信コマンド】状態変更(G1D)				*/
+	{	0xF0,			NULL,								OFF	},	/* 【CPU間通信コマンド】PCログ送信(内部コマンド)	*/
+	{	0xB1,			main_cpu_com_rcv_date_set,			OFF	},	/* 【CPU間通信コマンド】日時設定					*/
+	{	0xD5,			main_cpu_com_rcv_prg_hd_ready,		OFF	},	/* 【CPU間通信コマンド】プログラム転送準備		*/
+	{	0xD2,			main_cpu_com_rcv_prg_hd_start,		OFF	},	/* 【CPU間通信コマンド】プログラム転送開始		*/
+	{	0xD4,			main_cpu_com_rcv_prg_hd_erase,		OFF	},	/* 【CPU間通信コマンド】プログラム転送消去		*/
+	{	0xD0,			main_cpu_com_rcv_prg_hd_data,		OFF	},	/* 【CPU間通信コマンド】プログラム転送データ		*/
+	{	0xD1,			main_cpu_com_rcv_prg_hd_reslut,		OFF	},	/* 【CPU間通信コマンド】プログラム転送結果		*/
+	{	0xD3,			main_cpu_com_rcv_prg_hd_check,		OFF	},	/* 【CPU間通信コマンド】プログラム転送確認		*/
 };
+
 
 /* モード別処理 */
 #if 0

@@ -214,19 +214,6 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	
 }
 
-int dbg_cnt2 = 0;
-void wait_ms( int ms )
-{
-	int i,j;
-	
-	for(i = 0; i < ms; i++ ){
-		for(j = 0; j < 100; j++ ){
-			WAIT_10US()
-			WAIT_10US()
-			dbg_cnt2++;
-		}
-	}
-}
 
 
 

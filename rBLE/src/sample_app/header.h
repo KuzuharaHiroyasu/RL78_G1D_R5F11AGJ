@@ -28,10 +28,12 @@
 #include "r_cg_iica.h"
 #include "r_cg_port.h"
 #include "r_cg_intp.h"
+#include "r_cg_it.h"
 
 /* ミドル */
 #include "eep.h"
 #include "cpu_com.h"
+#include "calc_data.h"
 
 /* アプリケーション */
 #include "user_main.h"

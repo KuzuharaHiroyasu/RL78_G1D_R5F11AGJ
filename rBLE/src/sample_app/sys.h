@@ -184,6 +184,8 @@
 #define		FUNC_DEBUG_CALC_NON						OFF					/* G1DにSLEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
 
 
+#define		FUNC_DEBUG_PRG_H1D_U					OFF					/* 評価ボード単独で擬似デバッグ(上位側) */
+#define		FUNC_DEBUG_PRG_H1D_D					OFF					/* 評価ボード単独で擬似デバッグ(下位側) */
 
 
 /************************************************************/
@@ -308,15 +310,14 @@ typedef struct{
 /************************************************************/
 /* 外部参照宣言												*/
 /************************************************************/
+UB calc_sum( UB *p_in, INT len );
+void calc_sum_uw_cont( UW* sum, UB *p_in, INT len );
 void ring_buf_init( RING_BUF* p_ring, UB* p_data, UH size);
 INT read_ring_buf( RING_BUF* p_ring, UB* p_data );
 INT write_ring_buf( RING_BUF* p_ring ,UB data );
-UB	hex2bin(UB num);
-UB	uwhex2bin(UW *bin, UB *pstr);
-UB bcdbin( UB bin );
-INT bcd2bin( UB *bin, const UB *src_bcd );
 void dummy( void );
 UH crc16( UB* p_in, int len );
+void wait_ms( int ms );
 
 
 #endif

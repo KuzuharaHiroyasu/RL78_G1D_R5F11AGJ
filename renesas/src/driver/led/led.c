@@ -100,6 +100,19 @@ static void led_pin_init(void)
     write1_sfr(PM6, 0, PORT_OUTPUT);
 #endif
 #endif
+	// 空きポートによるスリープ計測用途
+#if 0
+    // set digital in/out mode
+    write1_sfr(PMC14, 7, 0);
+
+    //clear port register(extension board LED)
+    write1_sfr(P1, 6, 0);
+
+    //use port as output
+    write1_sfr(PM1,  6, PORT_OUTPUT);
+
+    write1_sfr(P1, 6, 1);
+#endif
 }
 
 
@@ -217,6 +230,14 @@ void led_blink(void)
 #endif
 }
 
+void timer_10ms_set(void)
+{
+    led_env.timer_flag = 1;
+    led_env.tick_10ms++;
+    led_env.tick_10ms_sec++;
+}
+
+
 #ifdef CONFIG_EMBEDDED
 #if defined(_USE_IAR_RL78)
 #pragma vector=INTTM00_vect
@@ -229,9 +250,12 @@ void led_blink(void)
 #endif
 __IRQ void led_timer_isr (void)
 {
+#if 0
     led_env.timer_flag = 1;
     led_env.tick_10ms++;
     led_env.tick_10ms_sec++;
+#endif
+//	timer_10ms_set();
 }
 #endif
 

@@ -30,6 +30,208 @@ extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int
 /************************************************************/
 /* 定数定義													*/
 /************************************************************/
+double testdata[200] = {
+2.13E-09	,
+0.00175	,
+0.001177	,
+0.001252	,
+0.001058	,
+0.000919	,
+0.000846	,
+0.000692	,
+0.00073	,
+0.000747	,
+0.00085	,
+0.000778	,
+0.000895	,
+0.000532	,
+0.000653	,
+0.000663	,
+0.000523	,
+0.000371	,
+0.000395	,
+0.000442	,
+0.000485	,
+0.000409	,
+0.000313	,
+0.000385	,
+0.000303	,
+0.000424	,
+0.000229	,
+0.000331	,
+0.000358	,
+0.000647	,
+0.003076	,
+0.000976	,
+0.003477	,
+0.007533	,
+0.004274	,
+0.001841	,
+0.001855	,
+0.00491	,
+0.005161	,
+0.001699	,
+0.006384	,
+0.010133	,
+0.007526	,
+0.008098	,
+0.008439	,
+0.010036	,
+0.020092	,
+0.015954	,
+0.022169	,
+0.009964	,
+0.016372	,
+0.019976	,
+0.024601	,
+0.018608	,
+0.011553	,
+0.01562	,
+0.012082	,
+0.012445	,
+0.015959	,
+0.0131	,
+0.013951	,
+0.016809	,
+0.011544	,
+0.005925	,
+0.010148	,
+0.006467	,
+0.000885	,
+0.001294	,
+0.00177	,
+0.000786	,
+0.000357	,
+0.000285	,
+0.00071	,
+0.000555	,
+0.000948	,
+0.001025	,
+0.001031	,
+0.001049	,
+0.001734	,
+0.001295	,
+0.001216	,
+0.001169	,
+0.000986	,
+0.000954	,
+0.001214	,
+0.001439	,
+0.001188	,
+0.000676	,
+0.000989	,
+0.000804	,
+0.000597	,
+0.000459	,
+0.000555	,
+0.000554	,
+0.000562	,
+0.000414	,
+0.000427	,
+0.00052	,
+0.000302	,
+0.000405	,
+0.000337	,
+0.000435	,
+0.000378	,
+0.000407	,
+0.000291	,
+0.000372	,
+0.000307	,
+0.000267	,
+0.000422	,
+0.000382	,
+0.000333	,
+0.000508	,
+0.000904	,
+0.00225	,
+0.001633	,
+0.003458	,
+0.006366	,
+0.006567	,
+0.004072	,
+0.003156	,
+0.002344	,
+0.003789	,
+0.002523	,
+0.011624	,
+0.011585	,
+0.006825	,
+0.012725	,
+0.011001	,
+0.011634	,
+0.015454	,
+0.011612	,
+0.020081	,
+0.023051	,
+0.034028	,
+0.016602	,
+0.014532	,
+0.016364	,
+0.014282	,
+0.020808	,
+0.017404	,
+0.011535	,
+0.00961	,
+0.011874	,
+0.011798	,
+0.010825	,
+0.010439	,
+0.007177	,
+0.005823	,
+0.005814	,
+0.003869	,
+0.002658	,
+0.002349	,
+0.000775	,
+0.001449	,
+0.000352	,
+0.000411	,
+0.000629	,
+0.001271	,
+0.001094	,
+0.001115	,
+0.001671	,
+0.00093	,
+0.001544	,
+0.001069	,
+0.001628	,
+0.002096	,
+0.001503	,
+0.001267	,
+0.000836	,
+0.00161	,
+0.001324	,
+0.001352	,
+0.001152	,
+0.001076	,
+0.000602	,
+0.000541	,
+0.000611	,
+0.000587	,
+0.000809	,
+0.000512	,
+0.000449	,
+0.000522	,
+0.000389	,
+0.00049	,
+0.000386	,
+0.000418	,
+0.00052	,
+0.000369	,
+0.000451	,
+0.000506	,
+0.000356	,
+0.000421	,
+0.000336	,
+0.000354	,
+0.000338	,
+0.000341	,
+0.000439	,
+0.000349	,
+0.000429	,
+0.000311
+};
 
 /************************************************************/
 /* 変数定義													*/
@@ -63,7 +265,6 @@ void calculator_apnea(const UH *data)
 	//データサイズ制限
 	datasize = DATA_SIZE_APNEA;
 	ptest1 = &temp_dbl_buf0[0];							//calloc
-	memset(temp_dbl_buf0,0,datasize*sizeof(double));
 	for(ii=0;ii<datasize;++ii){
 		ptest1[ii] = (double)data[ii];
 	}
@@ -84,9 +285,11 @@ void calculator_apnea(const UH *data)
 	
 	// (35) - (47)
 	calc_apnea(ptest1, datasize, 450, 0.0015f, 0.002f);
+//	calc_apnea(testdata, 200, 450, 0.0015f, 0.002f);
 	
 	// (48) - (56)
 	calc_snore(ptest1, datasize, 0.0125f);
+//	calc_snore(testdata, 200, 0.0125f);
 	
 	// (57)
 	
@@ -230,16 +433,15 @@ void calc_pp(const double* pData, int DSize, double Param1)
 void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3)
 {
 	double* pave;
-	double* peval2;
 	int datasize;
 	double* prms;
 	double* ppoint;
-	double* papnea;
 	double ave = 0.0f;
 	int ii;
 	int jj;
 	int min=0;
 	int loop=0;
+	int apnea=0;
 	
 	// (35) = Param1
 	// (36) = Param2
@@ -274,28 +476,18 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 		pave[ii] = ave;
 	}
 	
-	// (38) - (39)
-	peval2 = &temp_dbl_buf2[0];
-	for(ii=0;ii<DSize;++ii){
-		if(pave[ii] >= Param2){
-			peval2[ii] = 1;
-		}else{
-			peval2[ii] = 0;
-		}
-	}
-	
 	// (41) ... 使用していないため省略
 	// (42)
 	// (43) = prms
-	datasize = DSize / 100;
+	datasize = DSize / 20;
 	prms = &temp_dbl_buf1[0];
 	for(ii=0;ii<datasize;++ii){
 		double tmp = 0.0f;
 		prms[ii] = 0.0f;
-		for(jj=0;jj<100;++jj){
-			tmp += (pData[ii*100 + jj]*pData[ii*100 + jj]);
+		for(jj=0;jj<20;++jj){
+			tmp += (pData[ii*20 + jj]*pData[ii*20 + jj]);
 		}
-		tmp /= 100;
+		tmp /= 20;
 		prms[ii] = sqrt(tmp);
 	}
 	
@@ -311,34 +503,23 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	}
 	
 	// (46)
-	papnea = &temp_dbl_buf1[0];
 	if(datasize == 0){
-		apnea_ = APNEA_ERROR;
+		apnea_ = APNEA_NORMAL;
 	}
 	else if(datasize > 9){
-		apnea_ = APNEA_NORMAL;
+		apnea_ = APNEA_ERROR;
 		loop = datasize - 9;
-		for(ii=0;ii<9;++ii){
-			papnea[ii] = 0.0f;
-		}
 		for(ii=0;ii<loop;++ii){
-			ave = 0.0f;
+			apnea = 0;
 			for(jj=0;jj<9;++jj){
-				ave += ppoint[ii + jj];
+				apnea += ppoint[ii + jj];
 			}
-			ave /= 9;
-			if(ave == 0.0f){
-				papnea[ii+9] = 1.0f;
-				apnea_ = APNEA_WARN;
-			}else{
-				papnea[ii+9] = 0.0f;
+			if(apnea != 0){
+				apnea_ = APNEA_NORMAL;
 			}
 		}
 	}else{
-		for(ii=0;ii<datasize;++ii){
-			papnea[ii] = 0.0f;
-			apnea_ = APNEA_NONE;
-		}
+		apnea_ = APNEA_NORMAL;
 	}
 }
 
@@ -356,53 +537,31 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 /************************************************************************/
 void calc_snore(const double* pData, int DSize, double Param)
 {
-	double* pSnore;
 	double* pbase_x_y2;
-	double* pbase_x_y3;
 	
 	int cnt;
 	int active;
 	double* p_x_y2;
 	int pos;
-	double* p_x_y3;
-	
-	double* ptime;
 	
 	int intervalsize;
 	double* pinterval;
 	
 	int intervalsize2;
-	double* pinterval2;
-	
-	double snorecnt;
+	// double snorecnt;
 	
 	int ii;
 	// (48) = Param
 	
 	// 結果[いびき]を入れる箱
-	pSnore = &temp_dbl_buf1[0];								//calloc
-	pbase_x_y2 = &temp_dbl_buf2[0];							//calloc
-	pbase_x_y3 = &temp_dbl_buf3[0];							//calloc
+	pbase_x_y2 = &temp_dbl_buf1[0];							//calloc
 	
 	// (49)
 	for(ii=0;ii<DSize;++ii){
 		if(pData[ii] < Param){
-			pSnore[ii] = pData[ii];
 			pbase_x_y2[ii] = 1;
-			pbase_x_y3[ii] = -1;
 		}else{
-			pSnore[ii] = 0;
 			pbase_x_y2[ii] = 0;
-			pbase_x_y3[ii] = 0;
-		}
-	}
-	
-	// (50)
-	for(ii=0;ii<DSize;++ii){
-		if(pData[ii] > Param){
-			pSnore[ii] *= (1-0.94);
-		}else{
-			pSnore[ii] *= (0-0.94);
 		}
 	}
 	
@@ -425,7 +584,7 @@ void calc_snore(const double* pData, int DSize, double Param)
 	for(ii=0;ii<DSize;++ii){
 		if((pbase_x_y2[ii] >= 1) && (active == FALSE)){
 			active = TRUE;
-			p_x_y2[pos] = ii * 0.01;
+			p_x_y2[pos] = ii * 0.05;
 			pos += 1;
 		}else if(pbase_x_y2[ii] < 1){
 			active = FALSE;
@@ -434,74 +593,29 @@ void calc_snore(const double* pData, int DSize, double Param)
 		}
 	}
 	
-	// (52)
-	cnt=0;
-	active = FALSE;
-	for(ii=0;ii<DSize;++ii){
-		if((pbase_x_y3[ii] >= 0) && (active == FALSE)){
-			active = TRUE;
-			cnt += 1;
-		}else if(pbase_x_y3[ii] < 0){
-			active = FALSE;
-		}else{
-			// なにもしない
-		}
-	}
-	p_x_y3 = &temp_dbl_buf1[0];								//calloc
-	pos = 0;
-	p_x_y3[pos] = 0;
-	pos += 1;
-	active = FALSE;
-	for(ii=0;ii<DSize;++ii){
-		if((pbase_x_y3[ii] >= 0) && (active == FALSE)){
-			active = TRUE;
-			p_x_y3[pos] = ii * 0.01;
-			pos += 1;
-		}else if(pbase_x_y3[ii] < 0){
-			active = FALSE;
-		}else{
-			// なにもしない
-		}
-	}
-	
-	// (53)
-	ptime = &temp_dbl_buf2[0];								//calloc
-	for(ii=0;ii<cnt;++ii){
-		ptime[ii] = p_x_y2[ii+1] - p_x_y3[ii+1];
-	}
-	
 	// (54) pinterval[1] - pinterval[intervalsize] までが 呼吸間隔
 	intervalsize = cnt;
 	pinterval = &temp_dbl_buf1[0];
-	for(ii=0;ii<intervalsize;++ii){
+	for(ii=1;ii<intervalsize;++ii){
 		pinterval[ii] = p_x_y2[ii+1] - p_x_y2[ii];
 	}
 	
 	// (55)
+	snore_ = SNORE_OFF;
 	intervalsize2 = 0;
 	for(ii=0;ii<intervalsize;++ii){
 		// 3 <= x <= 5 以外の値を0にする
 		if((3.0f <= pinterval[ii]) && (pinterval[ii] <= 5.0f)){
 			// そのまま
+			snore_ = SNORE_ON;
 			intervalsize2 += 1;
 		}else{
 			pinterval[ii] = 0.0f;
 		}
 	}
 	
-	pinterval2 = &temp_dbl_buf0[0];							//calloc
-	pos = 0;
-	snore_ = SNORE_OFF;
-	for(ii=0;ii<intervalsize;++ii){
-		if(pinterval[ii] != 0.0f){
-			pinterval2[pos] = pinterval[ii];
-			snore_ = SNORE_ON;
-			pos+=1;
-		}
-	}
-	
 	// (56)
-	snorecnt = intervalsize2 * 2;
+	// snorecnt = intervalsize2 * 2;
 }
 
 // 状態を取得

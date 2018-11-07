@@ -20,7 +20,8 @@
  ****************************************************************************************
  */
 #if !defined(CLK_SUB_XT1)
- #define USE_LOCO_TIMER
+// RD8001‘Î‰Fíœ
+// #define USE_LOCO_TIMER
 #endif
 
 

@@ -87,6 +87,16 @@ typedef enum{
 	SYSTEM_MODE_MAX
 }SYSTEM_MODE;
 
+// プログラムシーケンス
+typedef enum{
+	PRG_SEQ_IDLE = 0,					// アイドル
+	PRG_SEQ_READY_WAIT,					// 開始待ち　※ブートへの切替
+	PRG_SEQ_START_WAIT,					// 開始待ち　※アプリへの切替
+	PRG_SEQ_ERASE_WAIT,					// 消去待ち　※フラッシュ消去
+	PRG_SEQ_MAX
+}PRG_SEQ;
+
+
 
 //#define			MAIN_STATUS_REQ_TIME			50		// ステータス要求時間[500ms]
 #define			MAIN_STATUS_REQ_TIME			100		// ステータス要求時間[1s]
@@ -107,6 +117,34 @@ typedef enum{
 #define		MEAS_KOKYU_CNT_MAX			200
 #define		MEAS_IBIKI_CNT_MAX			200
 #define		MEAS_ACL_CNT_MAX			20
+
+// 秒タイマー ※+1した値を設定
+#define		TIMER_SEC_PRG_READY_WAIT	( 1 + 1 )
+#define		TIMER_SEC_PRG_START_WAIT	( 1 + 1 )
+#define		TIMER_SEC_PRG_ERASE_WAIT	( 27 + 1 )
+
+#define	OK_NOW_UPDATING					0		//更新未了
+#define	OK_UPDATE_FIX					1		//正常完了(成功)
+#define	NG_UPDATE_FAILURE				2		//異常完了(失敗)
+
+#define	PRG_HD_UPDATE_STATE_NON			0	//更新未了
+#define	PRG_HD_UPDATE_STATE_OK			1	//正常完了(成功)
+#define	PRG_HD_UPDATE_STATE_NG			2	//異常完了(失敗)
+
+// プログラム転送(H1D)
+#define	PRG_H1D_EEP_RECODE_OFFSET		16				//[Byte]
+#define	PRG_H1D_EEP_RECODE_UNIT		20				//[Byte]
+#define	PRG_H1D_EEP_RECODE_CNT_MAX		((3276*2)-1)	//0オリジンで最大値なので-1
+
+typedef enum program_ver{
+	VERSION_MAJOR = 0,
+	VERSION_MINOR,
+	VERSION_REVISION,
+	VERSION_BUILD,
+	//-------
+	VERSION_NUM
+}tag_program_ver;
+
 
 
 // 測定情報
@@ -144,13 +182,30 @@ typedef struct{
 
 // 日時情報
 typedef struct{
-	UH year;
+	UB year;
 	UB month;
+	UB week;
 	UB day;
 	UB hour;
 	UB min;
 	UB sec;
 }DATE;
+
+// 警告機能
+typedef struct{
+	union{
+		UB	byte[EEP_ALARM_SIZE];
+		struct{
+			UH	valid;			// アラーム機能有効/無効
+			UB	ibiki;			// いびきアラーム
+			UB	ibiki_sens;		// いびきアラーム感度
+			UB	low_kokyu;		// 低呼吸アラーム
+			UB	delay;			// アラーム遅延
+			UB	stop;			// 体動停止
+			UB	time;			// 鳴動時間
+		}dat;
+	}info;
+}ALARM;
 
 
 typedef struct{
@@ -189,7 +244,9 @@ typedef struct{
 	UB	acl_cnt;
 	
 	
+	ALARM alarm;			// 警告機能
 	
+	UW	timer_sec;			// タイマー[秒]　※カウントダウン
 	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
@@ -197,9 +254,15 @@ typedef struct{
 	UW sec7_cnt;			//7秒カウント
 	
 	UB get_mode_status;
-	UB get_mode_calc_cnt;
-	UH get_wait_cnt;		// RD8001暫定：スマホ側が早すぎるとパケットがくっつく	
+	UH get_mode_calc_cnt;
 	
+	// プログラム書き換え用
+	UH prg_hd_eep_record_cnt_wr;					// レコードカウント
+	UH prg_hd_eep_record_cnt_rd;					// レコードカウント
+	UW prg_hd_eep_code_record_sum;					// レコードサム値
+	UB prg_hd_update_state;							// プログラム更新状態
+	UB prg_hd_seq;									// プログラム更新状態
+	UB prg_hd_version[VERSION_NUM];			// プログラムバージョン
 	
 	UW err_cnt;			//異常回数(デバッグ用途)
 }T_UNIT;
@@ -243,6 +306,12 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 /*##################################################################*/
 /*							VUART(BLE)通信部						*/
 /*##################################################################*/
+#define	VUART_CMD_MODE_CHG		0xB0
+#define	VUART_CMD_PRG_RESULT	0xD1
+#define	VUART_CMD_PRG_CHECK		0xD3
+
+
+
 #define VUART_DATA_SIZE_MAX				20
 
 typedef struct _DS_VUART_INPUT{
@@ -273,6 +342,7 @@ extern void ds_set_cpu_com_input( DS_CPU_COM_INPUT *p_data );
 extern bool user_main_sleep(void);
 extern void ds_set_vuart_data( UB *p_data, UB len );
 extern void ds_set_vuart_send_status( UB status );
+extern void user_system_init( void );
 extern void user_main_init( void );
 
 #endif // __MAIN_USR_INC__
