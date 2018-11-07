@@ -46,6 +46,8 @@
 #define STREAM_MEMORY_MAX_LINE_SIZE (80)
 #define SLEEP_DURATION              (400)
 
+#define		SERIAL_INVALID		// RD8001対応：シリアル機能無効(CPU間通信と競合)
+
 /*******************************************************************************
     Global Variables
 ********************************************************************************/
@@ -57,7 +59,9 @@ static BOOL is_echo_enabled = TRUE;
 static volatile bool is_sleepable;
 static volatile bool is_write_blocked;
 static volatile bool is_read_blocked;
+#ifndef	SERIAL_INVALID
 static uint8_t stream_buffer[STREAM_MEMORY_MAX_LINE_SIZE];
+#endif
 
 #define KE_EVT_USR_0_BIT ((uint32_t)0x1U << (31 - KE_EVT_USR_0))
 /* RDB_SIZE shall be 2^n */
@@ -76,7 +80,6 @@ uint8_t print_buf[RDB_SIZE];
 /*******************************************************************************
     Function Declarations
 ********************************************************************************/
-#define		SERIAL_INVALID		// RD8001対応：シリアル機能無効(CPU間通信と競合)
 
 #ifndef	SERIAL_INVALID
 static void console_rx_done( void );
@@ -310,11 +313,7 @@ bool console_can_sleep(void)
 #if 0
     return is_sleepable;
 #else
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
+	// RD8001暫定：スリープ出来ないタイミングは現状なし。プラットフォーム
     return true;
 #endif
 }

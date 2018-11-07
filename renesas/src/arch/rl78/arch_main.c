@@ -264,7 +264,7 @@ void arch_main_ent(void)
     plf_init(CFG_PLF_INIT);
 
     //init LED
-    led_init();
+//    led_init();
 
     // Initialize the CSI21 module
     spi_init();
@@ -363,7 +363,9 @@ void arch_main_ent(void)
     for (;;)
     {
         //LED activity
-        led_blink();
+//        led_blink();
+		// ユーザータイマー処理
+		user_main_timer_cyc();
 
         // schedule the BLE stack
         rwble_schedule();
@@ -380,15 +382,11 @@ void arch_main_ent(void)
                 if ((uint16_t)wakeup_ready() != false)
                  {
                     // Wait for interrupt
-                    __no_operation();		// RD8001暫定：ブレイク貼り用
-                    __no_operation();		// RD8001暫定：ブレイク貼り用
-                    __no_operation();		// RD8001暫定：ブレイク貼り用
-					//write1_sfr(P1, 6, 1);		// 空きポートによるスリープ計測
+                    NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+//					write1_sfr(P1, 5, 1);		// 空きポートによるスリープ計測
                     WFI();
-					__no_operation();		// RD8001暫定：ブレイク貼り用
-					__no_operation();		// RD8001暫定：ブレイク貼り用
-					__no_operation();		// RD8001暫定：ブレイク貼り用
-					//write1_sfr(P1, 6, 0);		// 空きポートによるスリープ計測
+                    NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+//					write1_sfr(P1, 5, 0);		// 空きポートによるスリープ計測
                     /* After CPU is released stop mode, this function must be called immediately */
                     wakeup_finish();
                 }

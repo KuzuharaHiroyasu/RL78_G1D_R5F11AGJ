@@ -39,7 +39,6 @@
 //led defines
 #include "led.h"
 
-#include	"header.h"		//ユーザー定義
 
 /*
  * DEFINES
@@ -67,7 +66,6 @@ static struct led_env_tag led_env;
  */
 static void led_pin_init(void)
 {
-#if 0
 #ifdef CONFIG_EMBEDDED
     // set digital in/out mode
     write1_sfr(PMC12, 0, 0);
@@ -98,20 +96,6 @@ static void led_pin_init(void)
     write1_sfr(PM14,  7, PORT_OUTPUT);
     write1_sfr(PM0, 3, PORT_OUTPUT);
     write1_sfr(PM6, 0, PORT_OUTPUT);
-#endif
-#endif
-	// 空きポートによるスリープ計測用途
-#if 0
-    // set digital in/out mode
-    write1_sfr(PMC14, 7, 0);
-
-    //clear port register(extension board LED)
-    write1_sfr(P1, 6, 0);
-
-    //use port as output
-    write1_sfr(PM1,  6, PORT_OUTPUT);
-
-    write1_sfr(P1, 6, 1);
 #endif
 }
 
@@ -166,9 +150,7 @@ static void led_timer_init(void)
 #ifdef _NO_USE
 void led2_set(int value)
 {
-#if 0
     LED02 = (value != 1);
-#endif
 }
 #endif //#ifdef _NO_USE
 
@@ -181,56 +163,38 @@ void led_init(void)
     //timers
     led_timer_init();
 
-#if 0
     //initialise LEDs
     write1_sfrbit(LED01, OFF);
     write1_sfrbit(LED02, ON );
-#endif
 
     //environment initialisation
     led_env.timer_flag  = 0;
     led_env.tick_10ms   = 0;
-    led_env.tick_10ms_sec = 0;
     #endif
 }
 
 
-
 void led_blink(void)
 {
-	
-	
 #ifdef CONFIG_EMBEDDED
     //new time tick
-	if ((uint16_t)led_env.timer_flag == 1)
-	{
-		//clear timer flag
-		led_env.timer_flag = 0;
-		
-		//RD8001暫定：時間は要検討
-		if(led_env.tick_10ms >= (uint16_t)PERIOD_20MSEC)
-		{
-			//toggle led1
-			//          toggle1_sfrbit(LED01);
-			//toggle led2
-			//          toggle1_sfrbit(LED02);
+    if ((uint16_t)led_env.timer_flag == 1)
+    {
+      //clear timer flag
+      led_env.timer_flag = 0;
 
-			ke_evt_set(KE_EVT_USR_3_BIT);
+      if(led_env.tick_10ms >= (uint16_t)PERIOD_100MSEC)
+      {
+          //toggle led1
+          toggle1_sfrbit(LED01);
+          //toggle led2
+          toggle1_sfrbit(LED02);
 
-			led_env.tick_10ms = 0;
-		}
-		if( led_env.tick_10ms_sec >= (uint16_t)PERIOD_1SEC)
-		{
-			led_env.tick_10ms_sec -= PERIOD_1SEC;
-			ke_evt_set(KE_EVT_USR_2_BIT);
-
-//			R_APP_VUART_Send_Char( &tx[0], 6 );
-		}
-	}
+          led_env.tick_10ms = 0;  
+      }
+    }
 #endif
 }
-
-
 
 #ifdef CONFIG_EMBEDDED
 #if defined(_USE_IAR_RL78)
@@ -244,21 +208,9 @@ void led_blink(void)
 #endif
 __IRQ void led_timer_isr (void)
 {
-#if 0
     led_env.timer_flag = 1;
     led_env.tick_10ms++;
-    led_env.tick_10ms_sec++;
-#endif
-//	timer_10ms_set();
 }
 #endif
 
 /// @} module
-
-//#pragma section text    CNT_CODE
-void timer_10ms_set(void)
-{
-    led_env.timer_flag = 1;
-    led_env.tick_10ms++;
-    led_env.tick_10ms_sec++;
-}

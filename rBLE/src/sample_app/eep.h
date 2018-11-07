@@ -50,15 +50,25 @@
 #define EEP_ADRS_TOP_ALARM				(UW)( EEP_ADRS_TOP_SETTING + EEP_SETTING_SIZE )		// 警告機能
 #define EEP_ADRS_DATA_TYPE				(UW)( EEP_DATA_SIZE_ALL - 1 )						// EEP種別(最終アドレス) ※通常時(0x00),プログラム転送(0xAA)
 
+
+
+// プログラム転送(H1D)
+#define	EEP_PRG_H1D_RECODE_UNIT			(UW)20				//モトローラ―１列(アドレス4byte+データ16byte)[Byte]
+#define	EEP_PRG_H1D_RECODE_OFFSET		(UW)12				//調整領域(12バイト)[Byte]
+
+#define	EEP_PRG_H1D_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
+
+
+
 // ラベル
-#define EEP_DATA_TYPE_NORMAL			0x00		// 通常時(0x00)
-#define EEP_DATA_TYPE_PRG				0xAA		// プログラム転送(0xAA)
+#define EEP_DATA_TYPE_NORMAL				0x11		// 通常時(0x11)
+#define EEP_DATA_TYPE_PRG_H1D				0xAA		// H1Dプログラム転送(0xAA)
 
 
-// RD8001暫定：デバッグコード
-#define I2C_RCV_SND_SIZE	20		//RD8001暫定：サイズ要調整
+#define EEP_I2C_LOCK_ERR_VAL			10000		// I2C異常判定回数(ロック)
 
 
+#define	I2C_WAIT						255			// スタートコンディション待ち ※数百us程度なので最大値を設定しておく
 
 
 /************************************************************/
@@ -73,11 +83,13 @@ extern void eep_init( void );
 
 extern void R_IICA0_Create(void);
 extern void R_IICA0_StopCondition(void);
-extern void err_info( int id );
 extern void eep_write( UW wr_adrs, UB* wr_data, UH len, UB wait_flg );
-extern void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len );
 extern void eep_read( UW rd_adrs, UB* rd_data, UH len );
-extern void_eep_all_erase( void );
+extern void eep_setting_area_erase( void );
+extern void i2c_set_snd_flg( UB data );
+extern void i2c_set_rcv_flg( UB data );
+extern void i2c_set_err_flg( UB data );
+
 
 
 #endif

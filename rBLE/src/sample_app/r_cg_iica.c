@@ -65,15 +65,8 @@ volatile uint16_t  g_iica0_tx_cnt;             /* iica0 send data count */
 void R_IICA0_Create(void)
 {
 	
-	R_IICA0_Reset();
+	R_IICA0_Reset();			// ユーザーコード
 	
-	
-	
-	
-
-
-
-
     IICA0EN = 1U; /* supply IICA0 clock */
     IICE0 = 0U; /* disable IICA0 operation */
     IICAMK0 = 1U; /* disable INTIICA0 interrupt */
@@ -140,6 +133,8 @@ MD_STATUS R_IICA0_Master_Send(uint8_t adr, uint8_t * const tx_buf, uint16_t tx_n
 {
     MD_STATUS status = MD_OK;
 
+	i2c_set_snd_flg( ON );		//ユーザーコード
+	
     IICAMK0 = 1U;  /* disable INTIICA0 interrupt */
 
     if (1U == IICBSY0)
@@ -192,6 +187,8 @@ MD_STATUS R_IICA0_Master_Receive(uint8_t adr, uint8_t * const rx_buf, uint16_t r
 {
     MD_STATUS status = MD_OK;
 
+	i2c_set_rcv_flg( ON );		//ユーザーコード
+
     IICAMK0 = 1U;  /* disable INTIIA0 interrupt */
 
     if (1U == IICBSY0)
@@ -227,6 +224,11 @@ MD_STATUS R_IICA0_Master_Receive(uint8_t adr, uint8_t * const rx_buf, uint16_t r
 
     return (status);
 }
+
+
+// ==============================
+// 以下ユーザーコード
+// ==============================
 
 #define		DRV_EEP_WAIT_THIGH				WAIT_2US();														/* データクロック"H"時間(汎用)		*/
 #define		DRV_EEP_WAIT_TLOW				WAIT_2US();														/* データクロック"L"時間(汎用)		*/

@@ -91,16 +91,18 @@
 #define	Nop120()	Nop40();Nop40();Nop40();
 
 #if defined(CLK_FCLK_8MHZ)
-#define WAIT_1US()		Nop5();Nop1();Nop1();Nop1();								/* 約1us待ち */
+#define WAIT_1US()		Nop5();Nop1();Nop1();Nop1();								/* 約1us待ち[8MHz] */
 #else
-#define WAIT_1US()		Nop10();Nop5();Nop1();										/* 約1us待ち */
+#define WAIT_1US()		Nop10();Nop5();Nop1();										/* 約1us待ち[16MHz] */
 #endif
 //#define WAIT_1US()		Nop10();Nop5();Nop1();										/* 約1us待ち */
 
-#define WAIT_2US()		WAIT_1US();WAIT_1US();										/* 約2us待ち */
-#define WAIT_5US()		WAIT_1US();WAIT_1US();WAIT_1US();WAIT_1US();WAIT_1US();		/* 約1us待ち */
+#define WAIT_2US()		WAIT_1US();WAIT_1US();											/* 約2us待ち */
+#define WAIT_5US()		WAIT_1US();WAIT_1US();WAIT_1US();WAIT_1US();WAIT_1US();			/* 約1us待ち */
 
-#define WAIT_10US()		WAIT_5US();WAIT_5US();										/* 約10us待ち */
+#define WAIT_10US()		WAIT_5US();WAIT_5US();											/* 約10us待ち */
+
+#define WAIT_50US()		WAIT_10US();WAIT_10US();WAIT_10US();WAIT_10US();WAIT_10US();	/* 約50us待ち */
 
 #define WAIT_EEP_STOP_AFTER			WAIT_10US();
 
@@ -154,10 +156,6 @@
 	}									\
 }
 
-/* type別のuhの上位桁もしくは下位桁を返す */
-#define	UH_U		0		/* 上位アドレス取得 */
-#define	UH_D		1		/* 下位アドレス取得 */
-
 /* 単体デバッグ用定義 */
 #define STATIC							static				/* 単体デバッグ実施時はSTATICを無のデファインにしても良い */
 
@@ -176,11 +174,10 @@
 /*----------------*/
 /* 機能の有効無効 */
 /*----------------*/
-// デバッグ機能 ※リリース時はOFFする事
+// RD8001暫定：デバッグ機能 ※最終リリース時はOFFする事
 #define		FUNC_DEBUG_LOG							ON					/* PCへのログ通信機能 */
 #define		FUNC_DEBUG_CPU_COM						OFF					/* CPU間通信をログ通信でデバッグする機能 */
 																		/* 使用する時はログ通信もOFFする事 */
-#define		FUNC_DEBUG_EEP_NON						OFF					/* G1DにEEPなしハードでデバッグする機能 */
 #define		FUNC_DEBUG_SLEEP_NON					OFF					/* G1DにSLEEPなしでデバッグする機能 */
 #define		FUNC_DEBUG_CALC_NON						OFF					/* G1Dに演算なしでデバッグする機能 */
 
@@ -189,11 +186,17 @@
 #define		FUNC_DEBUG_PRG_H1D_U					OFF					/* 評価ボード単独で擬似デバッグ(上位側) */
 #define		FUNC_DEBUG_PRG_H1D_D					OFF					/* 評価ボード単独で擬似デバッグ(下位側) */
 
+#define		FUNC_DEBUG_PORT							ON					/* デバッグポート機能 */
 
 
 
-
-
+#define		FUNC_DEBUG_BREAK_POINT					ON					/* デバッグ時のブレイクポイント設置有効 */
+#if FUNC_DEBUG_BREAK_POINT == ON
+#define		NO_OPERATION_BREAK_POINT();				Nop5();				// ブレイクポイント設置用
+#else
+#define		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+#endif
+	
 
 
 
@@ -262,9 +265,6 @@ INT write_ring_buf( RING_BUF* p_ring ,UB data );
 void dummy( void );
 UH crc16( UB* p_in, int len );
 void wait_ms( int ms );
-UB ke_time_check_elapsed( W now_time, W last_time, W val );
-void di_ret( void );
-void ei_ret( void );
 
 
 #endif

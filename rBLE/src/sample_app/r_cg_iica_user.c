@@ -57,7 +57,6 @@ extern volatile uint16_t  g_iica0_tx_cnt;              /* iica0 send data count 
 /* Start user code for global. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 
-extern int i2c_cmplete;
 /***********************************************************************************************************************
 * Function Name: r_iica0_interrupt
 * Description  : None
@@ -181,8 +180,8 @@ static void r_iica0_callback_master_error(MD_STATUS flag)
 {
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
-    err_info(1);
-    i2c_cmplete = 1;
+    err_info(ERR_ID_I2C);
+	i2c_set_err_flg( ON );		//ユーザーコード
 }
 /***********************************************************************************************************************
 * Function Name: r_iica0_callback_master_receiveend
@@ -192,10 +191,10 @@ static void r_iica0_callback_master_error(MD_STATUS flag)
 ***********************************************************************************************************************/
 static void r_iica0_callback_master_receiveend(void)
 {
-    SPT0 = 1U;
+//    SPT0 = 1U;
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
-    i2c_cmplete = 1;
+	i2c_set_rcv_flg( OFF );		//ユーザーコード
 }
 /***********************************************************************************************************************
 * Function Name: r_iica0_callback_master_sendend
@@ -205,10 +204,10 @@ static void r_iica0_callback_master_receiveend(void)
 ***********************************************************************************************************************/
 static void r_iica0_callback_master_sendend(void)
 {
-    SPT0 = 1U;
+//    SPT0 = 1U;
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
-    i2c_cmplete = 1;
+	i2c_set_snd_flg( OFF );		//ユーザーコード
 	
 }
 

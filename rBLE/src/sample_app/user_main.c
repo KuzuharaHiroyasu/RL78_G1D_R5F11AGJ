@@ -1,19 +1,11 @@
-/**
- ****************************************************************************************
- *
- * @file		DTM2Wire.c
- *
- * @brief Direct Test Mode 2Wire UART Driver.
- *
- * Copyright(C) 2013-2014 Renesas Electronics Corporation
- *
- ****************************************************************************************
- */
+/********************************************************************************/
+/* システム名   : RD8001 快眠チェッカー											*/
+/* ファイル名   : user_main.c													*/
+/* 機能         : ユーザーメイン（関数,RAM,ROM定義）							*/
+/* 変更履歴		: 2018.01.25 Axia Soft Design 西島 稔	初版作成				*/
+/* 注意事項     : なし															*/
+/********************************************************************************/
 
-/*
- * INCLUDE FILES
- ****************************************************************************************
- */
 #include "rwble_config.h"
 #if !defined(_USE_RWBLE_SOURCE)
 #include "arch.h"
@@ -32,15 +24,9 @@
 
 #include	"r_vuart_app.h"
 
-// RD8001暫定：OS関連の名前は暫定なので後で修正予定
-
-
-
-
-
 // プロトタイプ宣言
-static int_t cpu_com_evt(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t cpu_com_timer_handler(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_rest(void);
 STATIC void user_main_mode_idle_com(void);
@@ -50,7 +36,7 @@ STATIC void user_main_mode_get(void);
 STATIC void user_main_mode_prg_h1d(void);
 STATIC void user_main_mode_prg_g1d(void);
 STATIC void user_main_req_cyc( void );
-STATIC void main_cpu_com_snd_sts_req( void );
+STATIC UB main_cpu_com_snd_sts_req( void );
 STATIC void main_cpu_com_snd_mode_chg( void );
 STATIC void main_cpu_com_proc(void);
 STATIC void main_cpu_com_rcv_sts_res( void );
@@ -85,12 +71,16 @@ STATIC SYSTEM_MODE evt_get( int evt);
 STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
+STATIC SYSTEM_MODE evt_prg_h1d_fin( int evt);
+STATIC SYSTEM_MODE evt_prg_h1d_time_out( int evt);
 STATIC void user_main_mode_get_after( void );
-STATIC void user_main_eep_read(void);
+STATIC void user_main_eep_read_pow_on(void);
+//STATIC void eep_all_erase( void );		//未使用関数
+STATIC void eep_part_erase( void );
 STATIC void main_vuart_send( UB *p_data, UB len );
-STATIC UB main_prg_hd_eep_code_record( void );
-STATIC void main_prg_hd_result(void);
-STATIC void main_prg_hd_update(void);
+STATIC void main_vuart_prg_rcv_hd_record( void );
+STATIC void main_vuart_prg_rcv_hd_result(void);
+STATIC void main_vuart_prg_rcv_hd_update(void);
 STATIC void main_cpu_com_rcv_prg_hd_ready(void);
 STATIC void main_cpu_com_rcv_prg_hd_start(void);
 STATIC void main_cpu_com_rcv_prg_hd_erase(void);
@@ -121,42 +111,50 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 
-#include	"user_main_tbl.h"		// ユーザーテーブル実態定義
 
-
-// 外部参照
-extern void test_cpu_com_send( void );
-//fw update
+/********************/
+/*     外部参照     */
+/********************/
+//fw update ※G1Dアップデート開始処理
 extern RBLE_STATUS FW_Update_Receiver_Start( void );
 
+/********************/
+/*     変数定義     */
+/********************/
+/* Status */// プラットフォーム
+ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
 
 
-//変数定義
-/* Status */
-ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ] = {0};
-
-
-//STATIC T_UNIT s_unit;
-T_UNIT s_unit;					//RD8001暫定：staticへ変更予定
+STATIC T_UNIT s_unit;
 STATIC DS s_ds;
 
-//定数定義
-STATIC const UB s_eep_all0_tbl[EEP_ACCESS_ONCE_SIZE] = { 0 };
+/********************/
+/*     定数定義     */
+/********************/
+#include	"user_main_tbl.h"		// ユーザーテーブル実体定義
 
-
-// OS関連
-// イベント解析処理(OS)　※通信バッファを使用している
-
-// 1秒毎周期処理
+/************************************************************************/
+/* 関数     : app_evt_usr_2												*/
+/* 関数名   : ユーザーイベント(1秒周期)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : ユーザーイベント(1秒周期)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 void codeptr app_evt_usr_2(void) 
 { 
 	uint8_t *ke_msg;
 	
+	ke_evt_clear(KE_EVT_USR_2_BIT);
+	
 	// 秒タイマーカウントダウン
 	DEC_MIN( s_unit.timer_sec ,0 );
-	INC_MAX( s_unit.system_mode_time_out_cnt, USHRT_MAX );
 	
-	// RD8001暫定：G1Dバージョン送信
+#if 1
+	// RD8001暫定：G1Dダウンロード_デバッグ用バージョン送信
 	if( ON == s_unit.prg_g1d_send_ver_flg ){
 		DEC_MIN( s_unit.prg_g1d_send_ver_sec ,0 );
 		if( 0 == s_unit.prg_g1d_send_ver_sec ){
@@ -171,31 +169,38 @@ void codeptr app_evt_usr_2(void)
 			}
 		}
 	}
+#endif
 	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
-		ke_evt_clear(KE_EVT_USR_2_BIT);
 		return;
 	}
 
 
 	s_unit.sec30_cnt++;
-	if( s_unit.sec30_cnt >= 30 ){		// 30秒
-//	if( s_unit.sec30_cnt >= 3 ){		// デバッグ3秒版
-		
+	if( s_unit.sec30_cnt >= CALC_RESULT_WR_CYC ){		// 30秒
 		s_unit.sec30_cnt = 0;
 		
-		// 演算結果
-		user_main_calc_result();
+		ke_msg = ke_msg_alloc( USER_MAIN_CYC_CALC_RESULT, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
 	}
 	
 
 	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
 	ke_msg_send(ke_msg);
 
-	ke_evt_clear(KE_EVT_USR_2_BIT); 
 }
 
-// 50ms周期処理
+/************************************************************************/
+/* 関数     : app_evt_usr_2												*/
+/* 関数名   : ユーザーイベント(20ms周期)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : ユーザーイベント(20ms周期)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 void codeptr app_evt_usr_3(void) 
 { 
 	ke_evt_clear(KE_EVT_USR_3_BIT); 
@@ -207,62 +212,152 @@ void codeptr app_evt_usr_3(void)
 
 		ke_msg_send(ke_msg);
 	}
-//	cpu_com_proc();
 
 }
 
-
-static int_t cpu_com_evt(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+/************************************************************************/
+/* 関数     : user_main_cyc												*/
+/* 関数名   : ユーザーアプリ周期処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : ユーザーアプリ周期処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-	// RD8001対応：OSイベント対応(定期的に呼ばない様)
-	cpu_com_proc();			// 通信サービスミドル
+	cpu_com_proc();			// CPU間通信サービス
 	
-	main_vuart_proc();
+	main_vuart_proc();		// VUART通信サービス
 	
-	main_cpu_com_proc();	//通信サービスアプリ
-	user_main_mode();
-	{
-		uint8_t *ke_msg;
+	main_cpu_com_proc();	// 通信サービスアプリ
+	
+	user_main_mode();		// メインモード処理
 
-		ke_msg = ke_msg_alloc( USER_MAIN_ACT2, USER_MAIN_ID, USER_MAIN_ID, 0 );
+	return (KE_MSG_CONSUMED);
+}
 
-		ke_msg_send(ke_msg);
+
+/************************************************************************/
+/* 関数     : user_main_calc_result_cyc									*/
+/* 関数名   : ユーザーアプリ演算結果周期処理							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : ユーザーアプリ演算結果周期処理								*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	user_main_calc_result();	// 演算結果
+	
+	return (KE_MSG_CONSUMED);
+}
+
+
+
+/************************************************************************/
+/* 関数     : user_main_timer_10ms_set									*/
+/* 関数名   : 10msタイマーカウントセット								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 10msタイマーカウントセット									*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* ①スリープ中でも有効なタイマー										*/
+/************************************************************************/
+void user_main_timer_10ms_set( void )
+{
+	s_unit.tick_10ms++;
+	s_unit.tick_10ms_sec++;
+	s_unit.elapsed_time++;
+}
+
+
+/************************************************************************/
+/* 関数     : user_main_timer_cyc										*/
+/* 関数名   : タイマー周期処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : タイマー周期処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+void user_main_timer_cyc( void )
+{
+	// 20ms周期
+	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
+		ke_evt_set(KE_EVT_USR_3_BIT);
+
+		s_unit.tick_10ms = 0;
 	}
-//	test_cpu_com_send();
-	return (KE_MSG_CONSUMED);
+	// 1秒周期 ※遅れの蓄積は厳禁
+	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
+		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
+		ke_evt_set(KE_EVT_USR_2_BIT);
+	}
 }
 
 
-static int_t cpu_com_timer_handler(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+/************************************************************************/
+/* 関数     : time_get_elapsed_time										*/
+/* 関数名   : ソフトウェア経過時間取得処理								*/
+/* 引数     : なし														*/
+/* 戻り値   : 現在連続稼動時間											*/
+/* 変更履歴 : 2012.01.30 Axia Soft Design H.Wada	初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* 現在連続稼動時間の取得を行う											*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+UW time_get_elapsed_time( void )
 {
-	/* call func specified by APP */
-//	if (0 != Timer_func) {
-//		Timer_func();
-//	}
-//	cpu_com_proc();
-#if 0
-	uint8_t *ke_msg;
-
-	ke_msg = ke_msg_alloc( USER_MAIN_CYC_ACT, USER_MAIN_ID, USER_MAIN_ID, 0 );
-
-	ke_msg_send(ke_msg);
-#endif
-//	ke_timer_set(USER_MAIN_ACT2, USER_MAIN_ID, CPU_COM_CYC_TIME);
-	
-	return (KE_MSG_CONSUMED);
+	return s_unit.elapsed_time;
 }
 
+/************************************************************************/
+/* 関数     : user_system_init											*/
+/* 関数名   : システム関連初期化										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : システム関連初期化											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 void user_system_init( void )
 {
 	R_PORT_Create();
 	R_INTC_Create();
 	R_IT_Create();
 	
-	//RD8001暫定：H1D側リセット解除タイミング要検討　サブクロックが止まるとBLE関連が死ぬ
+	//RD8001暫定：H1D側リセット解除タイミング要検討。プラットフォーム。サブクロックが止まるとBLE関連が死ぬ
 	// H1Dのリセット解除はBLE処理前に必要
 	drv_o_port_h1d_reset( OFF );
 }
 
+/************************************************************************/
+/* 関数     : user_main_init											*/
+/* 関数名   : メイン初期化												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : メイン初期化													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 void user_main_init( void )
 {
 	// ミドル初期化
@@ -274,47 +369,107 @@ void user_main_init( void )
 	
 	
 	//EEP読み出し
-	user_main_eep_read();
+	user_main_eep_read_pow_on();
 	
-	s_unit.last_time = ke_time();
+	s_unit.last_time_sts_req = time_get_elapsed_time();
 	
 	// 状態設定
 	ke_state_set(USER_MAIN_ID, 0);
 	
 	// 演算初期化
 	calc_snore_init();
+	
+	// H1D起動待ち
+//	wait_ms(5);
+//	s_unit.last_time_sts_req = time_get_elapsed_time();
+
+	
+	
+
+#if FUNC_DEBUG_PORT == ON
+	//空きポートによる計測用設定(スリープなど)
+    write1_sfr(PM1,  5, PORT_OUTPUT);
+//    write1_sfr(PM1,  6, PORT_OUTPUT);		//使うとBLEが動かなくなるので削除
+
+    write1_sfr(P1, 5, 0);
+	
+	NO_OPERATION_BREAK_POINT();				// ブレイクポイント設置用
+
+#if 0
+	// デバッグ用計測処理
+	DI();
+	
+	write1_sfr(P1, 5, 1);
+	{
+		UB wait = 200;
+	    /* Wait */
+	    while (wait--)
+	    {
+	        ;
+	    }
+	}
+		wait_ms(1);
+    write1_sfr(P1, 5, 0);
+
+	wait_ms(5);
+	write1_sfr(P1, 5, 1);
+#endif
+
+#endif
+
+
+
+
+
+
 }
 
+/************************************************************************/
+/* 関数     : user_main_calc_result										*/
+/* 関数名   : 演算結果処理												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 演算結果処理													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_calc_result( void )
 {
 	UW wr_adrs = 0;
 #if 0
-	//演算結果をPC送付
+	//演算結果をPC送付するデバッグコード
 	main_cpu_com_snd_pc_log( &s_unit.calc.info.byte[0], CPU_COM_SND_DATA_SIZE_PC_LOG );
 #endif
 	//範囲チェック
 	if( s_unit.calc_cnt > EEP_CACL_DATA_NUM ){
-		err_info(11);
+		err_info(ERR_ID_MAIN);
 		return;
 	}
 	
 	// フレーム位置とデータ位置からEEPアドレスを算出
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CACL_DATA_SIZE );
 
-	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CACL_DATA_SIZE, OFF );
+	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CACL_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
 	
 	s_unit.calc_cnt++;
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	
-	
-	
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 }
 
 
+/************************************************************************/
+/* 関数     : user_main_mode											*/
+/* 関数名   : メインモード処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : メインモード処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode( void )
 {
 	// モード共通処理
@@ -324,30 +479,58 @@ STATIC void user_main_mode( void )
 	p_user_main_mode_func[s_unit.system_mode]();
 }
 
-// モード共通処理
+/************************************************************************/
+/* 関数     : user_main_mode_common										*/
+/* 関数名   : モード共通処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : モード共通処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_common( void )
 {
+	UW now_time;
+	
+	now_time = time_get_elapsed_time();
+	
 	// タイムアウトチェック
 	if( s_unit.system_mode != s_unit.last_system_mode ){
-		s_unit.system_mode_time_out_cnt = 0;
+		s_unit.system_mode_time_out_cnt = now_time;
 	}
 	
 	if( SYSTEM_MODE_IDLE_REST == s_unit.system_mode ){
-		if( s_unit.system_mode_time_out_cnt >= TIME_OUT_SYSTEM_MODE_IDLE_REST ){
+		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_IDLE_REST ){
 			evt_act( EVENT_TIME_OUT );
 		}
 	}
 	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
-		if( s_unit.system_mode_time_out_cnt >= TIME_OUT_SYSTEM_MODE_IDLE_COM ){
+		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_IDLE_COM ){
+			evt_act( EVENT_TIME_OUT );
+		}
+	}
+	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
+		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_H1D_PRG ){
 			evt_act( EVENT_TIME_OUT );
 		}
 	}
 	
-	
 	s_unit.last_system_mode = s_unit.system_mode;
 }
 
-
+/************************************************************************/
+/* 関数     : user_main_mode_sensing_before								*/
+/* 関数名   : センシング前処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : センシング前処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
@@ -361,6 +544,17 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.sensing_flg = ON;
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_sensing_after								*/
+/* 関数名   : センシング後処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : センシング後処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_sensing_after( void )
 {
 	UB oikosi_flg = OFF;
@@ -368,8 +562,7 @@ STATIC void user_main_mode_sensing_after( void )
 	UB wr_data[2] = {0};
 	
 	if( 0 == s_unit.calc_cnt ){
-		//RD8001暫定：データなし
-		err_info(12);
+		err_info(ERR_ID_MAIN);
 		return;
 	}
 	
@@ -378,7 +571,8 @@ STATIC void user_main_mode_sensing_after( void )
 		return;
 	}
 	
-	wait_ms(5);		//RD8001暫定；待ち
+	// EEP書き込み待ち ※周期処理では5ms待ちしていないので最後のタイミングでは固定待ちする
+	wait_ms(5);
 	
 	// 演算回数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_CALC_CNT;
@@ -409,9 +603,20 @@ STATIC void user_main_mode_sensing_after( void )
 	}
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_prg_hd_before								*/
+/* 関数名   : プログラム更新(H1D)前処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : プログラム更新(H1D)前処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_prg_hd_before( void )
 {
-	UB eep_data = EEP_DATA_TYPE_PRG;
+	UB eep_data = EEP_DATA_TYPE_PRG_H1D;
 	
 	// データ初期化
 	s_unit.prg_hd_eep_record_cnt_wr = 0;
@@ -434,7 +639,17 @@ STATIC void user_main_mode_prg_hd_before( void )
 }
 
 
-// フレーム毎の前処理
+/************************************************************************/
+/* 関数     : user_main_mode_get_frame_before							*/
+/* 関数名   : GETモードフレーム前処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : GETモードフレーム前処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC UB user_main_mode_get_frame_before( void )
 {
 	UB ret = ON;
@@ -450,7 +665,7 @@ STATIC UB user_main_mode_get_frame_before( void )
 	eep_read( rd_adrs, (UB*)&calc_cnt, 2 );
 	
 	if( calc_cnt > EEP_CACL_DATA_NUM ){
-		err_info(10);
+		err_info(ERR_ID_MAIN);
 		calc_cnt = 0;
 	}
 	
@@ -460,7 +675,17 @@ STATIC UB user_main_mode_get_frame_before( void )
 	return ret;
 }
 
-// GETの前処理(1回)
+/************************************************************************/
+/* 関数     : user_main_mode_get_before									*/
+/* 関数名   : GETモード前処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : GETモード前処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_get_before( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX];
@@ -485,7 +710,17 @@ STATIC void user_main_mode_get_before( void )
 }
 
 
-// GETの後処理(1回)
+/************************************************************************/
+/* 関数     : user_main_mode_get_after									*/
+/* 関数名   : GETモード後処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : GETモード後処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_get_after( void )
 {
 	UW wr_adrs = 0;
@@ -503,26 +738,52 @@ STATIC void user_main_mode_get_after( void )
 }
 
 
+
+/************************************************************************/
+/* 関数     : user_main_mode_inital										*/
+/* 関数名   : イニシャル状態処理										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : イニシャル状態処理											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_inital(void)
 {
 	//ステータス要求通知
 	user_main_req_cyc();
-	
-	
-	
 }
 
-
+/************************************************************************/
+/* 関数     : user_main_mode_idle_rest									*/
+/* 関数名   : アイドル_残量表示状態処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : アイドル_残量表示状態処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_idle_rest(void)
 {
 	//ステータス要求通知
 	user_main_req_cyc();
-	
-	
-	
-	
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_idle_com									*/
+/* 関数名   : アイドル_通信待機状態処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : アイドル_通信待機状態処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_idle_com(void)
 {
 	//ステータス要求通知
@@ -530,11 +791,22 @@ STATIC void user_main_mode_idle_com(void)
 	
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_sensing									*/
+/* 関数名   : センシング状態処理										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : センシング状態処理											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_sensing(void)
 {
-	ke_time_t now_time;
+	UW now_time;
 	
-	now_time = ke_time();
+	now_time = time_get_elapsed_time();
 	
 	if(( now_time - s_unit.last_sensing_data_rcv ) >= SENSING_END_JUDGE_TIME ){
 		// 規定値時間センシングなし
@@ -542,14 +814,20 @@ STATIC void user_main_mode_sensing(void)
 	}else{
 		// センシングあり
 	}
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
-
+/************************************************************************/
+/* 関数     : user_main_mode_move										*/
+/* 関数名   : 移行状態処理												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 移行状態処理													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_move(void)
 {
 	// 要求送信
@@ -557,6 +835,17 @@ STATIC void user_main_mode_move(void)
 	
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_get										*/
+/* 関数名   : GET状態処理												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : GET状態処理													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_get(void)
 {
 	UB tx[VUART_DATA_SIZE_MAX];
@@ -638,16 +927,25 @@ STATIC void user_main_mode_get(void)
 			s_unit.get_mode_seq = 7;
 		#endif
 	}else if( 6 == s_unit.get_mode_seq ){
-		// RD8001暫定：完了通知待ち　※タイムアウト必要？
+		// RD8001暫定：影舞19:完了通知待ち　※タイムアウト必要？
 	}else{
 		user_main_mode_get_after();
 	}
 }
 
+/************************************************************************/
+/* 関数     : user_main_mode_get										*/
+/* 関数名   : H1Dプログラム更新状態処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : H1Dプログラム更新状態処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_prg_h1d(void)
 {
-	drv_o_port_h1d_int( ON );	//RD8001暫定：H1D起こしておく。寝てると¨後の応答返してくれない
-	
 	if( PRG_SEQ_READY_WAIT == s_unit.prg_hd_seq ){
 		if( 0 == s_unit.timer_sec ){
 			//消去コマンド送信
@@ -682,24 +980,44 @@ STATIC void user_main_mode_prg_h1d(void)
 		}
 	}
 }
+
+/************************************************************************/
+/* 関数     : user_main_mode_prg_g1d									*/
+/* 関数名   : G1Dプログラム更新状態処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : G1Dプログラム更新状態処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+//RD8001暫定：G1Dダウンロード_処理確認中
 STATIC void user_main_mode_prg_g1d(void)
 {
 	
-	
 }
 
-// ===========================
-// 自己診断
-// ===========================
+/************************************************************************/
+/* 関数     : user_main_mode_self_check									*/
+/* 関数名   : 自己診断状態処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 自己診断状態処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void user_main_mode_self_check( void )
 {
 	UB read_eep[EEP_ACCESS_ONCE_SIZE];
-	ke_time_t now_time = ke_time();
+	UW now_time = time_get_elapsed_time();
 
 	if( 0 == s_unit.self_check.seq ){
 		// 全0書き込み
 		// EEPプログラムモード
-		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &s_eep_all0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
 			s_unit.self_check.eep_cnt = 0;
@@ -709,7 +1027,7 @@ STATIC void user_main_mode_self_check( void )
 		// 全0読み出し
 		// フレーム位置とデータ位置からEEPアドレスを算出
 		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
-		if( 0 != memcmp( &s_eep_all0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
+		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
 			s_unit.self_check.seq = 2;
 			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
 			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_ERR;
@@ -727,7 +1045,7 @@ STATIC void user_main_mode_self_check( void )
 		}
 	}else if( 2 == s_unit.self_check.seq ){
 		// 異常表示
-		if( ON == ke_time_check_elapsed(now_time, s_unit.self_check.last_time, TIME_CNT_DISP_SELF_CHECK_ERR )){
+		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_ERR ){
 			s_unit.self_check.seq = 3;
 			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
 			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
@@ -736,9 +1054,9 @@ STATIC void user_main_mode_self_check( void )
 		}
 	}else if( 3 == s_unit.self_check.seq ){
 		// 完了
-		if( ON == ke_time_check_elapsed((W)now_time, (W)s_unit.self_check.last_time, TIME_CNT_DISP_SELF_CHECK_FIN )){
+		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_FIN ){
 			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_NON;
+			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_NON;
 			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.seq = 4;
 		}
@@ -751,7 +1069,64 @@ STATIC void user_main_mode_self_check( void )
 	}
 }
 
-// イベント
+/************************************************************************/
+/* 関数     : err_info													*/
+/* 関数名   : 異常通知													*/
+/* 引数     : 異常ID(10進2桁)											*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : G1D側の異常をH1D経由でログ出力(デバッグ機能)					*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* ①デバッグ機能です。エラー出力出来ない可能性があります。				*/
+/* ②本ログが原因で不具合が発生する事があります。理由としては製品機能の	*/
+/*   CPU間通信に割り込む為。											*/
+/************************************************************************/
+void err_info( ERR_ID id )
+{
+#if FUNC_DEBUG_LOG == ON
+	// ログ出力
+	UB tx[CPU_COM_SND_DATA_SIZE_PC_LOG];
+	
+	memset( &tx[0], 0x20, sizeof(tx) );
+	
+	
+	tx[0] = 'G';
+	tx[1] = '1';
+	tx[2] = 'E';
+	tx[3] = 'R';
+	tx[4] = 'R';
+	tx[5] = (id / 10 ) + 0x30;
+	tx[6] = (id % 10 ) + 0x30;
+	
+	if( s_unit.last_err_id != id ){
+		main_cpu_com_snd_pc_log( (UB*)&tx[0], CPU_COM_SND_DATA_SIZE_PC_LOG );		// デバッグ
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	}
+	
+#if 0
+	while(1){
+		// 異常による永久ループ
+	}
+#endif
+#endif
+	s_unit.err_cnt++;
+	s_unit.last_err_id = id;
+}
+
+/************************************************************************/
+/* 関数     : evt_act													*/
+/* 関数名   : イベント実行												*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : TRUE	実施												*/
+/*          : FALSE	未実施												*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント実行													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC UB evt_act( EVENT_NUM evt )
 {
 	SYSTEM_MODE	system_mode;
@@ -762,17 +1137,45 @@ STATIC UB evt_act( EVENT_NUM evt )
 		return FALSE;
 	}
 	
+	// 影舞21:電源SW押下受付後の表示の為ここで行う
+	if( EVENT_POW_SW_LONG == evt ){
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+		s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_TRG_LONG_SW_RECEPTION;
+		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
+	}
+	
 	main_chg_system_mode( system_mode );
 	
 	return TRUE;
 }
 
+/************************************************************************/
+/* 関数     : evt_non													*/
+/* 関数名   : イベント(なし)											*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(なし)												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_non( int evt)
 {
 	return SYSTEM_MODE_NON;
 };
 
-
+/************************************************************************/
+/* 関数     : evt_idle_rest												*/
+/* 関数名   : イベント(アイドル_残量表示)								*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(アイドル_残量表示)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_idle_rest( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_REST;
@@ -784,6 +1187,17 @@ STATIC SYSTEM_MODE evt_idle_rest( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_idle_com												*/
+/* 関数名   : イベント(アイドル_通信待機)								*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(アイドル_通信待機)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_idle_com( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
@@ -791,6 +1205,17 @@ STATIC SYSTEM_MODE evt_idle_com( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_idle_com												*/
+/* 関数名   : イベント(アイドル_通信待機_電池残量チェックあり)			*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(アイドル_通信待機_電池残量チェックあり)				*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
@@ -801,7 +1226,17 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 	
 	return system_mode;
 }
-
+/************************************************************************/
+/* 関数     : evt_sensing												*/
+/* 関数名   : イベント(センシング)										*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(センシング)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_sensing( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
@@ -809,6 +1244,17 @@ STATIC SYSTEM_MODE evt_sensing( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_sensing_chg											*/
+/* 関数名   : イベント(センシング_充電状態チェックあり)					*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(センシング_充電状態チェックあり)						*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
@@ -820,6 +1266,17 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_initial												*/
+/* 関数名   : イベント(イニシャル)										*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(イニシャル)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_initial( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
@@ -827,6 +1284,17 @@ STATIC SYSTEM_MODE evt_initial( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_initial_chg											*/
+/* 関数名   : イベント(イニシャル_充電チェックあり)						*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(イニシャル_充電チェックあり)							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_initial_chg( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
@@ -838,6 +1306,17 @@ STATIC SYSTEM_MODE evt_initial_chg( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_get													*/
+/* 関数名   : イベント(GETモード)										*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(GETモード)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_get( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_GET;
@@ -845,6 +1324,17 @@ STATIC SYSTEM_MODE evt_get( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_h1d_prg_denchi										*/
+/* 関数名   : イベント(H1Dプログラム更新_電池チェックあり)				*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(H1Dプログラム更新_電池チェックあり)					*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_H1D;
@@ -856,6 +1346,17 @@ STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_g1d_prg_denchi										*/
+/* 関数名   : イベント(G1Dプログラム更新_電池チェックあり)				*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(G1Dプログラム更新_電池チェックあり)					*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_G1D;
@@ -867,6 +1368,17 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_g1d_prg_denchi										*/
+/* 関数名   : イベント(自己診断)										*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(自己診断)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC SYSTEM_MODE evt_self_check( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
@@ -874,27 +1386,104 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 	return system_mode;
 }
 
-STATIC void user_main_req_cyc( void )
+
+/************************************************************************/
+/* 関数     : evt_prg_h1d_fin											*/
+/* 関数名   : イベント(H1Dプログラム書き換え完了)						*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.13  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(H1Dプログラム書き換え完了)							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_prg_h1d_fin( int evt)
 {
-	ke_time_t now_time;
+	SYSTEM_MODE system_mode;;
 	
-	now_time = ke_time();
+	// EEPを消去し通常モードで使えるようにしておく ※リセットを経由しないケースがある為
+	eep_part_erase();
 	
-	// ステータス要求送信周期
-	if(( now_time - s_unit.last_time ) >= MAIN_STATUS_REQ_TIME ){
-		s_unit.last_time = now_time;
-		main_cpu_com_snd_sts_req();	/* ステータス要求 */
-	}
+	// 移行の処理は同じなので下記関数で実行
+	system_mode = evt_idle_com( evt );
+	
+	
+	return system_mode;
 }
+
+
+/************************************************************************/
+/* 関数     : evt_prg_h1d_time_out										*/
+/* 関数名   : イベント(H1Dプログラム書き換えタイムアウト)				*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.13  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(H1Dプログラム書き換えタイムアウト)					*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_prg_h1d_time_out( int evt)
+{
+	SYSTEM_MODE system_mode;;
+
+	// 上位への結果にNGを格納
+	s_unit.prg_hd_update_state = PRG_HD_UPDATE_STATE_NG;
+	
+	// 移行の処理は同じなので下記関数で実行
+	system_mode = evt_idle_com( evt );
+	
+	return system_mode;
+}
+
 
 
 // =============================================================
 // CPU通信関連
 // =============================================================
+/************************************************************************/
+/* 関数     : user_main_req_cyc											*/
+/* 関数名   : ステータス要求周期処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : ステータス要求周期処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void user_main_req_cyc( void )
+{
+	UW now_time;
+	
+	now_time = time_get_elapsed_time();
+	
+	// ステータス要求送信周期
+	if(( now_time - s_unit.last_time_sts_req ) >= MAIN_STATUS_REQ_TIME ){
+		if( ON == main_cpu_com_snd_sts_req() ){		/* ステータス要求送信 */
+			s_unit.last_time_sts_req = now_time;
+		}
+	}
+}
 
-STATIC void main_cpu_com_snd_sts_req( void )
+
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_sts_req									*/
+/* 関数名   : ステータス要求通知										*/
+/* 引数     : なし														*/
+/* 戻り値   : ON	実行												*/
+/*          : ON	未実行												*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : ステータス要求通知											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC UB main_cpu_com_snd_sts_req( void )
 {
 	G1D_INFO g1d;
+	UB ret = OFF;
 	
 	g1d.info.byte = 0;
 	g1d.info.bit_f.ble = get_ble_connect();
@@ -906,15 +1495,24 @@ STATIC void main_cpu_com_snd_sts_req( void )
 		s_ds.cpu_com.order.snd_data[2] = 0;
 		s_ds.cpu_com.order.snd_data[3] = 0;
 		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_STATUS_REQ;
-		
-//		test_cpu_com_send();
-
-	}else{
-		err_info(7);
+		ret = ON;
 	}
+	
+	return ret;
 }
 
 
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_mode_chg									*/
+/* 関数名   : モード変更通知											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : モード変更通知												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_snd_mode_chg( void )
 {
 	
@@ -927,8 +1525,20 @@ STATIC void main_cpu_com_snd_mode_chg( void )
 
 
 
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_pc_log									*/
+/* 関数名   : CPU間通信(ログ送信)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信(ログ送信)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 void main_cpu_com_snd_pc_log( UB* data, UB size )
 {
+#if FUNC_DEBUG_LOG == ON
 	int i = 0;
 	
 	s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PC_LOG;
@@ -936,6 +1546,7 @@ void main_cpu_com_snd_pc_log( UB* data, UB size )
 		s_ds.cpu_com.order.snd_data[i] = data[i];
 	}
 	s_ds.cpu_com.order.data_size = size;
+#endif
 }
 
 /************************************************************************/
@@ -963,10 +1574,7 @@ STATIC void main_cpu_com_snd_sensing_order( UB sekigai )
 /* 関数名   : CPU間通信周期処理											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.05  Axia Soft Design 宮本		初版作成			*/
-/*          : 2014.06.27  Axia Soft Design 吉居							*/
-/*          :						状態に応じて送信トリガを切り換える	*/
-/* 			: 2016.05.19  Axia Soft Design 西島　リトライアウト時の処理追加(CPU間通信異常対応) */
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
 /************************************************************************/
 /* 機能 : 周期処理														*/
 /************************************************************************/
@@ -987,17 +1595,26 @@ STATIC void main_cpu_com_proc(void)
 				/* 受信コマンドとコマンドテーブルが一致 */
 				if( NULL != s_cpu_com_rcv_func_tbl[i].func ){
 					/* 受信処理有り */
-//					s_cpu_com_rcv_func_tbl[i].func(&s_ds.cpu_com.input.rcv_data[0]);
 					s_cpu_com_rcv_func_tbl[i].func();
 				}
 			}
 		}
-		// 受信コマンドクリア ※暫定
+		// 受信コマンドクリア
 		s_ds.cpu_com.input.rcv_cmd = 0x00;
 	}
-	
 }
 
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_date_set									*/
+/* 関数名   : CPU間通信受信(日時)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(日時)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_date_set( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1006,21 +1623,28 @@ STATIC void main_cpu_com_rcv_date_set( void )
 	tx[1] = s_ds.cpu_com.input.rcv_data[0];		// CPU間の応答をそのまま入れる
 	main_vuart_send( &tx[0], 2 );
 	
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
 
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_sts_res									*/
+/* 関数名   : CPU間通信受信(ステータス要求)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(ステータス要求)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_sts_res( void )
 {
 	// H1Dイベント処理
 	if( EVENT_NON != s_ds.cpu_com.input.rcv_data[0] ){
 		// 以降状態へ変更
-		if( FALSE == evt_act( s_ds.cpu_com.input.rcv_data[0] )){
-			__no_operation();
+		if( FALSE == evt_act( (EVENT_NUM)s_ds.cpu_com.input.rcv_data[0] )){
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 		}
 	}
 	
@@ -1033,14 +1657,14 @@ STATIC void main_cpu_com_rcv_sts_res( void )
 	// 検査ポートON状態
 	if( ON == s_unit.h1d.info.bit_f.kensa ){
 		if( FALSE == evt_act( EVENT_KENSA_ON )){
-			__no_operation();
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 		}
 	}
 	// 充電ポートONエッジ
 	if(( ON  == s_unit.h1d.info.bit_f.bat_chg ) && 
 	   ( OFF == s_unit.h1d_last.info.bit_f.bat_chg )){
 		if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
-			__no_operation();
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 		}
 	}
 	
@@ -1060,6 +1684,17 @@ STATIC void main_cpu_com_rcv_sts_res( void )
 	s_unit.denchi_sts = s_ds.cpu_com.input.rcv_data[10];
 }
 
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_sensor_res								*/
+/* 関数名   : CPU間通信受信(センシングデータ)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(センシングデータ)								*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_sensor_res( void )
 {
 //	ke_time_t now_time;
@@ -1067,7 +1702,7 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 	MEAS meas;
 	
 	// 受信日時格納
-	s_unit.last_sensing_data_rcv = ke_time();
+	s_unit.last_sensing_data_rcv = time_get_elapsed_time();
 	
 	// センサーデータ格納
 	memcpy( &meas.info.byte[0], &s_ds.cpu_com.input.rcv_data[0], CPU_COM_SND_DATA_SIZE_SENSOR_DATA );
@@ -1118,17 +1753,21 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
 	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
 
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	
-	
-	
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 }
 
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_mode_chg									*/
+/* 関数名   : CPU間通信受信(モード変更)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(モード変更)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_mode_chg( void )
 {
 	if( SYSTEM_MODE_MOVE != s_unit.system_mode){
@@ -1141,7 +1780,7 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 	}else{
 		s_unit.system_mode = SYSTEM_MODE_IDLE_COM;				// モード変更
 		s_unit.next_system_mode = SYSTEM_MODE_IDLE_COM;			// モード変更
-		err_info(5);
+		err_info(ERR_ID_MAIN);
 		return;
 	}
 	
@@ -1161,7 +1800,7 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 	}
 	
 	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
-		//RD8001暫定：応答を返せるように修正
+		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
 		FW_Update_Receiver_Start();
 	}
 
@@ -1200,13 +1839,34 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 	
 }
 
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_disp_order								*/
+/* 関数名   : CPU間通信受信(表示指示)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(表示指示)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_disp_order( void )
 {
 	// 処理なし
 	
 }
 
-// バージョン
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_disp_order								*/
+/* 関数名   : CPU間通信受信(バージョン)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(バージョン)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_version( void )
 {
 	// 処理なし
@@ -1237,7 +1897,17 @@ STATIC void main_cpu_com_rcv_version( void )
 }
 
 
-// モード変更
+/************************************************************************/
+/* 関数     : main_chg_system_mode										*/
+/* 関数名   : モード変更												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : モード変更													*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode )
 {
 	s_unit.next_system_mode = next_mode;
@@ -1284,20 +1954,20 @@ STATIC void main_vuart_proc(void)
 		}
 	}
 
-	// RD8001暫定：テーブル化しないデバッグ用コマンド後で消す
+#if 1
+	// RD8001暫定：G1Dダウンロード_処理確認中(テストボードでのデバッグ処理)
 	if(( VUART_CMD_LEN_PRG_G1D_START == s_ds.vuart.input.rcv_len  ) && 
 	         ( VUART_CMD_PRG_G1D_START == s_ds.vuart.input.rcv_data[0] )){
-		// G1D update ready	※RD8001:暫定後で消す
 		FW_Update_Receiver_Start();
 	}else if(( VUART_CMD_LEN_PRG_G1D_VER == s_ds.vuart.input.rcv_len  ) && 
 	         ( VUART_CMD_PRG_G1D_VER == s_ds.vuart.input.rcv_data[0] )){
-		// RD8001暫定
 		s_unit.prg_g1d_send_ver_flg = ON;
 		s_unit.prg_g1d_send_ver_sec = 5;	// 5秒後
 	}else{
 		// 該当コマンドなし
 		
 	}
+#endif
 	
 	// 受信長クリア
 	s_ds.vuart.input.rcv_len = 0;
@@ -1305,14 +1975,14 @@ STATIC void main_vuart_proc(void)
 
 /************************************************************************/
 /* 関数     : ds_set_vuart_data											*/
-/* 関数名   : CPU間通信データセット										*/
-/* 引数     : CPU間通信データ格納ポインタ								*/
+/* 関数名   : VUART通信データセット										*/
+/* 引数     : VUART通信データ格納ポインタ								*/
+/*          : データ長													*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.05 Axia Soft Design 宮本 和幹	初版作成			*/
-/*          : 2014.06.12 Axia Soft Design 吉居							*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
-/* CPU間通信ミドルデータセット取得										*/
+/* VUART通信データセット												*/
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
@@ -1320,7 +1990,7 @@ STATIC void main_vuart_send( UB *p_data, UB len )
 {
 	// Vuart送信中は
 	if( ON == s_ds.vuart.input.send_status ){
-//		err_info(1);
+		err_info(ERR_ID_BLE_SEND_ERR);
 		return;
 	}
 	
@@ -1328,6 +1998,19 @@ STATIC void main_vuart_send( UB *p_data, UB len )
 	R_APP_VUART_Send_Char( (char *)p_data, len );
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_set_mode									*/
+/* 関数名   : VUART通信データセット										*/
+/* 引数     : VUART通信データ格納ポインタ								*/
+/*          : データ長													*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART通信データセット												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_set_mode( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1343,6 +2026,19 @@ void main_vuart_rcv_set_mode( void )
 }
 
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_set_mode									*/
+/* 関数名   : VUART通信データセット										*/
+/* 引数     : VUART通信データ格納ポインタ								*/
+/*          : データ長													*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART通信データセット												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_vuart_rcv_mode_chg( void )
 {
 	UB ret = TRUE;
@@ -1353,7 +2049,7 @@ STATIC void main_vuart_rcv_mode_chg( void )
 	}else if( 3 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_GET_DATA );
 	}else if( 4 == s_ds.vuart.input.rcv_data[1] ){
-		main_vuart_rcv_set_mode();		// RD8001暫定：デバッグ用データ設定
+		main_vuart_rcv_set_mode();		// RD8001暫定：デバッグ用データ設定(SETコマンド_最終必要？)
 	}else if( 5 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_G1D_PRG );
 	}else if( 6 == s_ds.vuart.input.rcv_data[1] ){
@@ -1373,6 +2069,18 @@ STATIC void main_vuart_rcv_mode_chg( void )
 	}
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_info										*/
+/* 関数名   : VUART通信(情報取得)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART通信(情報取得)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_vuart_rcv_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1389,7 +2097,18 @@ STATIC void main_vuart_rcv_info( void )
 	main_vuart_send( &tx[0], VUART_SND_LEN_INFO );
 }
 
-
+/************************************************************************/
+/* 関数     : main_vuart_rcv_version									*/
+/* 関数名   : VUART受信(バージョン)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(バージョン)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_vuart_rcv_version( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1423,11 +2142,20 @@ STATIC void main_vuart_rcv_version( void )
 }
 
 
-
+/************************************************************************/
+/* 関数     : main_set_bd_adrs											*/
+/* 関数名   : BDアドレス設定											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* BDアドレス設定														*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_set_bd_adrs( UB* bda)
 {
-	// RD8001暫定：プラットフォームのヘッダが入り組んでおりベタに設定している
-//	memcpy( &s_unit.bd_adrs[0], bda, sizeof(s_unit.bd_adrs) );
 	s_unit.bd_device_adrs[0] = bda[0];
 	s_unit.bd_device_adrs[1] = bda[1];
 	s_unit.bd_device_adrs[2] = bda[2];
@@ -1437,6 +2165,18 @@ void main_set_bd_adrs( UB* bda)
 
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_version									*/
+/* 関数名   : VUART受信(デバイス情報)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(デバイス情報)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_vuart_rcv_device_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1449,12 +2189,12 @@ STATIC void main_vuart_rcv_device_info( void )
 	
 	tx[0] = VUART_CMD_DEVICE_INFO;
 	tx[1] = result;							// 結果
-	tx[2] = s_unit.bd_device_adrs[5];		// BDデバイスアドレス
-	tx[3] = s_unit.bd_device_adrs[4];
-	tx[4] = s_unit.bd_device_adrs[3];
-	tx[5] = s_unit.bd_device_adrs[2];
-	tx[6] = s_unit.bd_device_adrs[1];
-	tx[7] = s_unit.bd_device_adrs[0];
+	tx[2] = s_unit.bd_device_adrs[0];		// BDデバイスアドレス
+	tx[3] = s_unit.bd_device_adrs[1];
+	tx[4] = s_unit.bd_device_adrs[2];
+	tx[5] = s_unit.bd_device_adrs[3];
+	tx[6] = s_unit.bd_device_adrs[4];
+	tx[7] = s_unit.bd_device_adrs[5];
 	tx[8] = s_unit.frame_num.cnt;
 	tx[9]  = s_unit.date.year;
 	tx[10]  = s_unit.date.month;
@@ -1467,7 +2207,18 @@ STATIC void main_vuart_rcv_device_info( void )
 	main_vuart_send( &tx[0], VUART_SND_LEN_DEVICE_INFO );
 }
 
-
+/************************************************************************/
+/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数名   : VUART受信(フレーム)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(フレーム)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_data_frame( void )
 {
 	UW wr_adrs;
@@ -1492,6 +2243,18 @@ void main_vuart_rcv_data_frame( void )
 	eep_write( wr_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MUKOKYU_TIME_SIZE, ON );
 	
 }
+/************************************************************************/
+/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数名   : VUART受信(演算)											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(演算)														*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_data_calc( void )
 {
 
@@ -1508,17 +2271,52 @@ void main_vuart_rcv_data_calc( void )
 }
 
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数名   : VUART受信(END)											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(END)														*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_data_end( void )
 {
 	user_main_mode_sensing_after();
 }
 
-
+/************************************************************************/
+/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数名   : VUART受信(完了)											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(完了)														*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_vuart_rcv_data_fin( void )
 {
 	s_unit.get_mode_seq = 7;
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_date										*/
+/* 関数名   : VUART受信(日時設定)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(日時設定)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_date( void )
 {
 	s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
@@ -1532,6 +2330,18 @@ void main_vuart_rcv_date( void )
 	s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_date										*/
+/* 関数名   : VUART受信(アラーム設定)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(アラーム設定)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_rcv_alarm_set( void )
 {
 	s_unit.alarm.info.dat.valid = s_ds.vuart.input.rcv_data[1];
@@ -1542,7 +2352,7 @@ void main_vuart_rcv_alarm_set( void )
 	s_unit.alarm.info.dat.stop = s_ds.vuart.input.rcv_data[6];
 	s_unit.alarm.info.dat.time = s_ds.vuart.input.rcv_data[7];
 	
-	eep_write( EEP_ADRS_TOP_ALARM, &s_unit.alarm, EEP_ALARM_SIZE, ON );
+	eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
 
 	{
 		UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1553,7 +2363,18 @@ void main_vuart_rcv_alarm_set( void )
 	}
 }
 
-
+/************************************************************************/
+/* 関数     : main_vuart_snd_alarm_info									*/
+/* 関数名   : VUART送信(アラーム通知)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART送信(アラーム通知)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 void main_vuart_snd_alarm_info( UB type, UB data )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1570,7 +2391,7 @@ void main_vuart_snd_alarm_info( UB type, UB data )
 /* 関数名   : CPU間通信用データ取得										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.15 Axia Soft Design 吉居 久和	初版作成			*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信用データ取得												*/
@@ -1587,8 +2408,7 @@ void ds_get_cpu_com_order( DS_CPU_COM_ORDER **p_data )
 /* 関数名   : CPU間通信データセット										*/
 /* 引数     : CPU間通信データ格納ポインタ								*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.05 Axia Soft Design 宮本 和幹	初版作成			*/
-/*          : 2014.06.12 Axia Soft Design 吉居							*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信ミドルデータセット取得										*/
@@ -1605,8 +2425,7 @@ void ds_set_cpu_com_input( DS_CPU_COM_INPUT *p_data )
 /* 関数名   : CPU間通信データセット										*/
 /* 引数     : CPU間通信データ格納ポインタ								*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.05 Axia Soft Design 宮本 和幹	初版作成			*/
-/*          : 2014.06.12 Axia Soft Design 吉居							*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信ミドルデータセット取得										*/
@@ -1624,8 +2443,7 @@ void ds_set_vuart_data( UB *p_data, UB len )
 /* 関数名   : CPU間通信データセット										*/
 /* 引数     : CPU間通信データ格納ポインタ								*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.05 Axia Soft Design 宮本 和幹	初版作成			*/
-/*          : 2014.06.12 Axia Soft Design 吉居							*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信ミドルデータセット取得										*/
@@ -1636,6 +2454,8 @@ void ds_set_vuart_send_status( UB status )
 {
 	s_ds.vuart.input.send_status = status;
 }
+
+
 
 // ============================
 // 以降演算部の処理
@@ -1757,15 +2577,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 
 #else
 	//デバッグ用ダミー処理
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-	__no_operation();		// RD8001暫定：ブレイク貼り用
-
-
-
-
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 
 	// ダミーデータ
 	s_unit.ibiki_cnt = 0;
@@ -1834,7 +2646,19 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 }
 
 
-// BLE以外のユーザーアプリのスリープチェック
+/************************************************************************/
+/* 関数     : user_main_sleep											*/
+/* 関数名   : ユーザーアプリのスリープチェック							*/
+/* 引数     : なし														*/
+/* 戻り値   : true		sleep有効										*/
+/*          : false		sleep無効										*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* ユーザーアプリのスリープチェック										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 bool user_main_sleep(void)
 {
 #if FUNC_DEBUG_SLEEP_NON == ON
@@ -1844,43 +2668,29 @@ bool user_main_sleep(void)
 	
 	if( ON == drv_intp_read_h1d_int() ){
 		ret = false;
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}else{
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
 	
-	if( ON == cpu_com_get_busy() ){
+	if( OFF == cpu_com_get_can_sleep() ){
 		ret = false;
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}else{
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		// ポートOFFタイミングが無い為にここでOFFする
+		drv_o_port_h1d_int( OFF );
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
 	
-	// RD8001暫定：プログラム書き換え中はスリープし無くて良いか
+	// H1Dプログラム書き換え中はスリープ無効
 	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
+		drv_o_port_h1d_int( ON );	// H1D側も起こしておく
 		ret = false;
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
-	
-	
-	
-	
-	
 	
 	if( ret == true ){
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
 	
 	return ret;
@@ -1888,9 +2698,29 @@ bool user_main_sleep(void)
 
 }
 
-
-STATIC void user_main_eep_read(void)
+/************************************************************************/
+/* 関数     : user_main_eep_read_pow_on									*/
+/* 関数名   : EEP読み出し処理(起動時)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* EEP読み出し処理(起動時)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+STATIC void user_main_eep_read_pow_on(void)
 {
+	UB eep_type;
+	
+	// EEP種別チェック
+	eep_read( EEP_ADRS_DATA_TYPE, &eep_type, 1 );
+	
+	if( EEP_DATA_TYPE_NORMAL != eep_type){
+		eep_part_erase();
+	}
+	
 	// フレーム関連
 	eep_read( EEP_ADRS_TOP_SETTING, &s_unit.frame_num.read, 1 );
 	eep_read( EEP_ADRS_TOP_SETTING + 1, &s_unit.frame_num.write, 1 );
@@ -1900,7 +2730,7 @@ STATIC void user_main_eep_read(void)
 	if(( s_unit.frame_num.read > ( EEP_FRAME_MAX - 1)) ||
 	   ( s_unit.frame_num.write > ( EEP_FRAME_MAX - 1)) ||
 	   ( s_unit.frame_num.cnt > EEP_FRAME_MAX )){
-		err_info(11);
+		err_info(ERR_ID_MAIN);
 		// 範囲外なら初期化
 		s_unit.frame_num.read = 0;
 		s_unit.frame_num.write = 0;
@@ -1912,102 +2742,122 @@ STATIC void user_main_eep_read(void)
 	
 	
 	// 警告機能
-	eep_read( EEP_ADRS_TOP_ALARM, &s_unit.alarm, EEP_ALARM_SIZE );
+	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
 	// RD8001暫：範囲チェック入れる
 
 	
 }
 
-
-// =====================================
-// プログラム転送コード
-// =====================================
-// 島君コード
-
-/*EEPが64Kybte×２面となっているので、
-1面に書き込める容量は64*1024÷20=3276.8レコード
-0.8レコード(16byte)は使わずに3277レコード目は２面目に
-書き込む形ならば境界は気にしなくて良いです。
-        */
-
-//---PCコマンド値＆応答値------------
-#define	PC_CMD_PROGRAM_TRANSFER				0xD0	//プログラム転送(データ)
-	#define	OK_PRG_H1D_EEP_RECODE_STORED		0		//OK(成功)
-	#define	NG_PRG_H1D_EEP_RECODE_CNT_OVER		1		//NG(失敗)
-//#define	VUART_CMD_PRG_RESULT		0xD1	//プログラム転送結果
-	#define	OK_PRG_H1D_EEP_RECODE_COMPLETED	0		//OK(成功)
-	#define	NG_PRG_H1D_EEP_RECODE_SUM_UNMATCH	1		//異常(サム値異常)
-	#define	NG_PRG_H1D_EEP_RECODE_FLASH		2		//フラッシュ異常
-//#define	VUART_CMD_PRG_CHECK		0xD3	//プログラム転送結果確認
-
-	
-//---CPU_COMコマンド値------------
-#define	CPU_COM_CMD_PROGRAM_AREA_ERASE			0xD4	//プログラム領域消去
-	#define	OK_FLASH_ERASED						0		//OK(成功)
-	#define	NG_FLASH_ERASE_FAILED				1		//NG(失敗)
-#define	CPU_COM_CMD_PROGRAM_TRANSFER			PC_CMD_PROGRAM_TRANSFER	//プログラム転送(データ)
-	#define	CPU_COM_PROGRAM_ADRESS_SIZE			4		//[Byte]
-	#define	CPU_COM_PROGRAM_RECODE_SIZE_MAX		256		//[Byte]
-	#define	OK_FLASH_WRITED						0		//OK(成功)
-	#define	NG_FLASH_WRITE_FAILED				1		//NG(失敗)
-#define	CPU_COM_PROGRAM_TRANSFER_RESULT			VUART_CMD_PRG_RESULT	//プログラム転送結果
-	#define	CPU_COM_PROGRAM_SUM_SIZE			4		//[Byte]
-	#define	OK_FLASH_CODE_RECODE_COMPLETED		OK_PRG_H1D_EEP_RECODE_COMPLETED		//OK(成功)
-	#define	NG_FLASH_CODE_RECODE_SUM_UNMATCH	NG_PRG_H1D_EEP_RECODE_SUM_UNMATCH		//異常(サム値異常)
-	#define	NG_FLASH_CODE_RECODE_FLASH			NG_PRG_H1D_EEP_RECODE_FLASH			//フラッシュ異常
-#define	CPU_COM_PROGRAM_UPDATE_START			0xD2		//プログラム更新開始実行
-	#define	OK_UPDATE_STARTED					0		//OK(成功)
-	#define	NG_UPDATE_START_FAILED				1		//NG(失敗)
-#define	CPU_COM_PROGRAM_UPDATE_FIX_CHECK		VUART_CMD_PRG_CHECK		//プログラム更新完了確認
-
-//static UB s_unit.prg_hd_version[VERSION_NUM] = {0};			//h1DアプリのVer
-//static UB s_unit.prg_hd_update_state = OK_NOW_UPDATING;			//H1D更新状態
-
-//PCから受信した1レコード分書き込みする
-//eep_write内でデータコピーしており、受信データ長も完全固定で０充填等もないため一時領域は不要
-//メモ：s_ds.vuart.input.rcv_dataは引数で貰った方が良いかも
-STATIC UB main_prg_hd_eep_code_record( void )
+/************************************************************************/
+/* 関数     : eep_all_erase												*/
+/* 関数名   : EEP全消去													*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : EEP全消去														*/
+/************************************************************************/
+/* 注意事項 : 															*/
+/* ①時間がかかる為に使用する際は注する事。約7.5Sec						*/
+/************************************************************************/
+#if 0		//未使用関数
+STATIC void eep_all_erase( void )
 {
-	UW adr;
+	UW adrs = 0;
+	UW i = 0;
+	UB eep_data = EEP_DATA_TYPE_NORMAL;
 	
-	if( SYSTEM_MODE_PRG_H1D != s_unit.system_mode){
-		return NG;
-	}
-	if( s_unit.prg_hd_eep_record_cnt_wr >= PRG_H1D_EEP_RECODE_CNT_MAX ){
-		return NG;
+	for( i = 0; i < (EEP_DATA_SIZE_ALL / EEP_ACCESS_ONCE_SIZE); i++ ){
+		adrs = i * EEP_ACCESS_ONCE_SIZE;
+		eep_write( adrs, (UB*)&s_eep_page0_tbl[0], EEP_ACCESS_ONCE_SIZE, ON );
 	}
 	
-	adr = ( s_unit.prg_hd_eep_record_cnt_wr * ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET) );
-	eep_write( adr, &s_ds.vuart.input.rcv_data[0], PRG_H1D_EEP_RECODE_UNIT, ON );
-#if 0	//ベリファイ
-	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], PRG_H1D_EEP_RECODE_UNIT );
-	if (memcmp( &s_ds.vuart.input.rcv_data[0], &s_ds.cpu_com.order.snd_data[0], PRG_H1D_EEP_RECODE_UNIT) != 0){
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		
-		
-		
-		
-	}
+	// 消去済みとして通常種別を書き込む
+	eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
+	
+}
 #endif
-	// サム値計算 ※データ
-	calc_sum_uw_cont( &s_unit.prg_hd_eep_code_record_sum, &s_ds.vuart.input.rcv_data[4], PRG_H1D_EEP_RECODE_UNIT -4 );
-	s_unit.prg_hd_eep_record_cnt_wr++;
 
-	return OK;
+/************************************************************************/
+/* 関数     : eep_part_erase											*/
+/* 関数名   : EEP部分消去(測定データ以外)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.13 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : EEP部分消去(測定データ以外)									*/
+/************************************************************************/
+/* 注意事項 : 															*/
+/* ①測定データ消去には時間がかかる為に消去しない						*/
+/************************************************************************/
+STATIC void eep_part_erase( void )
+{
+	UB eep_data = EEP_DATA_TYPE_NORMAL;
+	
+	eep_write( EEP_ADRS_TOP_SETTING, (UB*)&s_eep_page0_tbl[0], EEP_SETTING_SIZE, ON );
+	memset( &s_unit.frame_num, 0, sizeof(s_unit.frame_num) );
+	eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_eep_page0_tbl[0], EEP_ALARM_SIZE, ON );
+	memset( &s_unit.alarm, 0, sizeof(s_unit.alarm) );
+	
+	// 消去済みとして通常種別を書き込む
+	eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
 }
 
 
-STATIC void main_prg_hd_result(void)
+// =====================================
+// H1Dプログラム転送コード
+// =====================================
+
+/************************************************************************/
+/* 関数     : main_vuart_prg_rcv_hd_record								*/
+/* 関数名   : H1Dプログラム書き換え(レコード書き込み)					*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(レコード書き込み)								*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+STATIC void main_vuart_prg_rcv_hd_record( void )
+{
+	UW adr;
+	
+	if( s_unit.prg_hd_eep_record_cnt_wr >= EEP_PRG_H1D_RECODE_CNT_MAX ){
+		return;
+	}
+	
+	adr = ( s_unit.prg_hd_eep_record_cnt_wr * ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET) );
+	eep_write( adr, &s_ds.vuart.input.rcv_data[0], EEP_PRG_H1D_RECODE_UNIT, ON );
+#if 0	//ベリファイ
+	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT );
+	if (memcmp( &s_ds.vuart.input.rcv_data[0], &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT) != 0){
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	}
+#endif
+	// サム値計算 ※データ
+	calc_sum_uw_cont( &s_unit.prg_hd_eep_code_record_sum, &s_ds.vuart.input.rcv_data[4], EEP_PRG_H1D_RECODE_UNIT -4 );
+	s_unit.prg_hd_eep_record_cnt_wr++;
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_prg_rcv_hd_result								*/
+/* 関数名   : H1Dプログラム書き換え(転送結果)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(転送結果)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+STATIC void main_vuart_prg_rcv_hd_result(void)
 {
 	//サム値組立
-//	UB i;
 	UB ret;
 	UW recv_sum = 0;
-	
 	
 	recv_sum   = (UW)(s_ds.vuart.input.rcv_data[4]);
 	recv_sum <<= (UW)8;
@@ -2023,11 +2873,11 @@ STATIC void main_prg_hd_result(void)
 //		recv_sum += s_ds.vuart.input.rcv_data[i];
 //	}
 	
-	//サム値比較 RD8001暫定：EEPチェックに変えたい？
+	//サム値比較 RD8001暫定：EEPチェックの方が良いか？ EEP異常時の動作未定義
 	if( s_unit.prg_hd_eep_code_record_sum != recv_sum ){
-		ret = NG_PRG_H1D_EEP_RECODE_SUM_UNMATCH;
+		ret = NG;
 	}else{
-		ret = OK_PRG_H1D_EEP_RECODE_COMPLETED;
+		ret = OK;
 	}
 	
 	//---応答---
@@ -2039,21 +2889,29 @@ STATIC void main_prg_hd_result(void)
 		main_vuart_send( &tx[0], 2 );
 	}
 	
-	if( OK_PRG_H1D_EEP_RECODE_COMPLETED == ret ){
+	if( OK == ret ){
 		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_READY;
 		s_ds.cpu_com.order.data_size = 0;
 	}
 
 }
 
-//【PCからの受信コマンド対応動作】プログラム更新完了確認
-STATIC void main_prg_hd_update(void)
+/************************************************************************/
+/* 関数     : main_vuart_prg_rcv_hd_update								*/
+/* 関数名   : H1Dプログラム書き換え(完了確認)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(完了確認)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+STATIC void main_vuart_prg_rcv_hd_update(void)
 {
-//	UB i;
-//	UB loop_cnt;
-	
-	
 #if FUNC_DEBUG_PRG_H1D_U == ON
+	// デバッグ用処理
 	{
 		static UB dbg_prg_hd_update_flg = 0;
 		
@@ -2088,7 +2946,18 @@ STATIC void main_prg_hd_update(void)
 
 
 
-/* 【CPU間通信コマンド】プログラム転送準備		*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_ready								*/
+/* 関数名   : H1Dプログラム書き換え(転送準備)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(転送準備)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_ready(void)
 {
 	s_unit.timer_sec = TIMER_SEC_PRG_READY_WAIT;
@@ -2096,7 +2965,18 @@ STATIC void main_cpu_com_rcv_prg_hd_ready(void)
 	
 }
 
-/* 【CPU間通信コマンド】プログラム転送開始		*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_start								*/
+/* 関数名   : H1Dプログラム書き換え(転送開始)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(転送開始)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_start(void)
 {
 	s_unit.timer_sec = TIMER_SEC_PRG_START_WAIT;
@@ -2105,15 +2985,36 @@ STATIC void main_cpu_com_rcv_prg_hd_start(void)
 
 
 
-
-/* 【CPU間通信コマンド】プログラム転送消去		*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
+/* 関数名   : H1Dプログラム書き換え(消去)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(消去)											*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_erase(void)
 {
 	s_unit.timer_sec = TIMER_SEC_PRG_ERASE_WAIT;
 	s_unit.prg_hd_seq = PRG_SEQ_ERASE_WAIT;
 }
 	
-/* 【CPU間通信コマンド】プログラム転送データ	*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
+/* 関数名   : H1Dプログラム書き換え(データ)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(データ)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_data(void)
 {
 	if( s_unit.prg_hd_eep_record_cnt_rd < s_unit.prg_hd_eep_record_cnt_wr ){
@@ -2122,7 +3023,6 @@ STATIC void main_cpu_com_rcv_prg_hd_data(void)
 	}else{
 		// 終了
 		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_RESLUT;
-		// RD8001暫定：サム値格納　※値未確認
 		s_ds.cpu_com.order.snd_data[0] = (UB)(  s_unit.prg_hd_eep_code_record_sum & (UW)0x000000FF );
 		s_ds.cpu_com.order.snd_data[1] = (UB)(( s_unit.prg_hd_eep_code_record_sum & (UW)0x0000FF00 ) >> (UW)8 );
 		s_ds.cpu_com.order.snd_data[2] = (UB)(( s_unit.prg_hd_eep_code_record_sum & (UW)0x00FF0000 ) >> (UW)16 );
@@ -2132,7 +3032,18 @@ STATIC void main_cpu_com_rcv_prg_hd_data(void)
 }
 
 
-/* 【CPU間通信コマンド】プログラム転送結果		*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
+/* 関数名   : H1Dプログラム書き換え(転送結果)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(転送結果)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_reslut(void)
 {
 	if( 0 == s_ds.cpu_com.input.rcv_data[0] ){
@@ -2145,7 +3056,18 @@ STATIC void main_cpu_com_rcv_prg_hd_reslut(void)
 	}
 }
 
-/* 【CPU間通信コマンド】プログラム転送確認		*/
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
+/* 関数名   : H1Dプログラム書き換え(転送確認)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(転送確認)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_cpu_com_rcv_prg_hd_check(void)
 {
 	// バージョン格納
@@ -2158,17 +3080,31 @@ STATIC void main_cpu_com_rcv_prg_hd_check(void)
 	s_unit.prg_hd_update_state = PRG_HD_UPDATE_STATE_OK;
 }
 
-//CPUへ送信する1レコード分を準備する
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
+/* 関数名   : H1Dプログラム書き換え(1レコード分を準備)					*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* H1Dプログラム書き換え(1レコード分を準備)								*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 STATIC void main_prg_hd_read_eep_record( void )
 {
 	UW adr;
 	
-	adr = ( s_unit.prg_hd_eep_record_cnt_rd * ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET ) );
-	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], PRG_H1D_EEP_RECODE_UNIT );
+	adr = ( s_unit.prg_hd_eep_record_cnt_rd * ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET ) );
+	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT );
 	s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_DATA;
-	s_ds.cpu_com.order.data_size = PRG_H1D_EEP_RECODE_UNIT;
+	s_ds.cpu_com.order.data_size = EEP_PRG_H1D_RECODE_UNIT;
 	s_unit.prg_hd_eep_record_cnt_rd++;
 }
+
+
+
 
 
 STATIC void AlarmSnore(UB oldstate, UB newstate)

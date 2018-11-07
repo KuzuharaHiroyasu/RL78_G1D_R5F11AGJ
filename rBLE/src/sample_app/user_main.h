@@ -1,16 +1,10 @@
-/**
- ****************************************************************************************
- *
- * @file		cpu_com.h
- *
- * @brief Direct Test Mode 2Wire UART Driver.
- *
- * Copyright(C) 2013-2014 Renesas Electronics Corporation
- *
- * $Rev: v1.01.00
- *
- ****************************************************************************************
- */
+/********************************************************************************/
+/* システム名   : RD8001														*/
+/* ファイル名   : main.h														*/
+/* 機能         : ユーザーメイン(マクロ定義、型定義、関数の外部参照宣言)		*/
+/* 変更履歴     : 2017.12.20 Axia Soft Design 西島		初版作成				*/
+/* 注意事項     : なし															*/
+/********************************************************************************/
 
 #ifndef	__MAIN_USR_INC__
 #define	__MAIN_USR_INC__
@@ -27,22 +21,18 @@
 // ====================================================
 
 /* Tas Infomation */
-#define CPU_COM_STATE_MAX		2	// Max State Num
-#define CPU_COM_IDX_MAX			1	// Max ID Num
+#define USER_MAIN_STATE_MAX		2	// Max State Num
+#define USER_MAIN_IDX_MAX			1	// Max ID Num
 
 #define USER_MAIN_ID (TASK_USR_0)
 
-//#define USER_MAIN_CYC_ACT			1	/* Task API ID */
-
-#define USER_MAIN_CYC_ACT				KE_FIRST_MSG(USER_MAIN_ID) + 1		/* Task API ID */
-#define USER_MAIN_CALC_SEKIGAI			KE_FIRST_MSG(USER_MAIN_ID) + 2		/* Timer API ID */
-#define USER_MAIN_CALC_SEKISHOKU		KE_FIRST_MSG(USER_MAIN_ID) + 3		/* Timer API ID */
-#define USER_MAIN_CALC_KOKYU			KE_FIRST_MSG(USER_MAIN_ID) + 4		/* Timer API ID */
-#define USER_MAIN_CALC_IBIKI			KE_FIRST_MSG(USER_MAIN_ID) + 5		/* Timer API ID */
-#define USER_MAIN_CALC_ACL				KE_FIRST_MSG(USER_MAIN_ID) + 6		/* Timer API ID */
-#define USER_MAIN_ACT2					KE_FIRST_MSG(USER_MAIN_ID) + 7		/* Timer API ID */
-
-
+#define USER_MAIN_CYC_ACT				KE_FIRST_MSG(USER_MAIN_ID) + 1
+#define USER_MAIN_CALC_SEKIGAI			KE_FIRST_MSG(USER_MAIN_ID) + 2
+#define USER_MAIN_CALC_SEKISHOKU		KE_FIRST_MSG(USER_MAIN_ID) + 3
+#define USER_MAIN_CALC_KOKYU			KE_FIRST_MSG(USER_MAIN_ID) + 4
+#define USER_MAIN_CALC_IBIKI			KE_FIRST_MSG(USER_MAIN_ID) + 5
+#define USER_MAIN_CALC_ACL				KE_FIRST_MSG(USER_MAIN_ID) + 6
+#define USER_MAIN_CYC_CALC_RESULT		KE_FIRST_MSG(USER_MAIN_ID) + 7
 
 
 
@@ -64,12 +54,13 @@
 #if 0
 extern volatile RBLE_RUNNING_MODE	rBLE_Run_Mode_Flg;
 #endif
+
 /* Status Handler */
-extern const struct ke_state_handler cpu_com_state_handler[ CPU_COM_STATE_MAX ];
+extern const struct ke_state_handler user_main_state_handler[ USER_MAIN_STATE_MAX ];
 /* Default Handler */
-extern const struct ke_state_handler cpu_com_default_handler;
+extern const struct ke_state_handler user_main_default_handler;
 /* Status */
-extern ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ];
+extern ke_state_t user_main_state[ USER_MAIN_IDX_MAX ];
 
 
 
@@ -79,9 +70,9 @@ extern ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ];
 // システムモード ※H1D/G1D共通
 typedef enum{
 	// 仕様上の状態下限
-	SYSTEM_MODE_INITIAL = 0,					// イニシャル
-	SYSTEM_MODE_IDLE_REST,					// アイドル_残量表示 ※RD8001暫定：IDLEを統合するか要検討
-	SYSTEM_MODE_IDLE_COM,					// アイドル_通信待機 ※RD8001暫定：IDLEを統合するか要検討
+	SYSTEM_MODE_INITIAL = 0,				// イニシャル
+	SYSTEM_MODE_IDLE_REST,					// アイドル_残量表示
+	SYSTEM_MODE_IDLE_COM,					// アイドル_通信待機
 	SYSTEM_MODE_SENSING,					// センシング
 	SYSTEM_MODE_GET,						// データ取得
 	SYSTEM_MODE_PRG_H1D,					// H1Dプログラム更新
@@ -113,6 +104,26 @@ typedef enum{
 	EVENT_KENSA_ON,				// 検査ポートON
 	EVENT_MAX,					// 最大
 }EVENT_NUM;
+
+/* 異常ID定義(デバッグ機能) */
+typedef enum{
+	ERR_ID_EEP = 1					,			/* EEP(汎用) */
+	ERR_ID_I2C						,			/* I2C(汎用) */
+	ERR_ID_MAIN						,			/* MAIN(汎用) */
+	ERR_ID_CPU_COM					,			/* CPU間通信(汎用) */
+
+	ERR_ID_CPU_COM_ERR = 40			,			/* CPU間通信異常 */
+	ERR_ID_CPU_COM_RCV_RING			,			/* CPU間通信受信リングバッファ ※演算中はリングバッファを引き取れないので発生してしまう */
+	ERR_ID_DRV_UART_OERR = 50		,			/* UARTドライバ(オーバーランエラー) */
+	
+	// 高レベル異常
+	ERR_ID_BLE_SEND_ERR = 97	,				/* BLE送信異常 */
+	ERR_ID_CPU_COM_RETRYOUT = 98	,			/* CPU間通信リトライアウト(致命的) */
+	ERR_ID_LOGIC = 99				,			/* ロジック不具合(汎用) */
+
+	ERR_ID_MAX									/* 異常ID最大	*/
+}ERR_ID;
+
 
 // 電池残量状態 ※H1D/G1D共通
 #define DENCH_ZANRYO_STS_MAX					1	// 充電満タン
@@ -152,14 +163,21 @@ typedef enum{
 #define		MEAS_IBIKI_CNT_MAX			200
 #define		MEAS_ACL_CNT_MAX			20
 
-// 秒タイマー ※+1した値を設定
+// 演算結果書き込みタイミング
+#define		CALC_RESULT_WR_CYC			30			// 30秒
+//#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
+
+
+
+// 秒タイマー ※+1した値を設定 // RD8001暫定：本来は経過時間[10ms]を使いたい
 #define		TIMER_SEC_PRG_READY_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_START_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_ERASE_WAIT	( 27 + 1 )
 
-// タイマアウト
-#define		TIME_OUT_SYSTEM_MODE_IDLE_REST		( 6 - 1 )
-#define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 180 - 1 )		
+// システムモードタイマアウト[10ms]
+#define		TIME_OUT_SYSTEM_MODE_IDLE_REST		( 600 )
+#define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 18000 )		
+#define		TIME_OUT_SYSTEM_MODE_H1D_PRG		( 60000 )		
 
 
 #define	OK_NOW_UPDATING					0		//更新未了
@@ -170,16 +188,21 @@ typedef enum{
 #define	PRG_HD_UPDATE_STATE_OK			1	//正常完了(成功)
 #define	PRG_HD_UPDATE_STATE_NG			2	//異常完了(失敗)
 
-// プログラム転送(H1D)
-#define	PRG_H1D_EEP_RECODE_OFFSET		(UW)12				//[Byte]
-#define	PRG_H1D_EEP_RECODE_UNIT			(UW)20				//[Byte]
-
-//#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)((3276*2)-1)
-#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
 
 
 
 #define	BD_ADRS_NUM						6
+
+
+///10ms timer
+#define PERIOD_5SEC     500U
+#define PERIOD_1SEC     100U
+#define PERIOD_10MSEC   1U		//RD8001対応：定義追加
+#define PERIOD_20MSEC   2U		//RD8001対応：定義追加
+#define PERIOD_50MSEC   5U		//RD8001対応：定義追加
+#define PERIOD_100MSEC   10U
+
+
 
 typedef enum program_ver{
 	VERSION_MAJOR = 0,
@@ -256,7 +279,7 @@ typedef struct{
 
 // 自己診断
 typedef struct{
-	ke_time_t	last_time;
+	UW	last_time;
 	UH	eep_cnt;		// EEP消去回数
 	UB	seq;			// シーケンス
 	UB	com_flg;		// 通信での自己診断フラグ
@@ -277,7 +300,6 @@ typedef struct{
 	union {
 		UB	byte;
 		BIT_G1D_INFO bit_f;
-		/*呼出ランプ状態*/
 	}info;
 }G1D_INFO;
 
@@ -297,7 +319,6 @@ typedef struct{
 	union {
 		UB	byte;
 		BIT_H1D_INFO bit_f;
-		/*呼出ランプ状態*/
 	}info;
 }H1D_INFO;
 
@@ -311,16 +332,16 @@ typedef struct{
 
 typedef struct{
 	
-	SYSTEM_MODE system_mode;		/* システムモード */
-	SYSTEM_MODE next_system_mode;	/* 次のシステムモード */
-	SYSTEM_MODE last_system_mode;		/* システムモード */
+	SYSTEM_MODE system_mode;			/* システムモード */
+	SYSTEM_MODE next_system_mode;		/* 次のシステムモード */
+	SYSTEM_MODE last_system_mode;		/* 前回のシステムモード */
 	
-	UH system_mode_time_out_cnt;		/* システムモードタイムアウトカウント[S] */
+	UW system_mode_time_out_cnt;		/* システムモードタイムアウトカウント[10ms] */
 
 	DATE date;
 	
-	ke_time_t last_time;			//前回時間
-	ke_time_t last_sensing_data_rcv;		//前回センシングデータ受信
+	UW last_time_sts_req;			//前回時間(ステータス要求)
+	UW last_sensing_data_rcv;		//前回センシングデータ受信
 	UB sensing_flg;					// センシング中フラグ
 	
 	UB denchi_sts;			// 電池状態
@@ -334,8 +355,10 @@ typedef struct{
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
 	
 	// フレーム(枠)番号
-	FRAME_NUM_INFO frame_num;			// フレーム(枠)番号
+	FRAME_NUM_INFO frame_num;			// フレーム(枠)番号[EEPコピーエリア] ※EEPとは一致させておく
 	FRAME_NUM_INFO frame_num_work;		// フレーム(枠)番号ワーク
+
+	ALARM	alarm;						// 警告機能[EEPコピーエリア] ※EEPとは一致させておく
 	
 	// 機器データ(演算前)
 	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり
@@ -353,9 +376,13 @@ typedef struct{
 	UB	acl_cnt;
 	UB	sekigai_seq;		// 赤外有効/無効切替用のシーケンス
 	
-	ALARM	alarm;			// 警告機能
 	
 	UW	timer_sec;			// タイマー[秒]　※カウントダウン
+	
+	// timer
+	UH tick_10ms;
+	UH tick_10ms_sec;
+	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
@@ -383,7 +410,9 @@ typedef struct{
 	
 	UB	bd_device_adrs[BD_ADRS_NUM];						// BDデバイスアドレス
 	
-	UW err_cnt;			//異常回数(デバッグ用途)
+	// 異常関連デバッグ用途
+	UW err_cnt;				//異常回数(デバッグ用途)
+	ERR_ID last_err_id;		//前回異常ID(デバッグ用途)
 }T_UNIT;
 
 
@@ -545,7 +574,11 @@ extern void ds_set_vuart_data( UB *p_data, UB len );
 extern void ds_set_vuart_send_status( UB status );
 extern void user_system_init( void );
 extern void user_main_init( void );
+extern void err_info( ERR_ID id );
 extern void main_cpu_com_snd_pc_log( UB* data, UB size );
 extern void main_set_bd_adrs( UB* bda);
+extern void user_main_timer_10ms_set( void );
+extern void user_main_timer_cyc( void );
+extern UW time_get_elapsed_time( void );
 
 #endif // __MAIN_USR_INC__

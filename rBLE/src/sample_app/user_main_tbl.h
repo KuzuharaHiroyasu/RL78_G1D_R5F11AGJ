@@ -13,29 +13,29 @@
 
 static const struct ke_msg_handler cpu_com_handler[] =
 {
-	{ USER_MAIN_CYC_ACT			, (ke_msg_func_t)cpu_com_evt },
+	{ USER_MAIN_CYC_ACT			, (ke_msg_func_t)user_main_cyc },
 	{ USER_MAIN_CALC_SEKIGAI	, (ke_msg_func_t)main_calc_sekigai },
 	{ USER_MAIN_CALC_SEKISHOKU	, (ke_msg_func_t)main_calc_sekishoku },
 	{ USER_MAIN_CALC_KOKYU		, (ke_msg_func_t)main_calc_kokyu },
 	{ USER_MAIN_CALC_IBIKI		, (ke_msg_func_t)main_calc_ibiki },
 	{ USER_MAIN_CALC_ACL		, (ke_msg_func_t)main_calc_acl },
-	{ USER_MAIN_ACT2			, (ke_msg_func_t)cpu_com_timer_handler },
+	{ USER_MAIN_CYC_CALC_RESULT			, (ke_msg_func_t)user_main_calc_result_cyc },
 };
 
 /* Status Handler */
-const struct ke_state_handler cpu_com_state_handler[ CPU_COM_STATE_MAX ] =
+const struct ke_state_handler user_main_state_handler[ USER_MAIN_STATE_MAX ] =
 {   /* State message handlers */
     KE_STATE_HANDLER(cpu_com_handler)
 };
 
 /* Default Handler */
-const struct ke_state_handler cpu_com_default_handler = KE_STATE_HANDLER_NONE;
+const struct ke_state_handler user_main_default_handler = KE_STATE_HANDLER_NONE;
 
 /************************************************************/
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 0, 10};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 0, 11};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
@@ -77,15 +77,16 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DATA_FRAME,	VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
 	{	VUART_CMD_DATA_CALC,	VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
 	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// 機器データ[受信はSET時]
-	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_prg_hd_eep_code_record		},	// プログラム転送(データ)
-	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_prg_hd_result				},	// プログラム転送結果
-	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_prg_hd_update				},	// プログラム更新完了確認
+	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_vuart_prg_rcv_hd_record	},	// プログラム転送(データ)
+	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_vuart_prg_rcv_hd_result	},	// プログラム転送結果
+	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_vuart_prg_rcv_hd_update	},	// プログラム更新完了確認
 	{	VUART_CMD_ALARM_SET,	VUART_CMD_LEN_ALARM_SET,	main_vuart_rcv_alarm_set		},	// アラーム設定変更
 	{	VUART_CMD_ALARM_INFO,	0,							NULL							},	// アラーム通知[送信専用]
 };
 
 /* モード別処理 */
-STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,			// SYSTEM_MODE_INITIAL			イニシャル
+typedef void (*MODE_FUNC)(void);
+STATIC MODE_FUNC p_user_main_mode_func[] = {								user_main_mode_inital,			// SYSTEM_MODE_INITIAL			イニシャル
 																			user_main_mode_idle_rest,		// SYSTEM_MODE_IDLE_REST		アイドル_残量表示
 																			user_main_mode_idle_com,		// SYSTEM_MODE_IDLE_COM			アイドル_通信待機
 																			user_main_mode_sensing,			// SYSTEM_MODE_SENSING			センシング
@@ -98,8 +99,7 @@ STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,
 };
 
 typedef SYSTEM_MODE ( *EVENT_TABLE )( int event );
-
-static EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
+STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 // モード				INITAL				IDLE_REST			IDLE_COM			SENSING			GET					PRG_H1D				PRG_G1D			SELF_CHECK		MOVE				NON
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW(短)		*/	{ evt_idle_rest,	evt_sensing,		evt_sensing_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
@@ -112,9 +112,12 @@ static EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 /*プログラム(H1D)	*/	{ evt_non,			evt_h1d_prg_denchi,	evt_h1d_prg_denchi,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*プログラム(G1D)	*/	{ evt_non,			evt_g1d_prg_denchi,	evt_g1d_prg_denchi,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*自己診断(通信)	*/	{ evt_non,			evt_self_check,		evt_self_check,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*完了				*/	{ evt_non,			evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_idle_com,		evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
+/*完了				*/	{ evt_non,			evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_prg_h1d_fin,	evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
 /*中断				*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*タイムアウト		*/	{ evt_non,			evt_idle_com,		evt_initial_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*タイムアウト		*/	{ evt_non,			evt_idle_com,		evt_initial_chg,	evt_non,		evt_non,			evt_prg_h1d_time_out,evt_non,		evt_non,		evt_non,			evt_non },
 /*検査				*/	{ evt_idle_com_denchi,evt_self_check,	evt_self_check,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non }
 };
+
+// 1ページ256byteの０埋めテーブル
+STATIC const UB s_eep_page0_tbl[EEP_ACCESS_ONCE_SIZE] = { 0 };
 

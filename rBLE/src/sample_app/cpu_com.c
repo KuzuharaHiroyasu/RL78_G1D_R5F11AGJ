@@ -1,43 +1,24 @@
-/**
- ****************************************************************************************
- *
- * @file		DTM2Wire.c
- *
- * @brief Direct Test Mode 2Wire UART Driver.
- *
- * Copyright(C) 2013-2014 Renesas Electronics Corporation
- *
- ****************************************************************************************
- */
-
-/*
- * INCLUDE FILES
- ****************************************************************************************
- */
-#include "rwble_config.h"
-#if !defined(_USE_RWBLE_SOURCE)
-#include "arch.h"
-#include "rwke_api.h"
-#else /* !defined(_USE_RWBLE_SOURCE) */
-#include	"ke_task.h"
-#endif
-
-#include	"rble.h"
-#include	"rble_api.h"
-
+/************************************************************************/
+/* システム名   : RD8001 快眠チェッカー									*/
+/* ファイル名   : cpu_com.c												*/
+/* 機能         : CPU間通信ミドル										*/
+/* 変更履歴     : 2018.04.10 Axia Soft Design 西島		初版作成		*/
+/* 注意事項     : なし													*/
+/************************************************************************/
+/********************/
+/*     include      */
+/********************/
 #include	"header.h"		//ユーザー定義
 
 #include	"uart.h"
-#include	"port.h"
 
 
-/********************/
-/* プロトタイプ宣言 */
-/********************/
-STATIC void cpu_com_rcv_proc(void);
-STATIC void cpu_com_send_proc(void);
-STATIC UB cpu_com_analyze_msg(void);
-STATIC void cpu_com_clear_send_order(void);
+/************************************************************/
+/* プロトタイプ宣言											*/
+/************************************************************/
+
+
+STATIC void cpu_com_init_sub(void);
 STATIC void cpu_com_crcset(UB *msg, UH size, UH *crc);
 STATIC void cpu_com_rcv_proc(void);
 STATIC UB cpu_com_analyze_msg(void);
@@ -46,39 +27,38 @@ STATIC UB cpu_com_analyze_msg_check_data(void);
 STATIC void cpu_com_send_proc(void);
 STATIC UB cpu_com_make_send_data(void);
 STATIC void cpu_com_clear_send_order(void);
-void drv_cpu_com_set_send_status( UB status );
-void drv_cpu_com_get_send_status( UB *status );
-void test_cpu_com_send( void );
-#if 0		//未使用
-STATIC RING_BUF* drv_uart0_get_snd_ring( void );
-#endif
-STATIC RING_BUF* drv_uart0_get_rcv_ring( void );
 STATIC void cpu_com_send_data( UB* data, UH len );
+// 送信はDMA転送で一括送信する為にリングバッファは不要
+//STATIC RING_BUF* drv_uart0_get_snd_ring( void );
+STATIC RING_BUF* drv_uart0_get_rcv_ring( void );
+
 
 
 /********************/
 /*     内部変数     */
 /********************/
-//RD8001暫定：メインとのデータIF未定
-STATIC DS_CPU_COM_ORDER s_ds_cpu_com_order;
 STATIC DS_CPU_COM_INPUT s_cpu_com_ds_input;					/* データ管理部のコピーエリア アプリへのデータ受け渡し用 */
 STATIC DS_CPU_COM_ORDER *s_p_cpu_com_ds_order;				/* データ管理部のポインタ アプリからの指示用 */
 
 STATIC UB s_cpu_com_snd_cmd;								/* 送信コマンド */
-STATIC UB s_cpu_com_snd_data[CPU_COM_MSG_SIZE_MAX];			/* 送信メッセージ */
+STATIC UB s_cpu_com_snd_data[CPU_COM_BUF_SIZE_MAX];			/* 送信メッセージ */
 STATIC UH s_cpu_com_snd_size;								/* 送信メッセージ長 */
 STATIC UB s_cpu_com_snd_type;								/* 送信コマンドタイプ */
 STATIC UB s_cpu_com_snd_retry_cnt;							/* 送信リトライ回数 */
 STATIC UW s_cpu_com_snd_timeout;							/* リトライタイムアウト時間 *10ms */
 STATIC UB s_cpu_com_snd_rensou_cnt;							/* 送信連送回数 */
 
-STATIC ke_time_t s_cpu_com_snd_last_time;					/* 送信前回時間 */
+STATIC UW s_cpu_com_snd_last_time;					/* 送信前回時間 */
 
 
-STATIC UB s_cpu_com_snd_flg;								/* 送信フラグ */
 
 STATIC UB s_cpu_com_snd_seq_no;								/* 送信シーケンスNo */
-STATIC UB s_cpu_com_res_seq_no;								/* 受信シーケンスNo */
+//STATIC UB s_cpu_com_res_seq_no;								/* 受信シーケンスNo *///マスターで受信シーケンス未使用
+
+STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
+																/* DRV_CPU_COM_STATUS_CAN_SEND		送信可能状態 */
+																/* DRV_CPU_COM_STATUS_SENDING		送信中 */
+
 
 STATIC UB s_cpu_com_snd_status;								/* CPU間通信 送信ステータス */
 																/*	CPU_COM_SND_STATUS_IDLE			送信可能状態		*/
@@ -87,24 +67,20 @@ STATIC UB s_cpu_com_snd_status;								/* CPU間通信 送信ステータス */
 																/* 	CPU_COM_SND_STATUS_COMPLETE		送信完了状態		*/
 																/* 	CPU_COM_SND_STATUS_SEND_NG		リトライNG			*/
 
-STATIC CPU_COM_RCV_MSG	s_cpu_com_rcv_msg;					/* 受信メッセージ */
+STATIC CPU_COM_ANA_RCV_MSG	s_cpu_com_rcv_msg;				/* 受信メッセージ */
 STATIC UH s_cpu_com_rcv_msg_size;							/* 受信メッセージサイズ */
 
+// =============================
+// ドライバ用定義
+// =============================
+#define	DRV_UART0_RCV_RING_LENGTH				CPU_COM_BUF_SIZE_MAX			/* リングバッファ長(1メッセージ分＋１) ※＋１の理由はリングバッファの注意事項参照 */
+//#define	DRV_UART0_SND_RING_LENGTH				CPU_COM_BUF_SIZE_MAX		/* リングバッファ長(1メッセージ分＋１) ※＋１の理由はリングバッファの注意事項参照 */
 
-// ドライバコピペ RD8001暫定：サイズ未定
-#define	DRV_UART0_DATA_LENGH					100									/* CPU間通信データ長(送受、共通) ヘッダXXXバイト＋オプションデータXXXバイト */
-#define	DRV_UART0_RCV_RING_LENGTH				( (DRV_UART0_DATA_LENGH * 5) + 1 )		/* リングバッファ長(1メッセージ分＋１) ※＋１の理由はリングバッファの注意事項参照 */
-#define	DRV_UART0_SND_RING_LENGTH				( (DRV_UART0_DATA_LENGH * 1) + 1 )		/* リングバッファ長(3メッセージ分＋１) ※＋１の理由はリングバッファの注意事項参照 */
 
-
-#define			SERIAL_DRV_RCV_SIZE		1			//受信DMA通信サイズRD8001暫定：1バイトで負荷的に問題ないか
+#define			SERIAL_DRV_RCV_SIZE				1				//受信DMA通信サイズ:データ長が固定で無い事から1バイトで受信する ※負荷確認済み(2018.09.06)
 uint8_t			serial_drv_rcv[SERIAL_DRV_RCV_SIZE];
 
-
-/********************/
-/*     内部変数     */
-/********************/
-UB drv_uart0_send_buf[DRV_UART0_SND_RING_LENGTH];				/* 送信バッファ(リング用) */
+//UB drv_uart0_send_buf[DRV_UART0_SND_RING_LENGTH];				/* 送信バッファ(リング用) */// 送信はDMA転送で一括送信する為にリングバッファは不要
 UB drv_uart0_rcv_buf[DRV_UART0_RCV_RING_LENGTH];				/* 受信バッファ(リング用) */
 RING_BUF drv_uart0_send_ring;									/* 送信リングバッファ用コントローラ */
 RING_BUF drv_uart0_rcv_ring;									/* 受信リングバッファ用コントローラ */
@@ -116,36 +92,44 @@ RING_BUF drv_uart0_rcv_ring;									/* 受信リングバッファ用コントローラ */
 /* コマンドテーブル ※マスター専用 */
 /* タイプを変更する事で受信専用にも対応 */
 STATIC const T_CPU_COM_CMD_INFO s_tbl_cmd_info[CPU_COM_CMD_MAX] = {
-	/*コマンド*/ /*タイプ*/					/*リトライ(初送含む)*//*リトライ間隔 *10ms*/ /*連送回数*/
-	{	0x00,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* コマンド無し				*/
-	{	0xE0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* ステータス要求			*/
-	{	0xA0,	CPU_COM_CMD_TYPE_ONESHOT_RCV,		0,				0,					0	},	/* センサーデータ更新		*/
-	{	0xA1,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* センシング指示			*/
-	{	0xB0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 状態変更(G1D)			*/
-	{	0xF0,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* PCログ送信(内部コマンド)	*/
-	{	0xB1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 日時設定					*/
-																								// 以降プログラム更新
-	{	0xD5,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送準備		*/
-	{	0xD2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送開始		*/
-	{	0xD4,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送消去		*/
-	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送データ		*/
-	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送結果		*/
-	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				10,					0	},	/* プログラム転送確認		*/
-	{	0xB2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 表示指示					*/
-	{	0xB3,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* バージョン				*/
+	/*コマンド*/ /*タイプ*/					/*リトライ(初送含む)*//*リトライ間隔[10ms] */ /*連送回数*/
+	{	0x00,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,						0	},	/* コマンド無し				*/
+	{	0xE0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* ステータス要求			*/
+	{	0xA0,	CPU_COM_CMD_TYPE_ONESHOT_RCV,		0,				0,						0	},	/* センサーデータ更新		*/
+	{	0xA1,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,						0	},	/* センシング指示			*/
+	{	0xB0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* 状態変更(G1D)			*/
+	{	0xF0,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,						0	},	/* PCログ送信(内部コマンド)	*/
+	{	0xB1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* 日時設定					*/
+	{	0xD5,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* プログラム転送準備		*/
+	{	0xD2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* プログラム転送開始		*/
+	{	0xD4,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* プログラム転送消去		*/
+	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* プログラム転送データ		*/
+	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* プログラム転送結果		*/
+	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				10,						0	},	/* プログラム転送確認		*/
+	{	0xB2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* 表示指示					*/
+	{	0xB3,	CPU_COM_CMD_TYPE_RETRY,				3,				10,						0	},	/* バージョン				*/
 };
 
-
+/************************************************************************/
+/* 関数     : cpu_com_init												*/
+/* 関数名   : 初期化処理(プラットフォーム/ユーザー)						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : 初期化処理(プラットフォーム/ユーザー)							*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
 void cpu_com_init( void )
 {
+	// プラットフォーム関連の設定
 	SERIAL_EVENT_PARAM call_back = {0};
 	
 	call_back.rx_callback = &cpu_com_read_comp;
 	call_back.tx_callback = &cpu_com_write_comp;
 	call_back.err_callback = &cpu_com_error_comp;
 	
-	s_cpu_com_snd_flg = OFF;
-
 	serial_init( &call_back );
 	
 	// 受信データサイズの指定
@@ -155,10 +139,21 @@ void cpu_com_init( void )
 	
 }
 
-//  読み出し完了(コールバック)
+/************************************************************************/
+/* 関数     : cpu_com_read_comp											*/
+/* 関数名   : 読み出し完了(プラットフォーム)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : 読み出し完了(プラットフォーム)								*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
 void cpu_com_read_comp( void )
 {
 #if 0
+	// 元の処理
 	uint8_t *ke_msg;
 
 	DTM2Wire_Data_Wr_Point++;
@@ -167,15 +162,11 @@ void cpu_com_read_comp( void )
 	// 受信データサイズの指定
 	serial_read( ( uint8_t * )&serial_drv_rcv[ 0 ], SERIAL_DRV_RCV_SIZE );
 	if( E_QOVR == write_ring_buf( &drv_uart0_rcv_ring, serial_drv_rcv[0] )){
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
-		__no_operation();		// RD8001暫定：ブレイク貼り用
+		err_info(ERR_ID_CPU_COM_RCV_RING);
 	}
 #endif
-	//一旦OSなし
 #if 0
+	// 元の処理(OS通知)
 	if ( _DTM2WIRE_INIT_STATE_COMPLETE == cpu_com_init_Flg ) {
 	    ke_msg = ke_msg_alloc( DTM2RBLE_READ_COMPLETE, USER_MAIN_ID, USER_MAIN_ID, 0 );
     	ke_msg_send(ke_msg);
@@ -184,50 +175,71 @@ void cpu_com_read_comp( void )
 
 }
 
-// 書き込み完了(コールバック)
+/************************************************************************/
+/* 関数     : cpu_com_write_comp										*/
+/* 関数名   : 書き込み完了(プラットフォーム)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : 書き込み完了(プラットフォーム)								*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
 void cpu_com_write_comp( void )
 {
-	drv_o_port_h1d_int( OFF );
+//	drv_o_port_h1d_int( OFF );
+	drv_cpu_com_set_send_status( DRV_CPU_COM_STATUS_CAN_SEND );
 
 }
 
+/************************************************************************/
+/* 関数     : cpu_com_error_comp										*/
+/* 関数名   : 異常発生(プラットフォーム)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : 異常発生(プラットフォーム)									*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
 void cpu_com_error_comp( void )
 {
 #if 0
+	// 元の処理
 	if ( _RBLE_RUN_MODE_INIT == rBLE_Run_Mode_Flg ) {
 		rBLE_Run_Mode_Flg = _RBLE_RUN_MODE_NORMAL;
 	} else {
 	}
-#endif
-#if 0
-		serial_read( ( uint8_t * )&DTM2Wire_Data[ ( DTM2Wire_Data_Wr_Point & ( DTM2WIRE_MAX_BUF_CNT - 1 ) ) ], sizeof( uint16_t ) );
+	serial_read( ( uint8_t * )&DTM2Wire_Data[ ( DTM2Wire_Data_Wr_Point & ( DTM2WIRE_MAX_BUF_CNT - 1 ) ) ], sizeof( uint16_t ) );
 #else
 	// 受信データサイズの指定
 	serial_read( ( uint8_t * )&serial_drv_rcv[ 0 ], SERIAL_DRV_RCV_SIZE );
+	err_info(ERR_ID_DRV_UART_OERR);
 #endif
 }
 
-// ========================================
-// H1D共通コード
-// ========================================
-
-// ========================================
 
 /************************************************************************/
-/* 関数     : cpu_com_init												*/
-/* 関数名   : 初期化処理												*/
+/* ユーザーアプリ														*/
+/************************************************************************/
+
+/************************************************************************/
+/* 関数     : cpu_com_init_sub											*/
+/* 関数名   : 初期化処理(ユーザーアプリ)								*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 初期化処理													*/
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-void cpu_com_init_sub(void)
+STATIC void cpu_com_init_sub(void)
 {
 	memset(&s_cpu_com_ds_input, 0x00, sizeof(s_cpu_com_ds_input));
-	s_p_cpu_com_ds_order = &s_ds_cpu_com_order;		//RD8001暫定
+	s_p_cpu_com_ds_order = NULL;
 
 	s_cpu_com_snd_cmd = 0x00;
 	memset(s_cpu_com_snd_data, 0x00, sizeof(s_cpu_com_snd_data));
@@ -236,12 +248,16 @@ void cpu_com_init_sub(void)
 	s_cpu_com_snd_retry_cnt = 0;
 	s_cpu_com_snd_timeout = 0;
 	s_cpu_com_snd_rensou_cnt = 0;
-	s_cpu_com_snd_seq_no = 0;
-	s_cpu_com_res_seq_no = 0xFF;
 	
+	s_cpu_com_snd_last_time = time_get_elapsed_time();
+	
+	s_cpu_com_snd_seq_no = 0;
+//	s_cpu_com_res_seq_no = 0xFF;		//マスターで受信シーケンス未使用
+	
+	s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_CAN_SEND;
 	s_cpu_com_snd_status = CPU_COM_SND_STATUS_IDLE;
 	
-	memset(s_cpu_com_rcv_msg.buf, 0x00, sizeof(s_cpu_com_rcv_msg.buf));
+	memset( &s_cpu_com_rcv_msg, 0x00, sizeof(s_cpu_com_rcv_msg));
 	s_cpu_com_rcv_msg_size = 0;
 	
 #if FUNC_DEBUG_CPU_COM == OFF
@@ -258,8 +274,7 @@ void cpu_com_init_sub(void)
 /*			: UH size : 対象データ長									*/
 /*          : UH crc : CRC計算結果										*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2012.11.30  Axia Soft Design 浦久保   初版作成			*/
-/*          : 2014.05.13  Axia Soft Design 吉居		CPU間通信用に移植	*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 :																*/
 /************************************************************************/
@@ -277,7 +292,7 @@ STATIC void cpu_com_crcset(UB *msg, UH size, UH *crc)
 /* 関数名   : CPU間通信周期処理											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 周期処理														*/
 /************************************************************************/
@@ -314,7 +329,7 @@ void cpu_com_proc(void)
 /* 戻り値   : CPU_COM_SND_RES_OK										*/
 /*          : CPU_COM_SND_RES_BUSY_NG									*/
 /*          : CPU_COM_SND_RES_RETRY_OUT_NG								*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 指定コマンドを送信しレスポンス受信待ちを行う					*/
 /************************************************************************/
@@ -351,7 +366,6 @@ UB get_cpu_com_send_req( DS_CPU_COM_ORDER *order, DS_CPU_COM_INPUT *input )
 			/* 何もしない */
 		}
 		
-		/* RD8001暫定 リトライ待ち時間によってはWDTリフレッシュ処理必要 */
 		//wdt_refresh();
 	}
 	
@@ -374,7 +388,7 @@ UB get_cpu_com_send_req( DS_CPU_COM_ORDER *order, DS_CPU_COM_INPUT *input )
 /* 関数名   : 周期受信処理												*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 周期処理														*/
 /************************************************************************/
@@ -387,8 +401,6 @@ STATIC void cpu_com_rcv_proc(void)
 		s_cpu_com_ds_input.rcv_cmd = s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_CMD];
 		/* アプリ通知用のデータに受信データをセット */
 		memcpy( s_cpu_com_ds_input.rcv_data, &s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_DATA], ( s_cpu_com_rcv_msg_size- CPU_COM_MSG_SIZE_MIN ));
-		// デバッグ送信
-//		test_cpu_com_send();
 	}
 }
 
@@ -399,7 +411,7 @@ STATIC void cpu_com_rcv_proc(void)
 /* 引数     : なし														*/
 /* 戻り値   : ON :1メッセージ受信										*/
 /*          : OFF:未受信												*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : 周期処理														*/
 /************************************************************************/
@@ -451,7 +463,7 @@ STATIC UB cpu_com_analyze_msg_check_etx(void)
 			break;
 		}
 		//バッファオーバーラン対策
-		if( s_cpu_com_rcv_msg.pos >= CPU_COM_MSG_SIZE_MAX ){
+		if( s_cpu_com_rcv_msg.pos >= sizeof(s_cpu_com_rcv_msg.buf) ){
 			s_cpu_com_rcv_msg.pos = 0;
 			s_cpu_com_rcv_msg.state = CPU_COM_RCV_MSG_STATE_STX_WAIT;
 		}
@@ -469,18 +481,12 @@ STATIC UB cpu_com_analyze_msg_check_etx(void)
 			//制御コード以外
 			if(( ON == s_cpu_com_rcv_msg.last_dle_flg ) && ( CPU_COM_CTRL_CODE_STX == rcv_data )){
 				// STX受信と判断
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-//				com_srv_puts(COM_SRV_LOG_DEBUG,(const B*)"rcv stx\r\n");
-#endif
 				s_cpu_com_rcv_msg.pos = 0;
 				s_cpu_com_rcv_msg.buf[s_cpu_com_rcv_msg.pos++] = CPU_COM_CTRL_CODE_DLE;
 				s_cpu_com_rcv_msg.buf[s_cpu_com_rcv_msg.pos++] = CPU_COM_CTRL_CODE_STX;
 				s_cpu_com_rcv_msg.state = CPU_COM_RCV_MSG_STATE_ETX_WAIT;
 			}else if(( ON == s_cpu_com_rcv_msg.last_dle_flg ) && ( CPU_COM_CTRL_CODE_ETX == rcv_data ) && ( CPU_COM_RCV_MSG_STATE_ETX_WAIT == s_cpu_com_rcv_msg.state )){
 				// ETXまで取得
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-//				com_srv_puts(COM_SRV_LOG_DEBUG,(const B*)"rcv etx\r\n");
-#endif
 				s_cpu_com_rcv_msg.buf[s_cpu_com_rcv_msg.pos++] = CPU_COM_CTRL_CODE_ETX;
 				s_cpu_com_rcv_msg_size = s_cpu_com_rcv_msg.pos;
 				s_cpu_com_rcv_msg.pos = 0;
@@ -517,14 +523,12 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 	UH crc_rcv = 0; /* 受信データCRC */
 	UH tmp = 0;
 	UH data_size = 0;
-	UB seq_num = 0;
+//	UB seq_num = 0;	// シーケンス番号チェック無効 ※マスター未使用
 	
 	if(( CPU_COM_MSG_SIZE_MIN > s_cpu_com_rcv_msg_size ) ||
 		( CPU_COM_MSG_SIZE_MAX < s_cpu_com_rcv_msg_size )){
 		/* メッセージサイズ異常 */
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-		com_srv_puts(COM_SRV_LOG_DEBUG,(const B*)"CPU_COM DATA_SIZE_NG\r\n");
-#endif
+		err_info(ERR_ID_CPU_COM);
 		return OFF;
 	}
 	/* STX,ETX,SUM、CRCを除いたデータ長 */
@@ -535,22 +539,20 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 	crc_rcv |= s_cpu_com_rcv_msg.buf[ CPU_COM_STX_SIZE + data_size + 1 ] << 8;	/* CRC上位ビット */
 	cpu_com_crcset( &s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_CMD], data_size, &tmp );
 
-	if( crc_rcv != tmp ){
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-		com_srv_puts(COM_SRV_LOG_DEBUG,(const B*)"CPU_COM CRC_NG\r\n");
-#endif
+	if( crc_rcv != tmp ){		// CRC異常
+		err_info(ERR_ID_CPU_COM);
 		return OFF;
 	}
 	
 	/* シーケンス番号チェック */
+#if 0	// シーケンス番号チェック無効 ※マスター未使用
 	seq_num = s_cpu_com_rcv_msg.buf[ CPU_COM_MSG_TOP_POS_SEQ ];				/* シーケンス番号下位ビット */
 
-#if 0	// シーケンス番号チェック無効 ※マスターは必要なし
 	if( s_cpu_com_res_seq_no == seq_num ){
 		return OFF;
 	}
-#endif
 	s_cpu_com_res_seq_no = seq_num;		//シーケンス番号更新
+#endif
 	
 	/* チェックOK */
 	return ON;
@@ -571,33 +573,29 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-UB dbg_rcv_int = 0;
-#endif
-
 STATIC void cpu_com_send_proc(void)
 {
 #if 1
-	ke_time_t now_time;
+	UW now_time;
 //	ke_time_t time;
 	UB send_status;
-//	UH res_seq_expect;	/* 前回送信時シーケンスNo *///RD8001削除予定：シーケンス
+//	UH res_seq_expect;	/* 前回送信時シーケンスNo ※マスター未使用
 	
 	/* ドライバの送信状態を取得 */
 	drv_cpu_com_get_send_status( &send_status );
 //	s_cpu_com_snd_status = CPU_COM_SND_STATUS_COMPLETE;
-	send_status = DRV_CPU_COM_STATUS_CAN_SEND;		//RD8001暫定
 	
-	now_time = ke_time();
+	now_time = time_get_elapsed_time();
 	
 	switch( s_cpu_com_snd_status ){
 		case CPU_COM_SND_STATUS_RCV_WAIT:
 			/* 受信待ち状態 */
 //			res_seq_expect = s_cpu_com_snd_seq_no-1;//RD8001削除予定：シーケンス
 
-#if 1		//RD8001暫定	シーケンスチェックは無くす予定
+#if 1
 			if( s_cpu_com_snd_cmd == s_cpu_com_ds_input.rcv_cmd ){
 #else
+			// シーケンス番号チェック無効 ※マスター未使用
 			if(( s_cpu_com_snd_cmd == s_cpu_com_ds_input.rcv_cmd ) &&
 				( res_seq_expect == s_cpu_com_res_seq_no )){	/* 同一コマンド かつ 同一シーケンスNo */
 #endif
@@ -608,19 +606,11 @@ STATIC void cpu_com_send_proc(void)
 				/* 受信なし */
 //				time_soft_get_10ms(TIME_TYPE_10MS_CPU_COM_RETRY, &time);
 				if(( now_time - s_cpu_com_snd_last_time ) >= s_cpu_com_snd_timeout ){
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-					com_srv_printf(COM_SRV_LOG_COMMAND,(const B*)"CPU_COM_RCV TIME_OUT:%d\r\n",dbg_rcv_int );
-//					if( 1 == dbg_rcv_int ){
-						dbg_rcv_int = 0;
-//						//drv_cpu_com_init(ON);		//効果なし
-//					}
-#endif
+					err_info( ERR_ID_CPU_COM_ERR );
 					if( 0 == s_cpu_com_snd_retry_cnt ){
-						/* リトライアウト */
+						/* リトライアウト(致命的) */
 						s_cpu_com_snd_status = CPU_COM_SND_STATUS_SEND_NG; /* リトライNG */
-#if FUNC_DBG_CPU_COM_LOG_ERR == ON
-						com_srv_puts(COM_SRV_LOG_DEBUG,(const B*)"CPU間通信リトライアウト(致命的)\r\n");
-#endif
+						err_info( ERR_ID_CPU_COM_RETRYOUT );
 					}else{
 						if( DRV_CPU_COM_STATUS_CAN_SEND == send_status ){
 							/* 送信可能状態 */
@@ -729,7 +719,7 @@ STATIC void cpu_com_send_proc(void)
 /* 関数名   : 送信データ生成											*/
 /* 引数     : なし														*/
 /* 戻り値   : TRUE:正常 FALSE:異常										*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : アプリからの指示に従い送信データを生成する					*/
 /************************************************************************/
@@ -760,10 +750,12 @@ STATIC UB cpu_com_make_send_data(void)
 	if(( CPU_COM_CMD_NONE == s_p_cpu_com_ds_order->snd_cmd_id ) || ( CPU_COM_CMD_MAX <= s_p_cpu_com_ds_order->snd_cmd_id ) ||
 		( CPU_COM_CMD_TYPE_ONESHOT_RCV == s_tbl_cmd_info[s_p_cpu_com_ds_order->snd_cmd_id].cmd_type )){
 		/* コマンドID異常 */
+		err_info(ERR_ID_CPU_COM);
 		return FALSE;
 	}
-	if( CPU_COM_DATA_SIZE_MAX <= s_p_cpu_com_ds_order->data_size ){
+	if( CPU_COM_DATA_SIZE_MAX < s_p_cpu_com_ds_order->data_size ){
 		/* データ長異常 */
+		err_info(ERR_ID_CPU_COM);
 		return FALSE;
 	}
 	
@@ -821,17 +813,8 @@ STATIC UB cpu_com_make_send_data(void)
 	/* シーケンスNo加算 */
 	s_cpu_com_snd_seq_no++;
 	
-	// 送信バッファ書き込み
-#if 1
+	// 送信バッファ書き込み[DMA転送]
 	cpu_com_send_data( &s_cpu_com_snd_data[ 0 ], s_cpu_com_snd_size );
-#else
-	p_ring = drv_uart0_get_snd_ring();
-	for( i = 0;i < (size + CPU_COM_MSG_SIZE_MIN) ; i++ ){
-		if( E_OK != write_ring_buf( p_ring, s_cpu_com_snd_data[i] )){	/* リングバッファ書き込み */
-			break;
-		}
-	}
-#endif
 
 	return TRUE;
 }
@@ -842,7 +825,7 @@ STATIC UB cpu_com_make_send_data(void)
 /* 関数名   : 送信要求クリア											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.05.08  Axia Soft Design 吉居		初版作成			*/
+/* 変更履歴 : 2018.05.13  Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : アプリからの指示をクリアする									*/
 /************************************************************************/
@@ -861,26 +844,6 @@ STATIC void cpu_com_clear_send_order(void)
 }
 
 /************************************************************************/
-/* 関数     : cpu_com_sub_reset											*/
-/* 関数名   : サブマイコン側リセット処理								*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2014.06.24 Axia Soft Design 吉居	初版作成				*/
-/*          : 2016.02.23 Axia Soft Design 西島	サブマイコンに名称変更	*/
-/************************************************************************/
-/* 機能 : サブマイコンをリセットする									*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-#if 0
-void cpu_com_sub_reset(void)
-{
-	/* ドライバ関数をコール */
-	drv_cpu_com_sub_reset();
-}
-#endif
-
-/************************************************************************/
 /* 関数     : cpu_com_get_status										*/
 /* 関数名   : CPUステータス取得											*/
 /* 引数     : なし														*/
@@ -889,17 +852,20 @@ void cpu_com_sub_reset(void)
 /* 				CPU_COM_SND_STATUS_RENSOU		連送中状態				*/
 /* 				CPU_COM_SND_STATUS_COMPLETE		送信完了状態			*/
 /* 				CPU_COM_SND_STATUS_SEND_NG		リトライNG				*/
-/* 変更履歴 : 2014.07.09 Axia Soft Design 西島		初版作成			*/
+/* 変更履歴 : 2018.07.09 Axia Soft Design 西島		初版作成			*/
 /************************************************************************/
 /* 機能 : CPUステータス取得												*/
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
+// DSデータで確認出来るので削除
+#if 0
 UB cpu_com_get_status(void)
 {
 	/* ドライバ関数をコール */
 	return s_cpu_com_snd_status;
 }
+#endif
 
 
 /************************************************************************/
@@ -916,9 +882,15 @@ UB cpu_com_get_status(void)
 /************************************************************************/
 UH cpu_com_dle_extension( UB* data, UH size )
 {
-	UB cpu_com_buf_org[CPU_COM_DATA_SIZE_MAX];
+	UB cpu_com_buf_org[CPU_COM_MSG_SIZE_MAX];
 	int i = 0;
 	UH extension_size = 0;
+	
+	// 異常チェック
+	if(size > CPU_COM_MSG_SIZE_MAX ){
+		err_info(ERR_ID_LOGIC);
+		return ( size + extension_size );
+	}
 	
 	memcpy( &cpu_com_buf_org[0], data, size );
 	
@@ -937,30 +909,76 @@ UH cpu_com_dle_extension( UB* data, UH size )
 	// ETX対応 ※無拡張
 	*data++ = cpu_com_buf_org[i++];
 	*data   = cpu_com_buf_org[i];
-
+	
+	// 異常チェック
+	if(( size + extension_size ) > CPU_COM_BUF_SIZE_MAX ){
+		err_info(ERR_ID_LOGIC);
+	}
+	
 	return ( size + extension_size );
 }
 
+/************************************************************************/
+/* 関数     : cpu_com_send_data											*/
+/* 関数名   : 送信サブ関数												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : 送信サブ関数													*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
 STATIC void cpu_com_send_data( UB* data, UH len )
 {
 	drv_o_port_h1d_int( ON );
-	s_cpu_com_snd_flg = ON;
+
+	DRV_CPU_COM_H1D_WAKEUP_WAIT
+	
+	drv_cpu_com_set_send_status( DRV_CPU_COM_STATUS_SENDING );
 	serial_write( data, len );
 }
 
-UB cpu_com_get_busy( void )
+/************************************************************************/
+/* 関数     : cpu_com_get_can_sleep										*/
+/* 関数名   : スリープ可能状態取得										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07 Axia Soft Design 西島		初版作成			*/
+/************************************************************************/
+/* 機能 : スリープ可能状態取得											*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+UB cpu_com_get_can_sleep( void )
 {
-	return s_cpu_com_snd_flg;
+	UB ret = ON;
+	UB send_status;
+
+	/* ドライバの送信状態を取得 */
+	drv_cpu_com_get_send_status( &send_status );
+	
+	// 送信中はスリープ出来ない
+	if( DRV_CPU_COM_STATUS_SENDING == send_status ){
+		ret = OFF;
+	}else{
+		// プラットフォームがDMA書き込み完了なので送信状態レジスタもチェック
+		if( BIT06 & SSR00 ){
+			// 送信中
+			ret = OFF;
+		}
+	}
+	
+	return ret;
 }
 
 
-STATIC UB			s_drv_cpu_com_snd_status;							/* CPU間通信送信ステータス */
 /************************************************************************/
 /* 関数     : drv_cpu_com_set_send_status								*/
 /* 関数名   : CPU間通信送信状態セット									*/
 /* 引数     : UB status : 更新する状態									*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.04.25 Axia Soft Design 吉居 久和	初版作成			*/
+/* 変更履歴 : 2018.04.25 Axia Soft Design 西島 稔	初版作成			*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信の送信状態を更新する										*/
@@ -979,7 +997,7 @@ void drv_cpu_com_set_send_status( UB status )
 /* 関数名   : CPU間通信送信状態取得										*/
 /* 引数     : UB *status : 送信状態										*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2014.04.25 Axia Soft Design 吉居 久和	初版作成			*/
+/* 変更履歴 : 2018.04.25 Axia Soft Design 西島 稔	初版作成			*/
 /************************************************************************/
 /* 機能 :																*/
 /* CPU間通信の送信状態を取得する										*/
@@ -994,19 +1012,6 @@ void drv_cpu_com_get_send_status( UB *status )
 }
 
 
-//RD8001暫定：テスト版
-void test_cpu_com_send( void )
-{
-//	s_p_cpu_com_ds_order->snd_cmd_id = CPU_COM_CMD_STATUS_REQ;		/* 送信コマンドID */
-//	s_p_cpu_com_ds_order->snd_data[0] = 0x00;								/* 送信データ */
-//	s_p_cpu_com_ds_order->data_size = 1;										/* 送信データ長 */
-	
-	// データ作成
-	cpu_com_make_send_data();
-}
-
-
-
 /************************************************************************/
 /* 関数     : drv_uart0_init											*/
 /* 関数名   : UART0初期化処理											*/
@@ -1018,14 +1023,16 @@ void test_cpu_com_send( void )
 /* UART0の初期化処理													*/
 /************************************************************************/
 /* 注意事項 :															*/
-/* RX321ハードウェアマニュアルP.1386参照								*/
-/* デバッグポート有効時はSCI10、無効時はSCI1で動作、sys.hで切り替え可能 */
+/* なし																	*/
 /************************************************************************/
 void drv_uart0_data_init( void )
 {
+	memset( &serial_drv_rcv[0], 0x00, sizeof(serial_drv_rcv) );
+	
 	/* 送信リングバッファ初期化 */
-	memset( &drv_uart0_send_buf[0], 0x00, sizeof(drv_uart0_send_buf) );
-	ring_buf_init( &drv_uart0_send_ring, &drv_uart0_send_buf[0], DRV_UART0_SND_RING_LENGTH );
+	// DMA転送で一括送信する為にリングバッファは不要
+//	memset( &drv_uart0_send_buf[0], 0x00, sizeof(drv_uart0_send_buf) );
+//	ring_buf_init( &drv_uart0_send_ring, &drv_uart0_send_buf[0], DRV_UART0_SND_RING_LENGTH );
 	
 	/* 受信リングバッファ初期化 */
 	memset( &drv_uart0_rcv_buf[0], 0x00, sizeof(drv_uart0_rcv_buf) );
@@ -1045,7 +1052,8 @@ void drv_uart0_data_init( void )
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-#if 0		//未使用
+// 送信はDMA転送で一括送信する為にリングバッファは不要
+#if 0	// 未使用
 RING_BUF* drv_uart0_get_snd_ring( void )
 {
 	return &drv_uart0_send_ring;

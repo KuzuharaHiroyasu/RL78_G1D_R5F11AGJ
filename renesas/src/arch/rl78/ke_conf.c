@@ -372,7 +372,7 @@ _TSK_DESC const struct ke_task_desc TASK_DESC_ent[] =
     #if	__DTM2WIRE_UART_USE__
     DESGN(TASK_USR_0)  { MDT2Wire_state_handler, &MDT2Wire_default_handler, DTM2Wire_State, DTM2RBLE_STATE_MAX, DTM2RBLE_IDX_MAX },
     #else
-    DESGN(TASK_USR_0)  { cpu_com_state_handler, &cpu_com_default_handler, cpu_com_state, CPU_COM_STATE_MAX, CPU_COM_IDX_MAX },				//RD8001ÅEΩŒâÔøΩ
+    DESGN(TASK_USR_0)  { user_main_state_handler, &user_main_default_handler, user_main_state, USER_MAIN_STATE_MAX, USER_MAIN_IDX_MAX },				//RD8001ÅEΩŒâÔøΩ
     #endif
     DESGN(TASK_USR_1)  { NULL, NULL, NULL, 0, 0 },
     /* PLACE HOLDER FOR EMBEDDED USER TASKS : END */
