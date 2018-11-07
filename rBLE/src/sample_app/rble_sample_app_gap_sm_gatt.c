@@ -184,10 +184,11 @@ static const RBLE_ADV_INFO adv_info_base = {
     },
     {
         /* AdvDataLen */
-        3+13,
+        3+8,
         /* AdvData */
         2,  0x01, 0x06,                                                         /* Flags ( LE General Discoverable Mode | BR/EDR Not Supported ) */ 
-        12, 0x09, 'R', 'e', 'n', 'e', 's', 'a', 's', '-', 'B', 'L', 'E',        /* Complete local name */
+//        12, 0x09, 'R', 'e', 'n', 'e', 's', 'a', 's', '-', 'B', 'L', 'E',        /* Complete local name */
+        7,  0x09, 'S', 'l', 'e', 'e', 'i', 'm',			/* RD8001‘Î‰ž */
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     },
 #if (SERVICE_LIST_LEN != 0) && (SERVICE_LIST_LEN <= 29)

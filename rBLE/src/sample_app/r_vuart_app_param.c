@@ -66,9 +66,10 @@ const APP_BROADCAST_ENABLE_PARAM g_app_default_broadcast_param[] = {
                 0x00                                    /* reserved */
             },
             {
-                3+9+18,                 /* adv_data_len */
+                3+8+18,                 /* adv_data_len */
                 2, 0x01, 0x06,          /* adv_data */
-                8, 0x09, 'R', 'E', 'L', '-', 'B', 'L', 'E',
+//                8, 0x09, 'R', 'E', 'L', '-', 'B', 'L', 'E',
+                7, 0x09, 'S', 'l', 'e', 'e', 'i', 'm',			/* RD8001‘Î‰ž */
                 17, 0x07,
                 0x1B, 0xC5, 0xD5, 0xA5, 0x02, 0x00, 0xB8, 0x8C,
                 0xE5, 0x11, 0x1B, 0xA2, 0x01, 0x00, 0x8C, 0xD6,
@@ -101,9 +102,10 @@ const APP_BROADCAST_ENABLE_PARAM g_app_default_broadcast_param[] = {
                 0x00                                    /* reserved */
             },
             {
-                3+9+18,                 /* adv_data_len */
+                3+8+18,                 /* adv_data_len */
                 2, 0x01, 0x06,          /* adv_data */
-                8, 0x09, 'R', 'E', 'L', '-', 'B', 'L', 'E',
+//                8, 0x09, 'R', 'E', 'L', '-', 'B', 'L', 'E',
+                7, 0x09, 'S', 'l', 'e', 'e', 'i', 'm',			/* RD8001‘Î‰ž */
                 17, 0x07,
 
                 0x1B, 0xC5, 0xD5, 0xA5, 0x02, 0x00, 0xB8, 0x8C,
