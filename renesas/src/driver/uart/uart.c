@@ -417,7 +417,8 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#else
 		//16MHz時
-        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_8MHZ)));
+        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));	//9600bps
+//        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_8MHZ)));	//19200bps
 		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#endif
@@ -1052,6 +1053,14 @@ _UARTBASE __IRQ void st0_isr(void)
 #else
 #warning "No interrupt vector is genarated for sre0_isr"
 #endif
+
+
+#define DBG_ERR_CHECK		1	//RD8001暫定：異常回数デバッグコード
+#if DBG_ERR_CHECK	
+long o_err = 0;
+long f_err = 0;
+long p_err = 0;
+#endif
 _UARTBASE __IRQ void sre0_isr(void)
 {
     volatile uint8_t trash_data;
@@ -1075,6 +1084,18 @@ _UARTBASE __IRQ void sre0_isr(void)
 
     /* to avoid uart_overrun error */
     trash_data = read_sfr(UART_RXD_SDR_L);
+
+#if DBG_ERR_CHECK	//異常回数デバッグコード
+	if( 0x01 & trash_data ){
+		o_err++;
+	}
+	if( 0x02 & trash_data ){
+		p_err++;
+	}
+	if( 0x03 & trash_data ){
+		f_err++;
+	}
+#endif
 
     /* clear all error flags */
     write_sfr(UART_RXD_SIR_L, 0x07);

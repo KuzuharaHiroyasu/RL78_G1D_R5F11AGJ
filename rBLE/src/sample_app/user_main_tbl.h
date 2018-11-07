@@ -1,6 +1,6 @@
 /********************************************************************************/
 /* システム名   : RD8001 快眠チェッカー											*/
-/* ファイル名   : user_main_tbl.h													*/
+/* ファイル名   : user_main_tbl.h												*/
 /* 機能         : 全体管理（テーブル定義）										*/
 /* 変更履歴     : 2018.01.25 Axia Soft Design 西島 稔	初版作成				*/
 /* 注意事項     : なし															*/
@@ -52,7 +52,7 @@ const struct ke_state_handler cpu_com_default_handler = KE_STATE_HANDLER_NONE;
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 0, 6};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 0, 7};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
@@ -60,12 +60,13 @@ const B		version_product_tbl[]= {0, 0, 0, 6};				/* ソフトウェアバージョン */
 																/* ④ビルドバージョン：[0 ～ 99] */
 
 
-/* 受信データ処理 関数テーブル */
+/* CPU間通信受信データ処理 関数テーブル */
 STATIC const CPU_COM_RCV_CMD_TBL s_cpu_com_rcv_func_tbl[CPU_COM_CMD_MAX] = {
 	/* コマンド */		/* 関数  */					/* 応答有無 */
 	{	0x00,			NULL,								OFF	},	/* 【CPU間通信コマンド】コマンド無し				*/
 	{	0xE0,			main_cpu_com_rcv_sts_res,			OFF	},	/* 【CPU間通信コマンド】ステータス要求				*/
 	{	0xA0,			main_cpu_com_rcv_sensor_res,		OFF	},	/* 【CPU間通信コマンド】センサーデータ更新			*/
+	{	0xA1,			NULL,								OFF	},	/* 【CPU間通信コマンド】センシング指示				*/
 	{	0xB0,			main_cpu_com_rcv_mode_chg,			OFF	},	/* 【CPU間通信コマンド】状態変更(G1D)				*/
 	{	0xF0,			NULL,								OFF	},	/* 【CPU間通信コマンド】PCログ送信(内部コマンド)	*/
 	{	0xB1,			main_cpu_com_rcv_date_set,			OFF	},	/* 【CPU間通信コマンド】日時設定					*/
@@ -76,8 +77,29 @@ STATIC const CPU_COM_RCV_CMD_TBL s_cpu_com_rcv_func_tbl[CPU_COM_CMD_MAX] = {
 	{	0xD1,			main_cpu_com_rcv_prg_hd_reslut,		OFF	},	/* 【CPU間通信コマンド】プログラム転送結果		*/
 	{	0xD3,			main_cpu_com_rcv_prg_hd_check,		OFF	},	/* 【CPU間通信コマンド】プログラム転送確認		*/
 	{	0xB2,			main_cpu_com_rcv_disp_order,		OFF	},	/* 【CPU間通信コマンド】表示指示				*/
+	{	0xB3,			main_cpu_com_rcv_version,			OFF	},	/* 【CPU間通信コマンド】バージョン				*/
 };
 
+/* VUART通信受信データ処理 関数テーブル */
+STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
+	/* コマンド */				/* レングス */				/* 関数  */					/* 応答有無 */
+	{	0x00,					0,							NULL							},	// なし
+	{	VUART_CMD_MODE_CHG,		VUART_CMD_LEN_MODE_CHG,		main_vuart_rcv_mode_chg			},	// 状態変更(G1D)
+	{	VUART_CMD_DATE_SET,		VUART_CMD_LEN_DATE_SET,		main_vuart_rcv_date				},	// 日時設定
+	{	VUART_CMD_INFO,			VUART_CMD_LEN_INFO,			main_vuart_rcv_info				},	// 情報取得
+	{	VUART_CMD_VERSION,		VUART_CMD_LEN_VERSION,		main_vuart_rcv_version			},	// バージョン取得
+	{	VUART_CMD_DEVICE_INFO,	VUART_CMD_LEN_DEVICE_INFO,	main_vuart_rcv_device_info		},	// デバイス状況取得
+	{	VUART_CMD_DATA_NEXT,	VUART_CMD_LEN_DATA_NEXT,	NULL							},	// NEXT[送信専用]
+	{	VUART_CMD_DATA_END,		VUART_CMD_LEN_DATA_END,		main_vuart_rcv_data_end			},	// END[受信はSET時]
+	{	VUART_CMD_DATA_FRAME,	VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
+	{	VUART_CMD_DATA_CALC,	VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
+	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// 機器データ[受信はSET時]
+	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_prg_hd_eep_code_record		},	// プログラム転送(データ)
+	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_prg_hd_result				},	// プログラム転送結果
+	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_prg_hd_update				},	// プログラム更新完了確認
+	{	VUART_CMD_ALARM_SET,	VUART_CMD_LEN_ALARM_SET,	main_vuart_rcv_alarm_set		},	// アラーム設定変更
+	{	VUART_CMD_ALARM_INFO,	0,							NULL							},	// アラーム通知[送信専用]
+};
 
 /* モード別処理 */
 STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,			// SYSTEM_MODE_INITAL			イニシャル

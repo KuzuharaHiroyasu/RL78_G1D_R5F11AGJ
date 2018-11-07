@@ -118,19 +118,21 @@ RING_BUF drv_uart0_rcv_ring;									/* 受信リングバッファ用コントローラ */
 STATIC const T_CPU_COM_CMD_INFO s_tbl_cmd_info[CPU_COM_CMD_MAX] = {
 	/*コマンド*/ /*タイプ*/					/*リトライ(初送含む)*//*リトライ間隔 *10ms*/ /*連送回数*/
 	{	0x00,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* コマンド無し				*/
-	{	0xE0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* ステータス要求			*/
+	{	0xE0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* ステータス要求			*/
 	{	0xA0,	CPU_COM_CMD_TYPE_ONESHOT_RCV,		0,				0,					0	},	/* センサーデータ更新		*/
-	{	0xB0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 状態変更(G1D)			*/
+	{	0xA1,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* センシング指示			*/
+	{	0xB0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 状態変更(G1D)			*/
 	{	0xF0,	CPU_COM_CMD_TYPE_ONESHOT_SEND,		0,				0,					0	},	/* PCログ送信(内部コマンド)	*/
-	{	0xB1,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 日時設定					*/
+	{	0xB1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 日時設定					*/
 																								// 以降プログラム更新
-	{	0xD5,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送準備		*/
-	{	0xD2,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送開始		*/
-	{	0xD4,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送消去		*/
-	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送データ		*/
-	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* プログラム転送結果		*/
-	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				5,					0	},	/* プログラム転送確認		*/
-	{	0xB2,	CPU_COM_CMD_TYPE_RETRY,				3,				5,					0	},	/* 表示指示					*/
+	{	0xD5,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送準備		*/
+	{	0xD2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送開始		*/
+	{	0xD4,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送消去		*/
+	{	0xD0,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送データ		*/
+	{	0xD1,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* プログラム転送結果		*/
+	{	0xD3,	CPU_COM_CMD_TYPE_RETRY,				10,				10,					0	},	/* プログラム転送確認		*/
+	{	0xB2,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* 表示指示					*/
+	{	0xB3,	CPU_COM_CMD_TYPE_RETRY,				3,				10,					0	},	/* バージョン				*/
 };
 
 

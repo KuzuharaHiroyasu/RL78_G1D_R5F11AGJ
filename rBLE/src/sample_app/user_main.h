@@ -76,7 +76,7 @@ extern ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ];
 // ============================================================
 // ==================ユーザーアプリケーション==================
 // ============================================================
-// システムモード ※共通
+// システムモード ※H1D/G1D共通
 typedef enum{
 	// 仕様上の状態下限
 	SYSTEM_MODE_INITAL = 0,						// イニシャル
@@ -92,15 +92,6 @@ typedef enum{
 	SYSTEM_MODE_NON,					// なし
 	SYSTEM_MODE_MAX
 }SYSTEM_MODE;
-
-// RD8001暫定：削除予定　※システムモード統合
-#if 0
-#define			SYSTEM_MODE_HD_CHG_NON				0		// なし
-#define			SYSTEM_MODE_HD_CHG_SENSING			1		// あり(センシング)
-#define			SYSTEM_MODE_HD_CHG_IDLE				2		// あり(アイドル)
-#endif
-
-
 
 
 
@@ -122,13 +113,12 @@ typedef enum{
 
 
 
-
-
 #define		TIME_CNT_DISP_SELF_CHECK_ERR			(300)		/* 自己診断異常表示(3秒) */
-#define		TIME_CNT_DISP_SELF_CHECK_FIN			(300)		/* 自己診断異常表示(3秒) */
+#define		TIME_CNT_DISP_SELF_CHECK_FIN			(300)		/* 自己診断完了表示(3秒) */
 
+#define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
 
-
+// 測定個数
 #define		MEAS_SEKIGAI_CNT_MAX		140
 #define		MEAS_SEKISHOKU_CNT_MAX		140
 #define		MEAS_KOKYU_CNT_MAX			200
@@ -139,6 +129,7 @@ typedef enum{
 #define		TIMER_SEC_PRG_READY_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_START_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_ERASE_WAIT	( 27 + 1 )
+
 
 #define	OK_NOW_UPDATING					0		//更新未了
 #define	OK_UPDATE_FIX					1		//正常完了(成功)
@@ -236,6 +227,33 @@ typedef struct{
 	UB	com_flg;		// 通信での自己診断フラグ
 }SELF_CHECK;
 
+// H1D情報
+typedef struct{
+	UB	bat_chg			:1;		/* 1  充電検知ポート */
+	UB	bat_chg_fin		:1;		/* 2  充電完了イベント */
+	UB	dummy1			:1;		/* 3  未定義 */
+	UB	dummy2			:1;		/* 4  未定義 */
+	UB	dummy3			:1;		/* 5  未定義 */
+	UB	dummy4			:1;		/* 6  未定義 */
+	UB	dummy5			:1;		/* 7  未定義 */
+	UB	dummy6			:1;		/* 8  未定義 */
+}BIT_H1D_INFO;
+typedef struct{
+	union {
+		UB	byte;
+		BIT_H1D_INFO bit_f;
+		/*呼出ランプ状態*/
+	}info;
+}H1D_INFO;
+
+
+// フレーム(枠)番号
+typedef struct{
+	UB read;		// フレーム(枠)の読み出し番号
+	UB write;		// フレーム(枠)の書き込み番号
+	UB cnt;		// フレーム(枠)の書き込み数　※書き込み数0と最大の区別がつかない為
+}FRAME_NUM_INFO;
+
 typedef struct{
 	
 	SYSTEM_MODE system_mode;		/* システムモード */
@@ -248,15 +266,17 @@ typedef struct{
 	UB sensing_flg;					// センシング中フラグ
 	
 	UB denchi_sts;			// 電池状態
+	H1D_INFO h1d;			// H1D情報
+	
 	
 	// 演算関連
 	CALC calc;				// 演算後データ
 	UH calc_cnt;			// 演算カウント
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
 	
-	UB frame_num_read;		// フレーム(枠)の読み出し番号
-	UB frame_num_write;		// フレーム(枠)の書き込み番号
-	UB frame_num_cnt;		// フレーム(枠)の書き込み数　※書き込み数0と最大の区別がつかない為
+	// フレーム(枠)番号
+	FRAME_NUM_INFO frame_num;			// フレーム(枠)番号
+	FRAME_NUM_INFO frame_num_work;		// フレーム(枠)番号ワーク
 	
 	// 機器データ(演算前)
 	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり
@@ -268,11 +288,11 @@ typedef struct{
 	B	acl_z[MEAS_ACL_CNT_MAX];
 	// 機器データ(演算前)回数
 	UB	sekigai_cnt;
-	UB	sekishoku_cnt;	// 差動入力の為に符号あり
+	UB	sekishoku_cnt;
 	UB	kokyu_cnt;
 	UB	ibiki_cnt;
 	UB	acl_cnt;
-	
+	UB	sekigai_seq;		// 赤外有効/無効切替用のシーケンス
 	
 	ALARM	alarm;			// 警告機能
 	
@@ -283,7 +303,7 @@ typedef struct{
 	UW sec10_cnt;			//10秒カウント
 	UW sec7_cnt;			//7秒カウント
 	
-	UB get_mode_status;
+	UB get_mode_seq;				// GETモードシーケンス
 	UH get_mode_calc_cnt;
 	UH set_mode_calc_cnt;
 	
@@ -302,6 +322,8 @@ typedef struct{
 	// 自己診断
 	SELF_CHECK	self_check;
 	
+	// 自己診断
+	UB	bd_device_adrs[6];						// BDデバイスアドレス
 	
 	UW err_cnt;			//異常回数(デバッグ用途)
 }T_UNIT;
@@ -345,6 +367,35 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 /*##################################################################*/
 /*							VUART(BLE)通信部						*/
 /*##################################################################*/
+/* CPU間通信 コマンド種別 */
+/* 要求・応答のセット */
+typedef enum{
+	VUART_CMD_TYPE_NONE=0,							// なし
+	VUART_CMD_TYPE_MODE_CHG,						// 状態変更(G1D)
+	VUART_CMD_TYPE_DATE_SET,						// 日時設定
+	VUART_CMD_TYPE_INFO,							// 情報取得
+	VUART_CMD_TYPE_VERSION,							// バージョン取得
+	VUART_CMD_TYPE_DEVICE_INFO,						// デバイス状況取得
+	VUART_CMD_TYPE_DATA_NEXT,						// NEXT
+	VUART_CMD_TYPE_DATA_END,						// END
+	VUART_CMD_TYPE_DATA_FRAME,						// 枠情報(日時等)
+	VUART_CMD_TYPE_DATA_CALC,						// 機器データ
+	VUART_CMD_TYPE_DATA_FIN,						// データ取得完了通知
+	VUART_CMD_TYPE_PRG_H1D_DATA,					// プログラム転送(データ)
+	VUART_CMD_TYPE_PRG_H1D_RESULT,					// プログラム転送結果
+	VUART_CMD_TYPE_PRG_H1D_CHECK,					// プログラム更新完了確認
+	VUART_CMD_TYPE_ALARM_SET,						// 設定変更
+	VUART_CMD_TYPE_ALARM_INFO,						// アラーム通知
+	VUART_CMD_TYPE_MAX								// 最大値					
+}VUART_CMD_TYPE;
+
+typedef struct{
+	UB cmd;							/* 受信コマンド */
+	UB len;							/* 受信コマンド */
+	void (*func)(void);				/* 受信処理 */
+}VUART_RCV_CMD_TBL;
+
+
 // コマンド
 #define	VUART_CMD_MODE_CHG		0xB0
 #define	VUART_CMD_SET_CHG		0xC0
@@ -354,6 +405,7 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 #define	VUART_CMD_DATA_END		0xE1	// END
 #define	VUART_CMD_DATA_FRAME	0xE2	// 枠
 #define	VUART_CMD_DATA_CALC		0xE3	// 演算データ
+#define	VUART_CMD_DATA_FIN		0xE4	// 完了
 #define	VUART_CMD_PRG_RESULT	0xD1
 #define	VUART_CMD_PRG_CHECK		0xD3
 #define	VUART_CMD_PRG_G1D_START	0xF0
@@ -362,8 +414,14 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 #define	VUART_CMD_ALARM_SET		0xC0
 #define	VUART_CMD_ALARM_INFO	0xC4
 
+#define	VUART_CMD_INFO			0xC2
+#define	VUART_CMD_VERSION		0xC3
+#define	VUART_CMD_DEVICE_INFO	0xC5
+#define	VUART_CMD_ALARM_INFO	0xC4
+#define	VUART_CMD_INVALID		0xFF	// コマンド無し特殊処理
 
-// データ長
+
+// 受信データ長 ※コマンド部含む
 #define	VUART_CMD_LEN_MODE_CHG		2
 #define	VUART_CMD_LEN_SET_CHG		3
 #define	VUART_CMD_LEN_DATE_SET		8
@@ -372,19 +430,28 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 #define	VUART_CMD_LEN_DATA_END		1	// END
 #define	VUART_CMD_LEN_DATA_FRAME	10	// 枠
 #define	VUART_CMD_LEN_DATA_CALC		7	// 演算データ
+#define	VUART_CMD_LEN_DATA_FIN		2	// 演算データ
 #define	VUART_CMD_LEN_PRG_RESULT	5
 #define	VUART_CMD_LEN_PRG_DATA		20
 #define	VUART_CMD_LEN_PRG_CHECK		1
 #define	VUART_CMD_LEN_PRG_G1D_START	1
 #define	VUART_CMD_LEN_PRG_G1D_VER	1
 
-#define	VUART_CMD_LEN_ALARM_SET		3
+#define	VUART_CMD_LEN_VERSION		1
+#define	VUART_CMD_LEN_DEVICE_INFO	1
 
+#define	VUART_CMD_LEN_ALARM_SET		8
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
+// 送信データ長 ※コマンド部含む
+#define	VUART_SND_LEN_VERSION		13
+#define	VUART_SND_LEN_INFO			2
+#define	VUART_SND_LEN_DEVICE_INFO	15
+
 
 #define VUART_DATA_SIZE_MAX				20
+
 
 typedef struct _DS_VUART_INPUT{
 	UB rcv_data[VUART_DATA_SIZE_MAX];					/* 受信データ */

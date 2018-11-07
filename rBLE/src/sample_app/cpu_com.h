@@ -50,6 +50,7 @@ extern void codeptr app_evt_usr0(void);
 #define CPU_COM_SND_DATA_SIZE_SENSOR_DATA			15				/* センサーデータサイズ		*/
 #define CPU_COM_SND_DATA_SIZE_DATE_SET				7				/* 時刻設定					*/
 #define CPU_COM_SND_DATA_SIZE_DISP_ORDER			1				/* 表示指示					*/
+#define CPU_COM_SND_DATA_SIZE_SENSING_ORDER			1				/* センシング指示			*/
 
 /* データ長範囲 */
 #define CPU_COM_DATA_SIZE_MAX					(262+1)		/* データの最大長 */
@@ -88,16 +89,18 @@ extern void codeptr app_evt_usr0(void);
 #define CPU_COM_SND_RES_RETRY_OUT_NG			2			/* リトライアウト */
 #define CPU_COM_SND_RES_COM_NG					3			/* 送信コマンドNG */
 
+
 /* CPU間通信 コマンド種別 */
 /* 要求・応答のセット */
 typedef enum _CPU_COM_CMD_ID{
 	CPU_COM_CMD_NONE=0,							/* 【CPU間通信コマンド】コマンド無し				*/
 	CPU_COM_CMD_STATUS_REQ,						/* 【CPU間通信コマンド】ステータス要求				*/
 	CPU_COM_CMD_SENSOR_DATA,					/* 【CPU間通信コマンド】センサーデータ更新			*/
+	CPU_COM_CMD_SENSING_ORDER,					/* 【CPU間通信コマンド】センシング指示				*/
 	CPU_COM_CMD_MODE_CHG,						/* 【CPU間通信コマンド】状態変更(G1D)				*/
 	CPU_COM_CMD_PC_LOG,							/* 【CPU間通信コマンド】PCログ送信(内部コマンド)	*/
 	CPU_COM_CMD_DATE_SET,						/* 【CPU間通信コマンド】日時設定					*/
-	
+
 	CPU_COM_CMD_PRG_DOWNLORD_READY,				/* 【CPU間通信コマンド】プログラム転送準備		*/
 	CPU_COM_CMD_PRG_DOWNLORD_START,				/* 【CPU間通信コマンド】プログラム転送開始		*/
 	CPU_COM_CMD_PRG_DOWNLORD_ERASE,				/* 【CPU間通信コマンド】プログラム転送消去		*/
@@ -105,10 +108,7 @@ typedef enum _CPU_COM_CMD_ID{
 	CPU_COM_CMD_PRG_DOWNLORD_RESLUT,			/* 【CPU間通信コマンド】プログラム転送結果		*/
 	CPU_COM_CMD_PRG_DOWNLORD_CHECK,				/* 【CPU間通信コマンド】プログラム転送確認		*/
 	CPU_COM_CMD_DISP_ORDER,						/* 【CPU間通信コマンド】表示指示				*/
-//	CPU_COM_CMD_FILE_REQ,						/* 【CPU間通信コマンド】ファイル転送開始		*/
-//	CPU_COM_CMD_FILE,							/* 【CPU間通信コマンド】ファイル転送			*/
-//	CPU_COM_CMD_FILE_BLOCK_RESULT_REQ,			/* 【CPU間通信コマンド】ブロック転送結果要求	*/
-//	CPU_COM_CMD_FILE_RESLUT_REQ,				/* 【CPU間通信コマンド】ファイル転送結果要求	*/
+	CPU_COM_CMD_VERSION,						/* 【CPU間通信コマンド】バージョン				*/
 	CPU_COM_CMD_MAX								/* 【CPU間通信コマンド】最大値					*/
 }CPU_COM_CMD_ID;
 

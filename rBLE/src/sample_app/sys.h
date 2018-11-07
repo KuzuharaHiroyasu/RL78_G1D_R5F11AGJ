@@ -181,7 +181,10 @@
 																		/* 使用する時はログ通信もOFFする事 */
 #define		FUNC_DEBUG_EEP_NON						OFF					/* G1DにEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
 #define		FUNC_DEBUG_SLEEP_NON					OFF					/* G1DにSLEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
-#define		FUNC_DEBUG_CALC_NON						OFF					/* G1DにSLEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
+#define		FUNC_DEBUG_CALC_NON						OFF					/* G1Dに演算なしハードでデバッグする機能 *//* リリース時はOFFする事 */
+
+
+#define		FUNC_DEBUG_FIN_NON						OFF					/* GET時の完了通知不要版(ユニアーススマホで取得するときはこれをON) *//* リリース時はOFFする事 */
 
 
 #define		FUNC_DEBUG_PRG_H1D_U					OFF					/* 評価ボード単独で擬似デバッグ(上位側) */
