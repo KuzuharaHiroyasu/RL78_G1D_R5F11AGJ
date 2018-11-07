@@ -127,9 +127,10 @@ void ring_buf_init( RING_BUF* p_ring, UB* p_data, UH size)
 INT read_ring_buf( RING_BUF* p_ring, UB* p_data )
 {
 	INT	ercd = E_OK;
+	UB	iflg;
 	
 	/* データ競合対策開始 */
-	DI_RET();
+	DI_RET( iflg );
 
 	/* 異常対策 */
 	if(( p_ring->rd_pos >= p_ring->size ) ||
@@ -149,7 +150,7 @@ INT read_ring_buf( RING_BUF* p_ring, UB* p_data )
 	}
 	
 	/* データ競合対策終了 */
-	EI_RET();
+	EI_RET( iflg );
 	
 	return ercd;
 }
@@ -178,9 +179,10 @@ INT write_ring_buf( RING_BUF* p_ring ,UB data )
 {
 	UH	next;	/* 次の書き込み位置 */
 	INT	ercd = E_OK;
+	UB	iflg;
 	
 	/* データ競合対策開始 */
-	DI_RET();
+	DI_RET( iflg );
 
 	/* 異常対策 */
 	if(( p_ring->rd_pos >= p_ring->size ) ||
@@ -204,7 +206,7 @@ INT write_ring_buf( RING_BUF* p_ring ,UB data )
 	}
 
 	/* データ競合対策終了 */
-	EI_RET();
+	EI_RET( iflg );
 
 	return ercd;
 }
