@@ -357,6 +357,7 @@ void arch_main_ent(void)
 #endif
 	//RD8001対応：ユーザーアプリ初期化
 	user_main_init();
+	main_set_bd_adrs( (UB*)&public_addr.addr[0] );
 
     // And loop forever
     for (;;)

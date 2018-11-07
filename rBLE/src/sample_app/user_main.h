@@ -127,6 +127,7 @@ typedef enum{
 	PRG_SEQ_READY_WAIT,					// 開始待ち　※ブートへの切替
 	PRG_SEQ_START_WAIT,					// 開始待ち　※アプリへの切替
 	PRG_SEQ_ERASE_WAIT,					// 消去待ち　※フラッシュ消去
+	PRG_SEQ_COMPLETE_WAIT,				// 完了待ち　※結果通知
 	PRG_SEQ_MAX
 }PRG_SEQ;
 
@@ -175,6 +176,10 @@ typedef enum{
 
 //#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)((3276*2)-1)
 #define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
+
+
+
+#define	BD_ADRS_NUM						6
 
 typedef enum program_ver{
 	VERSION_MAJOR = 0,
@@ -376,8 +381,7 @@ typedef struct{
 	// 自己診断
 	SELF_CHECK	self_check;
 	
-	// 自己診断
-	UB	bd_device_adrs[6];						// BDデバイスアドレス
+	UB	bd_device_adrs[BD_ADRS_NUM];						// BDデバイスアドレス
 	
 	UW err_cnt;			//異常回数(デバッグ用途)
 }T_UNIT;
@@ -541,6 +545,7 @@ extern void ds_set_vuart_data( UB *p_data, UB len );
 extern void ds_set_vuart_send_status( UB status );
 extern void user_system_init( void );
 extern void user_main_init( void );
-void main_cpu_com_snd_pc_log( UB* data, UB size );
+extern void main_cpu_com_snd_pc_log( UB* data, UB size );
+extern void main_set_bd_adrs( UB* bda);
 
 #endif // __MAIN_USR_INC__

@@ -176,19 +176,26 @@
 /*----------------*/
 /* 機能の有効無効 */
 /*----------------*/
-#define		FUNC_DEBUG_LOG							ON					/* PCへのログ通信機能 *//* リリース時はOFFする事 */
-#define		FUNC_DEBUG_CPU_COM						OFF					/* CPU間通信をログ通信でデバッグする機能 *//* リリース時はOFFする事 */
+// デバッグ機能 ※リリース時はOFFする事
+#define		FUNC_DEBUG_LOG							ON					/* PCへのログ通信機能 */
+#define		FUNC_DEBUG_CPU_COM						OFF					/* CPU間通信をログ通信でデバッグする機能 */
 																		/* 使用する時はログ通信もOFFする事 */
-#define		FUNC_DEBUG_EEP_NON						OFF					/* G1DにEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
-#define		FUNC_DEBUG_SLEEP_NON					OFF					/* G1DにSLEEPなしハードでデバッグする機能 *//* リリース時はOFFする事 */
-#define		FUNC_DEBUG_CALC_NON						OFF					/* G1Dに演算なしハードでデバッグする機能 *//* リリース時はOFFする事 */
+#define		FUNC_DEBUG_EEP_NON						OFF					/* G1DにEEPなしハードでデバッグする機能 */
+#define		FUNC_DEBUG_SLEEP_NON					OFF					/* G1DにSLEEPなしでデバッグする機能 */
+#define		FUNC_DEBUG_CALC_NON						OFF					/* G1Dに演算なしでデバッグする機能 */
 
-
-#define		FUNC_DEBUG_FIN_NON						OFF					/* GET時の完了通知不要版(ユニアーススマホで取得するときはこれをON) *//* リリース時はOFFする事 */
-
+#define		FUNC_DEBUG_FIN_NON						OFF					/* GET時の完了通知不要版(ユニアーススマホで取得するときはこれをON) */
 
 #define		FUNC_DEBUG_PRG_H1D_U					OFF					/* 評価ボード単独で擬似デバッグ(上位側) */
 #define		FUNC_DEBUG_PRG_H1D_D					OFF					/* 評価ボード単独で擬似デバッグ(下位側) */
+
+
+
+
+
+
+
+
 
 
 /************************************************************/
@@ -203,24 +210,10 @@ typedef signed long		W;		/* 符号付き32ビット整数 */
 typedef unsigned long	UW;		/* 符号無し32ビット整数 */
 typedef signed int		INT;	/* プロセッサに自然なサイズの符号付き整数 */
 typedef unsigned int	UINT;	/* プロセッサに自然なサイズの符号無し整数 */
-//typedef int				BOOL;	/* 真偽値(TRUE or FALSE) */
+//typedef int				BOOL;	/* 真偽値(TRUE or FALSE) *///プラットフォームで定義されており重複の為にコメントアウト
 typedef float 			FLOAT;	/* 単精度浮動小数点 */
 typedef double			DOUBLE;	/* 倍単精度浮動小数点 */
 typedef int				ER;		/* 汎用エラー(μiTRON表記) */
-#if 0
-/* 日時 */
-typedef struct{
-	INT	tm_sec;		/* 秒 */
-	INT	tm_min;		/* 分 */
-	INT	tm_hour;	/* 時 */
-	INT	tm_mday;	/* 日 */
-	INT	tm_mon;		/* 月 */
-	INT	tm_year;	/* 年 */
-	INT	tm_wday;	/* 曜日 */
-	INT	tm_yday;	/* 日(1年の何日目) */
-	INT	tm_isdst;	/* サマータイムフラグ */
-}DATE;
-#endif
 
 /* リングバッファ(1バイト用) */
 typedef struct{
@@ -230,85 +223,10 @@ typedef struct{
 	UH	size;					/* サイズ */
 }RING_BUF;
 
-/* リングバッファ(2バイト用) */
-typedef struct{
-	UH*	buf;					/* リングバッファ用ポインタ */
-	UH	wr_pos;					/* 書き込み位置 */
-	UH	rd_pos;					/* 読み出し位置 */
-	UH	size;					/* サイズ */
-}RING_BUF_UH;
-
-/* リモコン用 */
-typedef struct{
-	UW	time;						/* 時間 */
-	UB	key_code;					/* キーコード */
-	UB	kind;						/* リモコン種別(セキュリティ/通常) */
-	UB	staff_code;					/* スタッフコード */
-}REMO;
-
-/* リングバッファ(時間付きバイトデータ) */
-typedef struct{
-	REMO*	buf;			/* リングバッファ用ポインタ */
-	UH	wr_pos;					/* 書き込み位置 */
-	UH	rd_pos;					/* 読み出し位置 */
-	UH	size;					/* サイズ */
-}RING_BUF_REMO;
-
-/* 入出力情報用 */
-typedef struct{
-	UB	sync;					/* 同期用データ */
-	UB	port1;					/* 入出力情報1 */
-	UB	port2;					/* 入出力情報2 */
-	UB	port3;					/* 入出力情報3 */
-}IO_INFO;
-
-/* リングバッファ(3バイト(24bit)用) */
-typedef struct{
-	IO_INFO*	buf;			/* リングバッファ用ポインタ */
-	UH	wr_pos;					/* 書き込み位置 */
-	UH	rd_pos;					/* 読み出し位置 */
-	UH	size;					/* サイズ */
-}RING_BUF_IO;
-
-
-/* 座標位置 */
-typedef struct{
-	H	x;			/* x座標 ポジション情報またはAD変換値 */
-	H	y;			/* y座標 ポジション情報またはAD変換値 */
-}POS_INFO;
-
-
-/* マスカブル割り込み禁止/許可 */
-/* 割込みの禁止/許可は#pragma拡張機能でサポートされている */
-//#ifndef __RL78__
-//#define	DI()	asm("FCLR I")
-//#define	EI()	asm("FSET I")
-//#endif
-
 /* マスカブル割り込み禁止/許可(前回状態への復帰) */
 /* 注意事項：前回状態への復帰となるためかならず同一関数内でセットで使用して下さい */
-#if 0
-#define DI_RET()		\
-{						\
-	__asm("PUSH PSW");	\
-	DI();				\
-}
-#define EI_RET()		\
-{						\
-	__asm("POP  PSW");	\
-}
-#else
-// RD8001暫定 上記でエラーが出る。
-#define DI_RET()		\
-{						\
-}
-#define EI_RET()		\
-{						\
-}
-
-
-
-#endif
+#define DI_RET		di_ret
+#define EI_RET		ei_ret
 
 /************************************************************/
 /* 外部参照宣言												*/
@@ -322,6 +240,8 @@ void dummy( void );
 UH crc16( UB* p_in, int len );
 void wait_ms( int ms );
 UB ke_time_check_elapsed( W now_time, W last_time, W val );
+void di_ret( void );
+void ei_ret( void );
 
 
 #endif

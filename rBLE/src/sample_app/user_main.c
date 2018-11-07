@@ -675,6 +675,12 @@ STATIC void user_main_mode_prg_h1d(void)
 			s_unit.prg_hd_seq = PRG_SEQ_IDLE;
 		}
 	}
+	
+	if( PRG_SEQ_COMPLETE_WAIT == s_unit.prg_hd_seq ){
+		if( OFF == s_ds.vuart.input.send_status ){
+			evt_act( EVENT_COMPLETE );
+		}
+	}
 }
 STATIC void user_main_mode_prg_g1d(void)
 {
@@ -1416,6 +1422,21 @@ STATIC void main_vuart_rcv_version( void )
 	}
 }
 
+
+
+void main_set_bd_adrs( UB* bda)
+{
+	// RD8001暫定：プラットフォームのヘッダが入り組んでおりベタに設定している
+//	memcpy( &s_unit.bd_adrs[0], bda, sizeof(s_unit.bd_adrs) );
+	s_unit.bd_device_adrs[0] = bda[0];
+	s_unit.bd_device_adrs[1] = bda[1];
+	s_unit.bd_device_adrs[2] = bda[2];
+	s_unit.bd_device_adrs[3] = bda[3];
+	s_unit.bd_device_adrs[4] = bda[4];
+	s_unit.bd_device_adrs[5] = bda[5];
+
+}
+
 STATIC void main_vuart_rcv_device_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1425,25 +1446,15 @@ STATIC void main_vuart_rcv_device_info( void )
 	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
 		result = VUART_DATA_RESULT_NG;
 	}
-
-	//RD8001暫定：デバイスアドレスの取得が必要
-	// サンプルの以下を調べる
-	// APP_ADDR_GET_SELF AT-AS?
-	s_unit.bd_device_adrs[0] = 0x11;
-	s_unit.bd_device_adrs[1] = 0x22;
-	s_unit.bd_device_adrs[2] = 0x33;
-	s_unit.bd_device_adrs[3] = 0x44;
-	s_unit.bd_device_adrs[4] = 0x55;
-	s_unit.bd_device_adrs[5] = 0x66;
 	
 	tx[0] = VUART_CMD_DEVICE_INFO;
 	tx[1] = result;							// 結果
-	tx[2] = s_unit.bd_device_adrs[0];		// BDデバイスアドレス
-	tx[3] = s_unit.bd_device_adrs[1];
-	tx[4] = s_unit.bd_device_adrs[2];
-	tx[5] = s_unit.bd_device_adrs[3];
-	tx[6] = s_unit.bd_device_adrs[4];
-	tx[7] = s_unit.bd_device_adrs[5];
+	tx[2] = s_unit.bd_device_adrs[5];		// BDデバイスアドレス
+	tx[3] = s_unit.bd_device_adrs[4];
+	tx[4] = s_unit.bd_device_adrs[3];
+	tx[5] = s_unit.bd_device_adrs[2];
+	tx[6] = s_unit.bd_device_adrs[1];
+	tx[7] = s_unit.bd_device_adrs[0];
 	tx[8] = s_unit.frame_num.cnt;
 	tx[9]  = s_unit.date.year;
 	tx[10]  = s_unit.date.month;
@@ -2063,12 +2074,15 @@ STATIC void main_prg_hd_update(void)
 		UB tx[VUART_DATA_SIZE_MAX] = {0};
 		tx[0] = VUART_CMD_PRG_CHECK;
 		tx[1] = s_unit.prg_hd_update_state;
-		tx[2] = s_unit.prg_hd_version[0];
-		tx[3] = s_unit.prg_hd_version[1];
-		tx[4] = s_unit.prg_hd_version[2];
-		tx[5] = s_unit.prg_hd_version[3];
+		tx[2] = 0x00;		// 予備領域
+		tx[3] = 0x00;		// 予備領域
+		tx[4] = 0x00;		// 予備領域
+		tx[5] = 0x00;		// 予備領域
 	
 		main_vuart_send( &tx[0], 6 );
+		if( OK_NOW_UPDATING != s_unit.prg_hd_update_state ){
+			s_unit.prg_hd_seq = PRG_SEQ_COMPLETE_WAIT;
+		}
 	}
 }
 
