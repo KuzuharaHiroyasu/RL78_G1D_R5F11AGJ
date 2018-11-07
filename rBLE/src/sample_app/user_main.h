@@ -79,7 +79,7 @@ extern ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ];
 // システムモード ※H1D/G1D共通
 typedef enum{
 	// 仕様上の状態下限
-	SYSTEM_MODE_INITAL = 0,						// イニシャル
+	SYSTEM_MODE_INITIAL = 0,					// イニシャル
 	SYSTEM_MODE_IDLE_REST,					// アイドル_残量表示 ※RD8001暫定：IDLEを統合するか要検討
 	SYSTEM_MODE_IDLE_COM,					// アイドル_通信待機 ※RD8001暫定：IDLEを統合するか要検討
 	SYSTEM_MODE_SENSING,					// センシング
@@ -89,10 +89,36 @@ typedef enum{
 	SYSTEM_MODE_SELF_CHECK,					// 自己診断
 	// 仕様上の状態上限
 	SYSTEM_MODE_MOVE,						// 移行
-	SYSTEM_MODE_NON,					// なし
+	SYSTEM_MODE_NON,						// なし
 	SYSTEM_MODE_MAX
 }SYSTEM_MODE;
 
+
+// イベント ※H1D/G1D共通
+typedef enum{
+	EVENT_NON = 0,				// なし
+	EVENT_POW_SW_SHORT,			// 電源SW押下(短)
+	EVENT_POW_SW_LONG,			// 電源SW押下(長)
+	EVENT_CHG_PORT_ON,			// 充電検知ポートON
+	EVENT_CHG_PORT_OFF,			// 充電検知ポートOFF
+	EVENT_DENCH_LOW,			// 電池残量低下
+	EVENT_CHG_FIN,				// 充電完了
+	EVENT_GET_DATA,				// データ取得
+	EVENT_H1D_PRG,				// プログラム書き換え(H1D)
+	EVENT_G1D_PRG,				// プログラム書き換え(G1D)
+	EVENT_SELF_CHECK_COM,		// 自己診断(通信)
+	EVENT_COMPLETE,				// 完了
+	EVENT_STOP,					// 中断
+	EVENT_TIME_OUT,				// タイムアウト
+	EVENT_KENSA_ON,				// 検査ポートON
+	EVENT_MAX,					// 最大
+}EVENT_NUM;
+
+// 電池残量状態 ※H1D/G1D共通
+#define DENCH_ZANRYO_STS_MAX					1	// 充電満タン
+#define DENCH_ZANRYO_STS_HIGH					2	// 数日持つ
+#define DENCH_ZANRYO_STS_LOW					3	// 残り１日持たない
+#define DENCH_ZANRYO_STS_MIN					4	// 電池残量なし
 
 
 // プログラムシーケンス
@@ -129,6 +155,10 @@ typedef enum{
 #define		TIMER_SEC_PRG_READY_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_START_WAIT	( 1 + 1 )
 #define		TIMER_SEC_PRG_ERASE_WAIT	( 27 + 1 )
+
+// タイマアウト
+#define		TIME_OUT_SYSTEM_MODE_IDLE_REST		( 6 - 1 )
+#define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 180 - 1 )		
 
 
 #define	OK_NOW_UPDATING					0		//更新未了
@@ -229,8 +259,28 @@ typedef struct{
 
 // H1D情報
 typedef struct{
+	UB	ble				:1;		/* 1  BLE接続 */
+	UB	dummy1			:1;		/* 2  未定義  */
+	UB	dummy2			:1;		/* 3  未定義 */
+	UB	dummy3			:1;		/* 4  未定義 */
+	UB	dummy4			:1;		/* 5  未定義 */
+	UB	dummy5			:1;		/* 6  未定義 */
+	UB	dummy6			:1;		/* 7  未定義 */
+	UB	dummy7			:1;		/* 8  未定義 */
+}BIT_G1D_INFO;
+typedef struct{
+	union {
+		UB	byte;
+		BIT_G1D_INFO bit_f;
+		/*呼出ランプ状態*/
+	}info;
+}G1D_INFO;
+
+
+// H1D情報
+typedef struct{
 	UB	bat_chg			:1;		/* 1  充電検知ポート */
-	UB	bat_chg_fin		:1;		/* 2  充電完了イベント */
+	UB	kensa			:1;		/* 2  検査ポート */
 	UB	dummy1			:1;		/* 3  未定義 */
 	UB	dummy2			:1;		/* 4  未定義 */
 	UB	dummy3			:1;		/* 5  未定義 */
@@ -258,7 +308,10 @@ typedef struct{
 	
 	SYSTEM_MODE system_mode;		/* システムモード */
 	SYSTEM_MODE next_system_mode;	/* 次のシステムモード */
+	SYSTEM_MODE last_system_mode;		/* システムモード */
 	
+	UH system_mode_time_out_cnt;		/* システムモードタイムアウトカウント[S] */
+
 	DATE date;
 	
 	ke_time_t last_time;			//前回時間
@@ -267,6 +320,7 @@ typedef struct{
 	
 	UB denchi_sts;			// 電池状態
 	H1D_INFO h1d;			// H1D情報
+	H1D_INFO h1d_last;		// H1D情報(前回)
 	
 	
 	// 演算関連
@@ -445,12 +499,16 @@ typedef struct{
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
 // 送信データ長 ※コマンド部含む
-#define	VUART_SND_LEN_VERSION		13
-#define	VUART_SND_LEN_INFO			2
-#define	VUART_SND_LEN_DEVICE_INFO	15
+#define	VUART_SND_LEN_INFO			3
+#define	VUART_SND_LEN_VERSION		14 
+#define	VUART_SND_LEN_DEVICE_INFO	16
 
 
 #define VUART_DATA_SIZE_MAX				20
+
+#define VUART_DATA_RESULT_OK		0
+#define VUART_DATA_RESULT_NG		1
+
 
 
 typedef struct _DS_VUART_INPUT{

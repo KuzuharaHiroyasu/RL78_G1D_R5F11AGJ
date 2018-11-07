@@ -1819,3 +1819,15 @@ BOOL RBLE_App_Init(void)
 
     return ret;
 }
+
+uint8_t get_ble_connect(void)
+{
+    BOOL ret = OFF;
+	
+	if( APP_CONNECT_SLAVE == app.state ){
+		ret = ON;
+	}
+	
+	return ret;
+}
+

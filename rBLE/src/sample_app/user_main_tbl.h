@@ -31,28 +31,11 @@ const struct ke_state_handler cpu_com_state_handler[ CPU_COM_STATE_MAX ] =
 /* Default Handler */
 const struct ke_state_handler cpu_com_default_handler = KE_STATE_HANDLER_NONE;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /************************************************************/
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 0, 7};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 0, 8};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
@@ -102,7 +85,7 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 };
 
 /* モード別処理 */
-STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,			// SYSTEM_MODE_INITAL			イニシャル
+STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,			// SYSTEM_MODE_INITIAL			イニシャル
 																			user_main_mode_idle_rest,		// SYSTEM_MODE_IDLE_REST		アイドル_残量表示
 																			user_main_mode_idle_com,		// SYSTEM_MODE_IDLE_COM			アイドル_通信待機
 																			user_main_mode_sensing,			// SYSTEM_MODE_SENSING			センシング
@@ -114,4 +97,24 @@ STATIC void	(* const p_user_main_mode_func[])()			= {					user_main_mode_inital,
 																			dummy,							// SYSTEM_MODE_NON				なし
 };
 
+typedef SYSTEM_MODE ( *EVENT_TABLE )( int event );
+
+static EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
+// モード				INITAL				IDLE_REST			IDLE_COM			SENSING			GET					PRG_H1D				PRG_G1D			SELF_CHECK		MOVE				NON
+/*イベントなし		*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW(短)		*/	{ evt_idle_rest,	evt_sensing,		evt_sensing_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW押下(長)	*/	{ evt_non,			evt_initial,		evt_initial_chg,	evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*充電検知ポートON	*/	{ evt_idle_com,		evt_idle_com,		evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電池残量低下		*/	{ evt_non,			evt_non,			evt_initial,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*充電完了			*/	{ evt_non,			evt_non,			evt_initial,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*データ取得		*/	{ evt_non,			evt_get,			evt_get,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*プログラム(H1D)	*/	{ evt_non,			evt_h1d_prg_denchi,	evt_h1d_prg_denchi,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*プログラム(G1D)	*/	{ evt_non,			evt_g1d_prg_denchi,	evt_g1d_prg_denchi,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*自己診断(通信)	*/	{ evt_non,			evt_self_check,		evt_self_check,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*完了				*/	{ evt_non,			evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_idle_com,		evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
+/*中断				*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*タイムアウト		*/	{ evt_non,			evt_idle_com,		evt_initial_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*検査				*/	{ evt_idle_com_denchi,evt_self_check,	evt_self_check,		evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non }
+};
 

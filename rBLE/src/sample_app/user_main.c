@@ -58,6 +58,7 @@ STATIC void main_cpu_com_rcv_sensor_res( void );
 STATIC void main_cpu_com_rcv_mode_chg( void );
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
 STATIC void user_main_mode( void );
+STATIC void user_main_mode_common( void );
 //STATIC void main_cpu_com_snd_pc_log( UB* data, UB size );
 STATIC void main_cpu_com_snd_sensing_order( UB sekigai );
 STATIC void main_vuart_proc(void);
@@ -66,15 +67,27 @@ STATIC void main_vuart_rcv_date( void );
 STATIC void main_vuart_rcv_info( void );
 STATIC void main_vuart_rcv_version( void );
 STATIC void main_vuart_rcv_device_info( void );
-STATIC void main_cpu_com_rcv_get_mode( void );
 STATIC void user_main_calc_result( void );
 STATIC void user_main_mode_sensing_before( void );
 STATIC void user_main_mode_sensing_after( void );
 STATIC UB user_main_mode_get_frame_before( void );
 STATIC void user_main_mode_self_check( void );
+STATIC UB evt_act( EVENT_NUM evt );
+STATIC SYSTEM_MODE evt_non( int evt);
+STATIC SYSTEM_MODE evt_idle_rest( int evt);
+STATIC SYSTEM_MODE evt_idle_com( int evt);
+STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
+STATIC SYSTEM_MODE evt_sensing( int evt);
+STATIC SYSTEM_MODE evt_sensing_chg( int evt);
+STATIC SYSTEM_MODE evt_initial( int evt);
+STATIC SYSTEM_MODE evt_initial_chg( int evt);
+STATIC SYSTEM_MODE evt_get( int evt);
+STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt);
+STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
+STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read(void);
-STATIC void main_send_vuart( UB *p_data, UB len );
+STATIC void main_vuart_send( UB *p_data, UB len );
 STATIC UB main_prg_hd_eep_code_record( void );
 STATIC void main_prg_hd_result(void);
 STATIC void main_prg_hd_update(void);
@@ -141,7 +154,7 @@ void codeptr app_evt_usr_2(void)
 	
 	// 秒タイマーカウントダウン
 	DEC_MIN( s_unit.timer_sec ,0 );
-	
+	INC_MAX( s_unit.system_mode_time_out_cnt, USHRT_MAX );
 	
 	// RD8001暫定：G1Dバージョン送信
 	if( ON == s_unit.prg_g1d_send_ver_flg ){
@@ -154,7 +167,7 @@ void codeptr app_evt_usr_2(void)
 				tx[1] = version_product_tbl[1];
 				tx[2] = version_product_tbl[2];
 				tx[3] = version_product_tbl[3];
-				main_send_vuart( &tx[0], 4 );
+				main_vuart_send( &tx[0], 4 );
 			}
 		}
 	}
@@ -304,9 +317,36 @@ STATIC void user_main_calc_result( void )
 
 STATIC void user_main_mode( void )
 {
+	// モード共通処理
+	user_main_mode_common();
+	
 	// 各種モード処理
 	p_user_main_mode_func[s_unit.system_mode]();
 }
+
+// モード共通処理
+STATIC void user_main_mode_common( void )
+{
+	// タイムアウトチェック
+	if( s_unit.system_mode != s_unit.last_system_mode ){
+		s_unit.system_mode_time_out_cnt = 0;
+	}
+	
+	if( SYSTEM_MODE_IDLE_REST == s_unit.system_mode ){
+		if( s_unit.system_mode_time_out_cnt >= TIME_OUT_SYSTEM_MODE_IDLE_REST ){
+			evt_act( EVENT_TIME_OUT );
+		}
+	}
+	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
+		if( s_unit.system_mode_time_out_cnt >= TIME_OUT_SYSTEM_MODE_IDLE_COM ){
+			evt_act( EVENT_TIME_OUT );
+		}
+	}
+	
+	
+	s_unit.last_system_mode = s_unit.system_mode;
+}
+
 
 STATIC void user_main_mode_sensing_before( void )
 {
@@ -389,7 +429,7 @@ STATIC void user_main_mode_prg_hd_before( void )
 		tx[0] = VUART_CMD_MODE_CHG;
 		tx[1] = 0x00;
 	
-		main_send_vuart( &tx[0], 2 );
+		main_vuart_send( &tx[0], 2 );
 	}
 }
 
@@ -431,7 +471,7 @@ STATIC void user_main_mode_get_before( void )
 	   ( s_unit.frame_num_work.cnt == 0 )){
 		//データなし時は完了
 		tx[0] = 0xE1;		// END
-		main_send_vuart( &tx[0], 1 );
+		main_vuart_send( &tx[0], 1 );
 #if FUNC_DEBUG_FIN_NON == OFF
 		s_unit.get_mode_seq = 6;
 #else
@@ -459,8 +499,7 @@ STATIC void user_main_mode_get_after( void )
 	eep_write(( wr_adrs + 2 ), &s_unit.frame_num.cnt, 1, ON );
 	
 	// システム戻す
-	main_chg_system_mode( SYSTEM_MODE_IDLE_COM );
-	main_cpu_com_snd_mode_chg();
+	evt_act( EVENT_COMPLETE );
 }
 
 
@@ -551,7 +590,7 @@ STATIC void user_main_mode_get(void)
 		tx[8] =  ( s_unit.max_mukokyu_sec & 0x00ff );
 		tx[9] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
 		
-		main_send_vuart( &tx[0], 10 );
+		main_vuart_send( &tx[0], 10 );
 		s_unit.get_mode_seq = 3;
 	}else if( 3 == s_unit.get_mode_seq ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){
@@ -573,7 +612,7 @@ STATIC void user_main_mode_get(void)
 			tx[4] = calc_eep.info.dat.myaku_val;
 			tx[5] = calc_eep.info.dat.spo2_val;
 			tx[6] = calc_eep.info.dat.kubi;
-			main_send_vuart( &tx[0], 7 );
+			main_vuart_send( &tx[0], 7 );
 			s_unit.get_mode_calc_cnt++;
 		}
 	}else if( 4 == s_unit.get_mode_seq ){
@@ -585,12 +624,12 @@ STATIC void user_main_mode_get(void)
 		}else{
 			//継続
 			tx[0] = VUART_CMD_DATA_NEXT;		// NEXT
-			main_send_vuart( &tx[0], 1 );
+			main_vuart_send( &tx[0], 1 );
 			user_main_mode_get_frame_before();
 		}
 	}else if( 5 == s_unit.get_mode_seq ){
 		tx[0] = VUART_CMD_DATA_END;				// END
-		main_send_vuart( &tx[0], 1 );
+		main_vuart_send( &tx[0], 1 );
 		
 		#if FUNC_DEBUG_FIN_NON == OFF
 			s_unit.get_mode_seq = 6;
@@ -701,12 +740,132 @@ STATIC void user_main_mode_self_check( void )
 		// 完了
 		if( ON ==  s_unit.self_check.com_flg ){
 			s_unit.self_check.com_flg = OFF;
-			
-			main_chg_system_mode( SYSTEM_MODE_IDLE_COM );
-			main_cpu_com_snd_mode_chg();
-			
+			evt_act( EVENT_COMPLETE );
 		}
 	}
+}
+
+// イベント
+STATIC UB evt_act( EVENT_NUM evt )
+{
+	SYSTEM_MODE	system_mode;
+	
+	
+	system_mode = p_event_table[evt][s_unit.system_mode]( evt );
+	if( SYSTEM_MODE_NON == system_mode ){
+		return FALSE;
+	}
+	
+	main_chg_system_mode( system_mode );
+	
+	return TRUE;
+}
+
+STATIC SYSTEM_MODE evt_non( int evt)
+{
+	return SYSTEM_MODE_NON;
+};
+
+
+STATIC SYSTEM_MODE evt_idle_rest( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_REST;
+	
+	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+			system_mode = SYSTEM_MODE_NON;
+	}
+
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_idle_com( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+			system_mode = SYSTEM_MODE_NON;
+	}
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_sensing( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_sensing_chg( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
+	
+	if( ON == s_unit.h1d.info.bit_f.bat_chg ){
+		system_mode = SYSTEM_MODE_NON;
+	}
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_initial( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_initial_chg( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
+	
+	if( ON == s_unit.h1d.info.bit_f.bat_chg ){
+		system_mode = SYSTEM_MODE_NON;
+	}
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_get( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_GET;
+	
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_H1D;
+	
+	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+			system_mode = SYSTEM_MODE_NON;
+	}
+
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_G1D;
+	
+	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+			system_mode = SYSTEM_MODE_NON;
+	}
+
+	return system_mode;
+}
+
+STATIC SYSTEM_MODE evt_self_check( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
+	
+	return system_mode;
 }
 
 STATIC void user_main_req_cyc( void )
@@ -729,11 +888,15 @@ STATIC void user_main_req_cyc( void )
 
 STATIC void main_cpu_com_snd_sts_req( void )
 {
+	G1D_INFO g1d;
+	
+	g1d.info.byte = 0;
+	g1d.info.bit_f.ble = get_ble_connect();
 	
 	if( CPU_COM_SND_STATUS_IDLE == s_ds.cpu_com.input.cpu_com_send_status ){
 		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_STATUS_REQ;
 		s_ds.cpu_com.order.snd_data[0] = s_unit.system_mode;
-		s_ds.cpu_com.order.snd_data[1] = 0;
+		s_ds.cpu_com.order.snd_data[1] = g1d.info.byte;
 		s_ds.cpu_com.order.snd_data[2] = 0;
 		s_ds.cpu_com.order.snd_data[3] = 0;
 		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_STATUS_REQ;
@@ -835,7 +998,7 @@ STATIC void main_cpu_com_rcv_date_set( void )
 	
 	tx[0] = VUART_CMD_DATE_SET;
 	tx[1] = s_ds.cpu_com.input.rcv_data[0];		// CPU間の応答をそのまま入れる
-	main_send_vuart( &tx[0], 2 );
+	main_vuart_send( &tx[0], 2 );
 	
 	__no_operation();
 	__no_operation();
@@ -844,20 +1007,39 @@ STATIC void main_cpu_com_rcv_date_set( void )
 	__no_operation();
 }
 
+
 STATIC void main_cpu_com_rcv_sts_res( void )
 {
-	/* H1Dからの状態変更要求 */
-	if( SYSTEM_MODE_NON != s_ds.cpu_com.input.rcv_data[0] ){
+	// H1Dイベント処理
+	if( EVENT_NON != s_ds.cpu_com.input.rcv_data[0] ){
 		// 以降状態へ変更
-		main_chg_system_mode( s_ds.cpu_com.input.rcv_data[0] );
+		if( FALSE == evt_act( s_ds.cpu_com.input.rcv_data[0] )){
+			__no_operation();
+		}
 	}
-	
 	
 	// H1D状態　※現在未使用
 	// s_ds.cpu_com.input.rcv_data[1];
 	
 	// H1D情報
 	s_unit.h1d.info.byte = s_ds.cpu_com.input.rcv_data[2];
+	
+	// 検査ポートON状態
+	if( ON == s_unit.h1d.info.bit_f.kensa ){
+		if( FALSE == evt_act( EVENT_KENSA_ON )){
+			__no_operation();
+		}
+	}
+	// 充電ポートONエッジ
+	if(( ON  == s_unit.h1d.info.bit_f.bat_chg ) && 
+	   ( OFF == s_unit.h1d_last.info.bit_f.bat_chg )){
+		if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
+			__no_operation();
+		}
+	}
+	
+	s_unit.h1d_last.info.byte = s_unit.h1d.info.byte;
+	
 	
 	// 日時
 	s_unit.date.year	 = s_ds.cpu_com.input.rcv_data[3];
@@ -979,17 +1161,18 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 
 	
 	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
-		{
-			UB tx[VUART_DATA_SIZE_MAX] = {0};
-			
-			// OK応答
-			tx[0] = VUART_CMD_MODE_CHG;
-			tx[1] = 0x00;
-			
-			s_ds.vuart.input.send_status = OFF;
-			main_send_vuart( &tx[0], 2 );
-			
-			s_unit.self_check.com_flg = ON;
+		if( ON == s_unit.self_check.com_flg ){
+			{
+				UB tx[VUART_DATA_SIZE_MAX] = {0};
+				
+				// OK応答
+				tx[0] = VUART_CMD_MODE_CHG;
+				tx[1] = 0x00;
+				
+				s_ds.vuart.input.send_status = OFF;
+				main_vuart_send( &tx[0], 2 );
+				
+			}
 		}
 	}
 
@@ -1002,7 +1185,7 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 			tx[1] = 0x00;
 			
 			s_ds.vuart.input.send_status = OFF;
-			main_send_vuart( &tx[0], 2 );
+			main_vuart_send( &tx[0], 2 );
 			
 			s_unit.get_mode_seq = 0;
 		}
@@ -1027,21 +1210,23 @@ STATIC void main_cpu_com_rcv_version( void )
 		// OK応答
 		tx[0] = VUART_CMD_VERSION;
 		// H1Dバージョン
-		tx[1] = s_ds.cpu_com.input.rcv_data[0];
-		tx[2] = s_ds.cpu_com.input.rcv_data[1];
-		tx[3] = s_ds.cpu_com.input.rcv_data[2];
-		tx[4] = s_ds.cpu_com.input.rcv_data[3];
-		tx[5] = s_ds.cpu_com.input.rcv_data[4];
-		tx[6] = s_ds.cpu_com.input.rcv_data[5];
-		tx[7] = s_ds.cpu_com.input.rcv_data[6];
-		tx[8] = s_ds.cpu_com.input.rcv_data[7];
-		// G1Dバージョン
-		tx[9]  = version_product_tbl[0];
-		tx[10] = version_product_tbl[1];
-		tx[11] = version_product_tbl[2];
-		tx[12] = version_product_tbl[3];
 		
-		main_send_vuart( &tx[0], VUART_SND_LEN_VERSION );
+		tx[1] = VUART_DATA_RESULT_OK;
+		tx[2] = s_ds.cpu_com.input.rcv_data[0];
+		tx[3] = s_ds.cpu_com.input.rcv_data[1];
+		tx[4] = s_ds.cpu_com.input.rcv_data[2];
+		tx[5] = s_ds.cpu_com.input.rcv_data[3];
+		tx[6] = s_ds.cpu_com.input.rcv_data[4];
+		tx[7] = s_ds.cpu_com.input.rcv_data[5];
+		tx[8] = s_ds.cpu_com.input.rcv_data[6];
+		tx[9] = s_ds.cpu_com.input.rcv_data[7];
+		// G1Dバージョン
+		tx[10]  = version_product_tbl[0];
+		tx[11] = version_product_tbl[1];
+		tx[12] = version_product_tbl[2];
+		tx[13] = version_product_tbl[3];
+		
+		main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
 	}
 }
 
@@ -1069,6 +1254,12 @@ STATIC void main_vuart_proc(void)
 	int i  =0;
 	
 	if( 0 == s_ds.vuart.input.rcv_len ){
+		return;		//受信なし
+	}
+	
+	if( SYSTEM_MODE_INITIAL == s_unit.system_mode ){
+		// RD8001暫定：イニシャル時は受信せずクリア
+		s_ds.vuart.input.rcv_len = 0;
 		return;		//受信なし
 	}
 	
@@ -1119,7 +1310,7 @@ STATIC void main_vuart_proc(void)
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-STATIC void main_send_vuart( UB *p_data, UB len )
+STATIC void main_vuart_send( UB *p_data, UB len )
 {
 	// Vuart送信中は
 	if( ON == s_ds.vuart.input.send_status ){
@@ -1131,19 +1322,6 @@ STATIC void main_send_vuart( UB *p_data, UB len )
 	R_APP_VUART_Send_Char( (char *)p_data, len );
 }
 
-STATIC void main_cpu_com_rcv_get_mode( void )
-{
-	if(( SYSTEM_MODE_IDLE_COM != s_unit.system_mode) &&
-	   ( SYSTEM_MODE_IDLE_REST != s_unit.system_mode)){
-		return;
-	}
-	
-	main_chg_system_mode( SYSTEM_MODE_GET );
-	main_cpu_com_snd_mode_chg();
-	
-}
-
-
 void main_vuart_rcv_set_mode( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
@@ -1153,7 +1331,7 @@ void main_vuart_rcv_set_mode( void )
 	tx[0] = VUART_CMD_MODE_CHG;
 	tx[1] = 0x00;
 	
-	main_send_vuart( &tx[0], 2 );
+	main_vuart_send( &tx[0], 2 );
 
 	s_unit.calc_cnt = 0;
 }
@@ -1161,45 +1339,93 @@ void main_vuart_rcv_set_mode( void )
 
 STATIC void main_vuart_rcv_mode_chg( void )
 {
+	UB ret = TRUE;
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	
 	if( 2 == s_ds.vuart.input.rcv_data[1] ){
-		main_chg_system_mode( SYSTEM_MODE_PRG_H1D );
-		main_cpu_com_snd_mode_chg();
+		ret = evt_act( EVENT_H1D_PRG );
 	}else if( 3 == s_ds.vuart.input.rcv_data[1] ){
-//		main_vuart_rcv_info();		// RD8001暫定：デバッグコマンド実行箇所
-		main_cpu_com_rcv_get_mode();
+		ret = evt_act( EVENT_GET_DATA );
 	}else if( 4 == s_ds.vuart.input.rcv_data[1] ){
-		main_vuart_rcv_set_mode();
+		main_vuart_rcv_set_mode();		// RD8001暫定：デバッグ用データ設定
 	}else if( 5 == s_ds.vuart.input.rcv_data[1] ){
-		main_chg_system_mode( SYSTEM_MODE_PRG_G1D );
-		main_cpu_com_snd_mode_chg();
+		ret = evt_act( EVENT_G1D_PRG );
 	}else if( 6 == s_ds.vuart.input.rcv_data[1] ){
-		main_chg_system_mode( SYSTEM_MODE_SELF_CHECK );
-		main_cpu_com_snd_mode_chg();
+		ret = evt_act( EVENT_SELF_CHECK_COM );
+		if( TRUE == ret){
+			s_unit.self_check.com_flg = ON;
+		} 
 	}else{
 		// 何もしない
 	}
+	
+	if( FALSE == ret ){
+		// NG応答
+		tx[0] = VUART_CMD_MODE_CHG;
+		tx[1] = VUART_DATA_RESULT_NG;
+		main_vuart_send( &tx[0], 2 );
+	}
 }
+
 STATIC void main_vuart_rcv_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		result = VUART_DATA_RESULT_NG;
+	}
 	
 	tx[0] = VUART_CMD_INFO;
-	tx[1] = s_unit.denchi_sts;
-	main_send_vuart( &tx[0], VUART_SND_LEN_INFO );
+	tx[1] = result;
+	tx[2] = s_unit.denchi_sts;
+	main_vuart_send( &tx[0], VUART_SND_LEN_INFO );
 }
 
 
 STATIC void main_vuart_rcv_version( void )
 {
-	// バージョンをブリッジで送信
-	s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_VERSION;
-	s_ds.cpu_com.order.data_size = 0;
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		
+		// OK応答
+		tx[0] = VUART_CMD_VERSION;
+		// H1Dバージョン
+		tx[1] = VUART_DATA_RESULT_NG;
+		tx[2] = 0;
+		tx[3] = 0;
+		tx[4] = 0;
+		tx[5] = 0;
+		tx[6] = 0;
+		tx[7] = 0;
+		tx[8] = 0;
+		tx[9] = 0;
+		// G1Dバージョン
+		tx[10]  = version_product_tbl[0];
+		tx[11] = version_product_tbl[1];
+		tx[12] = version_product_tbl[2];
+		tx[13] = version_product_tbl[3];
+		main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
+	}else{
+		// バージョンをブリッジで送信
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_VERSION;
+		s_ds.cpu_com.order.data_size = 0;
+	}
 }
 
 STATIC void main_vuart_rcv_device_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
 	
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		result = VUART_DATA_RESULT_NG;
+	}
+
 	//RD8001暫定：デバイスアドレスの取得が必要
 	// サンプルの以下を調べる
 	// APP_ADDR_GET_SELF AT-AS?
@@ -1210,23 +1436,24 @@ STATIC void main_vuart_rcv_device_info( void )
 	s_unit.bd_device_adrs[4] = 0x55;
 	s_unit.bd_device_adrs[5] = 0x66;
 	
-	tx[0] = VUART_CMD_VERSION;
-	tx[1] = s_unit.bd_device_adrs[0];		// BDデバイスアドレス
-	tx[2] = s_unit.bd_device_adrs[1];
-	tx[3] = s_unit.bd_device_adrs[2];
-	tx[4] = s_unit.bd_device_adrs[3];
-	tx[5] = s_unit.bd_device_adrs[4];
-	tx[6] = s_unit.bd_device_adrs[5];
-	tx[7] = s_unit.frame_num.cnt;
-	tx[8]  = s_unit.date.year;
-	tx[9]  = s_unit.date.month;
-	tx[10] = s_unit.date.week;
-	tx[11] = s_unit.date.day;
-	tx[12] = s_unit.date.hour;
-	tx[13] = s_unit.date.min;
-	tx[14] = s_unit.date.sec;
+	tx[0] = VUART_CMD_DEVICE_INFO;
+	tx[1] = result;							// 結果
+	tx[2] = s_unit.bd_device_adrs[0];		// BDデバイスアドレス
+	tx[3] = s_unit.bd_device_adrs[1];
+	tx[4] = s_unit.bd_device_adrs[2];
+	tx[5] = s_unit.bd_device_adrs[3];
+	tx[6] = s_unit.bd_device_adrs[4];
+	tx[7] = s_unit.bd_device_adrs[5];
+	tx[8] = s_unit.frame_num.cnt;
+	tx[9]  = s_unit.date.year;
+	tx[10]  = s_unit.date.month;
+	tx[11] = s_unit.date.week;
+	tx[12] = s_unit.date.day;
+	tx[13] = s_unit.date.hour;
+	tx[14] = s_unit.date.min;
+	tx[15] = s_unit.date.sec;
 	
-	main_send_vuart( &tx[0], VUART_SND_LEN_DEVICE_INFO );
+	main_vuart_send( &tx[0], VUART_SND_LEN_DEVICE_INFO );
 }
 
 
@@ -1311,7 +1538,7 @@ void main_vuart_rcv_alarm_set( void )
 		
 		tx[0] = VUART_CMD_ALARM_SET;
 		tx[1] = 0;
-		main_send_vuart( &tx[0], 2 );
+		main_vuart_send( &tx[0], 2 );
 	}
 }
 
@@ -1323,7 +1550,7 @@ void main_vuart_snd_alarm_info( UB type, UB data )
 	tx[0] = VUART_CMD_ALARM_INFO;
 	tx[1] = type;
 	tx[2] = data;
-	main_send_vuart( &tx[0], 3 );
+	main_vuart_send( &tx[0], 3 );
 }
 
 
@@ -1798,7 +2025,7 @@ STATIC void main_prg_hd_result(void)
 		tx[0] = VUART_CMD_PRG_RESULT;
 		tx[1] = ret;
 	
-		main_send_vuart( &tx[0], 2 );
+		main_vuart_send( &tx[0], 2 );
 	}
 	
 	if( OK_PRG_H1D_EEP_RECODE_COMPLETED == ret ){
@@ -1841,7 +2068,7 @@ STATIC void main_prg_hd_update(void)
 		tx[4] = s_unit.prg_hd_version[2];
 		tx[5] = s_unit.prg_hd_version[3];
 	
-		main_send_vuart( &tx[0], 6 );
+		main_vuart_send( &tx[0], 6 );
 	}
 }
 
