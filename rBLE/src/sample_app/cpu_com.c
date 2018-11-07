@@ -233,7 +233,7 @@ void cpu_com_init_sub(void)
 	s_cpu_com_snd_timeout = 0;
 	s_cpu_com_snd_rensou_cnt = 0;
 	s_cpu_com_snd_seq_no = 0;
-	s_cpu_com_res_seq_no = 0;
+	s_cpu_com_res_seq_no = 0xFF;
 	
 	s_cpu_com_snd_status = CPU_COM_SND_STATUS_IDLE;
 	
@@ -380,22 +380,11 @@ STATIC void cpu_com_rcv_proc(void)
 {
 	if( ON == cpu_com_analyze_msg() ){
 		/* 受信データ正常 */
-#if 1
 		s_cpu_com_ds_input.rcv_cmd = s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_CMD];
-		/* 受信シーケンスNoのセット */
-		s_cpu_com_res_seq_no = s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_SEQ];				/* SEQ下位ビット */
 		/* アプリ通知用のデータに受信データをセット */
 		memcpy( s_cpu_com_ds_input.rcv_data, &s_cpu_com_rcv_msg.buf[CPU_COM_MSG_TOP_POS_DATA], ( s_cpu_com_rcv_msg_size- CPU_COM_MSG_SIZE_MIN ));
-#endif
 		// デバッグ送信
 //		test_cpu_com_send();
-	}else{
-#if 1
-		/* 受信なし */
-		s_cpu_com_ds_input.rcv_cmd = 0x00;
-		s_cpu_com_res_seq_no = 0x0000;
-		memset( s_cpu_com_ds_input.rcv_data, 0x00, sizeof(s_cpu_com_ds_input.rcv_data));
-#endif
 	}
 }
 
@@ -524,6 +513,7 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 	UH crc_rcv = 0; /* 受信データCRC */
 	UH tmp = 0;
 	UH data_size = 0;
+	UB seq_num = 0;
 	
 	if(( CPU_COM_MSG_SIZE_MIN > s_cpu_com_rcv_msg_size ) ||
 		( CPU_COM_MSG_SIZE_MAX < s_cpu_com_rcv_msg_size )){
@@ -547,6 +537,16 @@ STATIC UB cpu_com_analyze_msg_check_data(void)
 #endif
 		return OFF;
 	}
+	
+	/* シーケンス番号チェック */
+	seq_num = s_cpu_com_rcv_msg.buf[ CPU_COM_MSG_TOP_POS_SEQ ];				/* シーケンス番号下位ビット */
+
+#if 0	// シーケンス番号チェック無効 ※マスターは必要なし
+	if( s_cpu_com_res_seq_no == seq_num ){
+		return OFF;
+	}
+#endif
+	s_cpu_com_res_seq_no = seq_num;		//シーケンス番号更新
 	
 	/* チェックOK */
 	return ON;

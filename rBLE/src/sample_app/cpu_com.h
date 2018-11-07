@@ -128,19 +128,7 @@ typedef enum _CPU_COM_CMD_ID{
 
 
 
-/* 読み出し(文字列、ファイル)結果 */
-typedef enum{
-	READ_RESULT_NO_ERROR = 0,		/* 正常終了 */
-	READ_RESULT_ERROR_READ,			/* 読み出し失敗 */
-	READ_RESULT_FILE_NON,			/* ファイルなし */
-	READ_RESULT_MAX
-} ENUM_READ_RESULT;
-
-
 /* =====通信仕様関連===== */
-
-
-
 // 通信データに於ける制御コード
 #define CPU_COM_CTRL_CODE_STX			0x02					/* STX */
 #define CPU_COM_CTRL_CODE_ETX			0x03					/* ETX */
@@ -169,32 +157,6 @@ typedef struct _T_CPU_COM_CMD_INFO {
 	UW retry_time;			/* リトライ間隔 */
 	UB rensou_cnt;			/* 連送回数 */
 } T_CPU_COM_CMD_INFO;
-
-
-typedef struct{
-	UH file_num;					/* ファイル番号	2byte */
-	UW block_num;					/* ブロック番号	4byte */
-	UB* p_data;						/* 書き換えデータの先頭ポインタ	256byteまで */
-	UH len;							/* データ長 */
-}T_CPU_COM_CMD_FILE_DATA;
-
-
-typedef struct{
-	UW block_num;					/* ブロック番号	4byte */
-}T_CPU_COM_CMD_FILE_RESULT_BLOCK;
-
-typedef struct{
-	UW sum;							/* サム値	4byte */
-}T_CPU_COM_CMD_FILE_RESULT;
-
-// ファイル読み出し
-typedef struct{
-	UH file_num;					/* ファイル番号	2byte */
-	UW block_num;					/* ブロック番号	4byte */
-}T_CPU_COM_CMD_READ_FILE;
-
-
-
 
 typedef struct{
 	UB buf[CPU_COM_MSG_SIZE_MAX];		/* バッファ */

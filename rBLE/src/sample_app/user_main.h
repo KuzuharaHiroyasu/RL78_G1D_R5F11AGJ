@@ -132,9 +132,12 @@ typedef enum{
 #define	PRG_HD_UPDATE_STATE_NG			2	//異常完了(失敗)
 
 // プログラム転送(H1D)
-#define	PRG_H1D_EEP_RECODE_OFFSET		16				//[Byte]
-#define	PRG_H1D_EEP_RECODE_UNIT		20				//[Byte]
-#define	PRG_H1D_EEP_RECODE_CNT_MAX		((3276*2)-1)	//0オリジンで最大値なので-1
+#define	PRG_H1D_EEP_RECODE_OFFSET		(UW)12				//[Byte]
+#define	PRG_H1D_EEP_RECODE_UNIT			(UW)20				//[Byte]
+
+//#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)((3276*2)-1)
+#define	PRG_H1D_EEP_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( PRG_H1D_EEP_RECODE_UNIT + PRG_H1D_EEP_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
+
 
 typedef enum program_ver{
 	VERSION_MAJOR = 0,
@@ -255,6 +258,7 @@ typedef struct{
 	
 	UB get_mode_status;
 	UH get_mode_calc_cnt;
+	UH set_mode_calc_cnt;
 	
 	// プログラム書き換え用
 	UH prg_hd_eep_record_cnt_wr;					// レコードカウント
@@ -306,10 +310,32 @@ typedef struct _CPU_COM_RCV_CMD_TBL{
 /*##################################################################*/
 /*							VUART(BLE)通信部						*/
 /*##################################################################*/
+// コマンド
 #define	VUART_CMD_MODE_CHG		0xB0
+#define	VUART_CMD_SET_CHG		0xC0
+#define	VUART_CMD_DATE_SET		0xC1
+#define	VUART_CMD_INFO			0xC2
+#define	VUART_CMD_DATA_NEXT		0xE0	// NEXT
+#define	VUART_CMD_DATA_END		0xE1	// END
+#define	VUART_CMD_DATA_FRAME	0xE2	// 枠
+#define	VUART_CMD_DATA_CALC		0xE3	// 演算データ
 #define	VUART_CMD_PRG_RESULT	0xD1
 #define	VUART_CMD_PRG_CHECK		0xD3
 
+// データ長
+#define	VUART_CMD_LEN_MODE_CHG		2
+#define	VUART_CMD_LEN_SET_CHG		3
+#define	VUART_CMD_LEN_DATE_SET		8
+#define	VUART_CMD_LEN_INFO			1
+#define	VUART_CMD_LEN_DATA_NEXT		1	// NEXT
+#define	VUART_CMD_LEN_DATA_END		1	// END
+#define	VUART_CMD_LEN_DATA_FRAME	10	// 枠
+#define	VUART_CMD_LEN_DATA_CALC		7	// 演算データ
+#define	VUART_CMD_LEN_PRG_RESULT	5
+#define	VUART_CMD_LEN_PRG_DATA		20
+#define	VUART_CMD_LEN_PRG_CHECK		1
+
+#define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
 
 #define VUART_DATA_SIZE_MAX				20
