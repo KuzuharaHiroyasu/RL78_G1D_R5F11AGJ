@@ -230,6 +230,7 @@ typedef struct{
 	
 	UB frame_num_read;		// フレーム(枠)の読み出し番号
 	UB frame_num_write;		// フレーム(枠)の書き込み番号
+	UB frame_num_cnt;		// フレーム(枠)の書き込み数　※書き込み数0と最大の区別がつかない為
 	
 	// 機器データ(演算前)
 	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり

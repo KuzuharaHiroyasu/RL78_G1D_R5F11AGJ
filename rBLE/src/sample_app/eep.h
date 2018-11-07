@@ -31,7 +31,7 @@
 #define EEP_CACL_DATA_SIZE			8		//ダミー含む
 #define EEP_FRAM_ADD_SIZE			256		// フレーム用付加情報(時間,最高無呼吸,演算回数)
 #define EEP_FRAME_SIZE				(UW)(( EEP_CACL_DATA_SIZE * 1440 ) + EEP_FRAM_ADD_SIZE )
-#define EEP_SETTING_SIZE			2		
+#define EEP_SETTING_SIZE			3		
 #define EEP_ALARM_SIZE				8
 #define EEP_DATE_SIZE				7
 #define EEP_MUKOKYU_TIME_SIZE		2

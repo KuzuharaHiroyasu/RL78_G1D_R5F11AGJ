@@ -238,6 +238,11 @@ STATIC void user_main_calc_result( void )
 	//演算結果をPC送付
 	main_cpu_com_snd_pc_log( &s_unit.calc.info.byte[0], CPU_COM_SND_DATA_SIZE_PC_LOG );
 #endif
+	//範囲チェック
+	if( s_unit.calc_cnt > EEP_CACL_DATA_NUM ){
+		err_info(11);
+		return;
+	}
 	
 	// フレーム位置とデータ位置からEEPアドレスを算出
 	wr_adrs = ( s_unit.frame_num_write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CACL_DATA_SIZE );
@@ -245,11 +250,6 @@ STATIC void user_main_calc_result( void )
 	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CACL_DATA_SIZE, OFF );
 	
 	s_unit.calc_cnt++;
-	//範囲チェック
-	if( s_unit.calc_cnt >= EEP_CACL_DATA_NUM ){
-		s_unit.calc_cnt = 0;
-		err_info(11);
-	}
 	__no_operation();
 	__no_operation();
 	__no_operation();
@@ -290,22 +290,24 @@ STATIC void user_main_mode_sensing_after( void )
 	wr_adrs = ( s_unit.frame_num_write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_CALC_CNT;
 	eep_write( wr_adrs, (UB*)&s_unit.calc_cnt, 2, ON );
 	
+	// 追い越し判定
+	if(( s_unit.frame_num_write == s_unit.frame_num_read ) &&
+	   ( s_unit.frame_num_cnt > 0 )){
+		// 追い越されてしまうので読み出しポインタを進める
+		oikosi_flg = ON;
+	}
 	
 	// 書き込み枠番号を進める
 	INC_MAX_INI(s_unit.frame_num_write, (EEP_FRAME_MAX - 1), 0);
+	INC_MAX(s_unit.frame_num_cnt, EEP_FRAME_MAX );
 	
-	// 追い越し判定
-	if( s_unit.frame_num_write == s_unit.frame_num_read ){
-		// 追い越されてしまうので読み出しポインタを進める
-		INC_MAX_INI(s_unit.frame_num_read, (EEP_FRAME_MAX  -1), 0);
-		oikosi_flg = ON;
-	}
 	
 	wr_adrs = EEP_ADRS_TOP_SETTING;
 	if( OFF == oikosi_flg ){
 		// 書き込みポインタ
 		eep_write( wr_adrs + 1, &s_unit.frame_num_write, 1, ON );
 	}else{
+		INC_MAX_INI(s_unit.frame_num_read, (EEP_FRAME_MAX  -1), 0);
 		// 書き込み、読み出しポインタ
 		wr_data[0] = s_unit.frame_num_read;
 		wr_data[1] = s_unit.frame_num_write;
@@ -422,29 +424,12 @@ STATIC void user_main_mode_get(void)
 		return;
 	}
 	
-	
 	if( 0 == s_unit.get_mode_status ){
-#if 0
-		tx[0] = 'S';
-		tx[1] = 'T';
-		tx[2] = 'A';
-		tx[3] = 'R';
-		tx[4] = 'T';
-		tx[5] = s_unit.denchi_sts;
-//		s_ds.vuart.input.send_status = ON;
-//		R_APP_VUART_Send_Char( &tx[0], 6 );
-		main_send_vuart( &tx[0], 6 );
-#endif
-		if( s_unit.frame_num_write == s_unit.frame_num_read ){
-			// RD8001暫定：データなし通知仕様が無い為に暫定
+		if(( s_unit.frame_num_write == s_unit.frame_num_read ) && 
+		   ( s_unit.frame_num_cnt == 0 )){
 			{
 				UB tx[10];
-//				tx[0] = 'E';
-//				tx[1] = 'N';
-//				tx[2] = 'D';
 				tx[0] = 0xE1;		// END
-	//			s_ds.vuart.input.send_status = ON;
-	//			R_APP_VUART_Send_Char( &tx[0], 3 );
 				main_send_vuart( &tx[0], 1 );
 			}
 			s_unit.get_mode_status = 6;
@@ -461,16 +446,6 @@ STATIC void user_main_mode_get(void)
 		eep_read( rd_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MUKOKYU_TIME_SIZE );
 		s_unit.get_mode_status = 2;
 	}else if( 2 == s_unit.get_mode_status ){
-
-#if 0
-		tx[0] = (UB)( s_unit.date.year & 0x00FF );
-		tx[1] = (UB)(( s_unit.date.year & 0xFF00 ) >> 8);		// リトルエンディアン
-#else	
-		// RD8001暫定：
-		tx[0] = 0xe2;
-		tx[1] = 0x07;
-//		s_unit.date.year;
-#endif
 		tx[0] = 0xe2;
 		tx[1] = s_unit.date.year;	
 		tx[2] = s_unit.date.month;	
@@ -482,12 +457,8 @@ STATIC void user_main_mode_get(void)
 		tx[8] =  ( s_unit.max_mukokyu_sec & 0x00ff );
 		tx[9] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
 		
-//		s_ds.vuart.input.send_status = ON;
-//		R_APP_VUART_Send_Char( &tx[0], 7 );
 		main_send_vuart( &tx[0], 10 );
 		s_unit.get_mode_status = 3;
-		
-	
 	}else if( 3 == s_unit.get_mode_status ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){
 			
@@ -535,6 +506,8 @@ STATIC void user_main_mode_get(void)
 	}else if( 5 == s_unit.get_mode_status ){
 		wr_adrs = EEP_ADRS_TOP_SETTING;
 		eep_write( wr_adrs, &s_unit.frame_num_read, 1, ON );
+		s_unit.frame_num_cnt = 0;
+		eep_write(( wr_adrs + 2 ), &s_unit.frame_num_cnt, 1, ON );
 		tx[0] = 0xE1;		// END
 //		s_ds.vuart.input.send_status = ON;
 //		R_APP_VUART_Send_Char( &tx[0], 3 );
@@ -1323,19 +1296,30 @@ bool user_main_sleep(void)
 
 STATIC void user_main_eep_read(void)
 {
+	// フレーム関連
 	eep_read( EEP_ADRS_TOP_SETTING, &s_unit.frame_num_read, 1 );
 	eep_read( EEP_ADRS_TOP_SETTING + 1, &s_unit.frame_num_write, 1 );
+	eep_read( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num_cnt, 1 );
 	
 	// 範囲チェック
 	if(( s_unit.frame_num_read > ( EEP_FRAME_MAX - 1)) ||
-	   ( s_unit.frame_num_write > ( EEP_FRAME_MAX - 1))){
+	   ( s_unit.frame_num_write > ( EEP_FRAME_MAX - 1)) ||
+	   ( s_unit.frame_num_cnt > EEP_FRAME_MAX )){
 		err_info(11);
 		// 範囲外なら初期化
 		s_unit.frame_num_read = 0;
 		s_unit.frame_num_write = 0;
+		s_unit.frame_num_cnt = 0;
 		eep_write( EEP_ADRS_TOP_SETTING, &s_unit.frame_num_read, 1, ON );
 		eep_write( EEP_ADRS_TOP_SETTING + 1, &s_unit.frame_num_write, 1, ON );
+		eep_write( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num_cnt, 1, ON );
 	}
+	
+	
+	// 警告機能
+	eep_read( EEP_ADRS_TOP_ALARM, &s_unit.alarm, EEP_ALARM_SIZE );
+	// RD8001暫：範囲チェック入れる
+
 	
 }
 
