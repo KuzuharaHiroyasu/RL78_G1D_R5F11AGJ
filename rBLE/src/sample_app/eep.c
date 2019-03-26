@@ -159,14 +159,16 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	UB adrs_size = 0;
 	UW lcok_cnt = 0;
 
-//	if( EEP_DEVICE_ADR == device_adrs ){
+	if( EEP_DEVICE_ADR == device_adrs ){
 		// EEP時
 		adrs[0] = (UB)(( read_adrs >> 8 ) & 0xff );		//アドレス上位
 		adrs[1] = (UB)( read_adrs & 0x00ff );			//アドレス下位
 		adrs_size  = 2;
-//	}else{
-//		return;
-//	}
+	}else if( ACL_DEVICE_ADR == device_adrs ){
+		// 加速度センサー時
+		adrs[0] = (UB)( read_adrs & 0x00ff );			//アドレス
+		adrs_size  = 1;
+	}
 
 	i2c_cmplete = 0;
 	if( 0 != R_IICA0_Master_Send( device_adrs, &adrs[0], adrs_size, EEP_WAIT )){
@@ -178,20 +180,10 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 				break;
 			}
 		}
-#if 0	//ストップコンディションあり
-//		R_IICA0_StopCondition();
-	}
-	/* ストップコンディション後の待ち */
-//	WAIT_5US();		//RD8001暫定
-//	WAIT_5US();		//RD8001暫定
-	wait_ms(5);
-#else
 	}
 	//RD8001暫定:バス開放
 	R_IICA0_Stop();
 	R_IICA0_Create();
-	
-#endif
 
 	// ストップビットあり
 	//RD8001暫定：ストップコンディションを送らないと読み出し失敗する
@@ -212,6 +204,9 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	}
 	while(0U == SPD0){}
 	
+	/* ストップコンディション後の待ち */
+	wait_ms(5);
+	WAIT_5US();		//RD8001暫定
 }
 
 

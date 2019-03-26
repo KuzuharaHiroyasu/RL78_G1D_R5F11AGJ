@@ -1,9 +1,9 @@
-<CubeSuiteProject>
-  <ProductVersion>8.01.00.00</ProductVersion>
+﻿<CubeSuiteProject>
+  <ProductVersion>9.01.00.00</ProductVersion>
   <Class Guid="68f4a651-b9cd-473b-a595-b00447132ffa">
     <Instance Guid="00000000-0000-0000-0000-000000000000">
       <FormatVersion>2.0</FormatVersion>
-      <FileVersion>8.1</FileVersion>
+      <FileVersion>9.1</FileVersion>
       <ProjectGuid>1bf1ddbb-6ace-4f37-b75e-f252e12935fe</ProjectGuid>
       <ProjectItemGuid>62d71d02-afb7-48ea-9059-dea9b9ea67a8</ProjectItemGuid>
       <FileCategoryGuid>c9ebe9a9-2a1d-41f2-a796-d628e5eb4533</FileCategoryGuid>
@@ -633,6 +633,20 @@
       <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
       <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
     </Instance>
+    <Instance Guid="1908da36-d90a-4d6a-a3c0-eaadbd323643">
+      <Name>r_cg_adc_user.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\r_cg_adc_user.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
+    </Instance>
+    <Instance Guid="1c02294f-728f-4fca-90f0-07d473a647ff">
+      <Name>r_cg_adc.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\r_cg_adc.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
+    </Instance>
     <Instance Guid="127d00d6-ed83-4b04-8f19-da7c90229ed5">
       <Name>apnea</Name>
       <Type>Category</Type>
@@ -943,7 +957,7 @@
   </Class>
   <Class Guid="1159186b-b838-4741-8324-8293bf3d5c5f">
     <Instance Guid="1159186b-b838-4741-8324-8293bf3d5c5f">
-      <DataFormatVersion>1.2</DataFormatVersion>
+      <DataFormatVersion>1.3</DataFormatVersion>
       <BuildModeCount>1</BuildModeCount>
       <BuildMode0>RABlAGYAYQB1AGwAdABCAHUAaQBsAGQA</BuildMode0>
       <BatchBuildFlag0>False</BatchBuildFlag0>
@@ -1046,7 +1060,11 @@
       <SourceItemType47>CSource</SourceItemType47>
       <SourceItemGuid48>8c87bdfb-27a3-478e-aca7-7ccdda83566d</SourceItemGuid48>
       <SourceItemType48>CSource</SourceItemType48>
-      <SourceItemCount>49</SourceItemCount>
+      <SourceItemGuid49>1908da36-d90a-4d6a-a3c0-eaadbd323643</SourceItemGuid49>
+      <SourceItemType49>CSource</SourceItemType49>
+      <SourceItemGuid50>1c02294f-728f-4fca-90f0-07d473a647ff</SourceItemGuid50>
+      <SourceItemType50>CSource</SourceItemType50>
+      <SourceItemCount>51</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="6bb7060d-7e24-4135-bd9b-7db166417523">
@@ -1096,12 +1114,14 @@
       <LinkOptionLibraryStandard-DefaultValue>True</LinkOptionLibraryStandard-DefaultValue>
       <PreBuildCommands-DefaultValue />
       <HexOptionDivisionOutputFile-DefaultValue />
-      <LibOptionLibraryRuntime-DefaultValue>False</LibOptionLibraryRuntime-DefaultValue>
-      <LinkOptionLibraryRuntime-DefaultValue>True</LinkOptionLibraryRuntime-DefaultValue>
+      <LibOptionLibraryStandard2-DefaultValue>None</LibOptionLibraryStandard2-DefaultValue>
+      <LinkOptionLibraryStandard2-DefaultValue>C90</LinkOptionLibraryStandard2-DefaultValue>
       <PostBuildCommands-DefaultValue />
       <GeneralOptionOtherAdditionalOptions-DefaultValue />
+      <LibOptionLibraryRuntime-DefaultValue>False</LibOptionLibraryRuntime-DefaultValue>
+      <LinkOptionLibraryRuntime-DefaultValue>True</LinkOptionLibraryRuntime-DefaultValue>
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586786073090902360</TimeTagModified--0>
+      <TimeTagModified--0>-8586481081202500826</TimeTagModified--0>
       <BuildMode-0>DefaultBuild</BuildMode-0>
       <Memo-0 />
       <OutputMessageFormat-0>%TargetFiles%</OutputMessageFormat-0>
@@ -1129,7 +1149,7 @@
       <TemporaryFolder-0 />
       <GeneralOptionEdition-0>None</GeneralOptionEdition-0>
       <GeneralOptionOtherAdditionalOptions-0 />
-      <LastCompilerVersion-0>V1.06.00</LastCompilerVersion-0>
+      <LastCompilerVersion-0>V1.08.00</LastCompilerVersion-0>
     </Instance>
     <Instance Guid="86bebc9e-2f6f-4e72-83c8-8883e6cf6d33">
       <COptionAsmPath-DefaultValue>False</COptionAsmPath-DefaultValue>
@@ -1203,6 +1223,7 @@
       <COptionMisra2012RuleNumberRequiredRemove-DefaultValue />
       <COptionIgnoreFilesMisra-DefaultValue />
       <COptionCheckLanguageExtension-DefaultValue>False</COptionCheckLanguageExtension-DefaultValue>
+      <COptionMisraIntermodule-DefaultValue>False</COptionMisraIntermodule-DefaultValue>
       <IsLockedByUser>False</IsLockedByUser>
       <TimeTagModified--0>-8586756007078402732</TimeTagModified--0>
       <COptionAsmPath-0>False</COptionAsmPath-0>
@@ -1323,6 +1344,7 @@ noCFG_PKTMON
       <COptionMisra2012RuleNumberRequiredRemove-0 />
       <COptionIgnoreFilesMisra-0 />
       <COptionCheckLanguageExtension-0>False</COptionCheckLanguageExtension-0>
+      <COptionMisraIntermodule-0>False</COptionMisraIntermodule-0>
     </Instance>
     <Instance Guid="7a176a9a-9fa0-4b5e-9c2d-94265d8d049f">
       <AsmOptionCharacterSet-DefaultValue>Auto</AsmOptionCharacterSet-DefaultValue>
@@ -1400,7 +1422,7 @@ noCFG_PKTMON
       <LinkOptionChangeMessageInformation-DefaultValue>None</LinkOptionChangeMessageInformation-DefaultValue>
       <LinkOptionCheck64KOnly-DefaultValue>False</LinkOptionCheck64KOnly-DefaultValue>
       <LinkOptionDebugMonitor-DefaultValue>3FE00-3FFFF</LinkOptionDebugMonitor-DefaultValue>
-      <LinkOptionLibraryLibMalloc-DefaultValue>False</LinkOptionLibraryLibMalloc-DefaultValue>
+      <LinkOptionLibraryStandard2-DefaultValue>C90</LinkOptionLibraryStandard2-DefaultValue>
       <LinkOptionLogo-DefaultValue>False</LinkOptionLogo-DefaultValue>
       <LinkOptionRom-DefaultValue>.data=.dataR
 .sdata=.sdataR
@@ -1410,7 +1432,7 @@ noCFG_PKTMON
       <LinkOptionVectN-DefaultValue />
       <LinkOptionVfinfoOutputType-DefaultValue />
       <LinkOptionChangeMessageInformationNumber-DefaultValue />
-      <LinkOptionLibraryRuntime-DefaultValue>True</LinkOptionLibraryRuntime-DefaultValue>
+      <LinkOptionLibraryLibMalloc-DefaultValue>False</LinkOptionLibraryLibMalloc-DefaultValue>
       <LinkOptionNoCheckSectionLayout-DefaultValue>False</LinkOptionNoCheckSectionLayout-DefaultValue>
       <LinkOptionOptimizeBranch-DefaultValue>False</LinkOptionOptimizeBranch-DefaultValue>
       <LinkOptionPreLinkCommands-DefaultValue />
@@ -1419,6 +1441,7 @@ noCFG_PKTMON
       <LinkOptionVect-DefaultValue />
       <LinkOptionCFI-DefaultValue>False</LinkOptionCFI-DefaultValue>
       <LinkOptionChangeMessageWarning-DefaultValue>None</LinkOptionChangeMessageWarning-DefaultValue>
+      <LinkOptionLibraryRuntime-DefaultValue>True</LinkOptionLibraryRuntime-DefaultValue>
       <LinkOptionPostLinkCommands-DefaultValue />
       <LinkOptionShowTotalSize-DefaultValue>False</LinkOptionShowTotalSize-DefaultValue>
       <LinkOptionSymbolForbid-DefaultValue />
@@ -1438,6 +1461,7 @@ noCFG_PKTMON
       <LinkOptionChangeMessageErrorNumber-DefaultValue />
       <LinkOptionOcdHpi-DefaultValue>None</LinkOptionOcdHpi-DefaultValue>
       <LinkOptionShowRelocationAttribute-DefaultValue>False</LinkOptionShowRelocationAttribute-DefaultValue>
+      <LinkOptionSplitVect-DefaultValue>False</LinkOptionSplitVect-DefaultValue>
       <LinkOptionRrm-DefaultValue>False</LinkOptionRrm-DefaultValue>
       <LinkOptionShowCFI-DefaultValue>False</LinkOptionShowCFI-DefaultValue>
       <LinkOptionRrmValue-DefaultValue />
@@ -1504,7 +1528,7 @@ noCFG_PKTMON
       <LinkOptionChangeMessageInformation-0>None</LinkOptionChangeMessageInformation-0>
       <LinkOptionCheck64KOnly-0>False</LinkOptionCheck64KOnly-0>
       <LinkOptionDebugMonitor-0>FE00-FFFF</LinkOptionDebugMonitor-0>
-      <LinkOptionLibraryLibMalloc-0>False</LinkOptionLibraryLibMalloc-0>
+      <LinkOptionLibraryStandard2-0>C90</LinkOptionLibraryStandard2-0>
       <LinkOptionLogo-0>False</LinkOptionLogo-0>
       <LinkOptionRom-0>.data=.dataR
 .sdata=.sdataR
@@ -1514,7 +1538,7 @@ noCFG_PKTMON
       <LinkOptionVectN-0 />
       <LinkOptionVfinfoOutputType-0 />
       <LinkOptionChangeMessageInformationNumber-0 />
-      <LinkOptionLibraryRuntime-0>True</LinkOptionLibraryRuntime-0>
+      <LinkOptionLibraryLibMalloc-0>False</LinkOptionLibraryLibMalloc-0>
       <LinkOptionNoCheckSectionLayout-0>False</LinkOptionNoCheckSectionLayout-0>
       <LinkOptionOptimizeBranch-0>True</LinkOptionOptimizeBranch-0>
       <LinkOptionPreLinkCommands-0 />
@@ -1523,6 +1547,7 @@ noCFG_PKTMON
       <LinkOptionVect-0 />
       <LinkOptionCFI-0>False</LinkOptionCFI-0>
       <LinkOptionChangeMessageWarning-0>None</LinkOptionChangeMessageWarning-0>
+      <LinkOptionLibraryRuntime-0>True</LinkOptionLibraryRuntime-0>
       <LinkOptionPostLinkCommands-0 />
       <LinkOptionShowTotalSize-0>False</LinkOptionShowTotalSize-0>
       <LinkOptionSymbolForbid-0 />
@@ -1542,11 +1567,13 @@ noCFG_PKTMON
       <LinkOptionChangeMessageErrorNumber-0 />
       <LinkOptionOcdHpi-0>None</LinkOptionOcdHpi-0>
       <LinkOptionShowRelocationAttribute-0>False</LinkOptionShowRelocationAttribute-0>
+      <LinkOptionSplitVect-0>False</LinkOptionSplitVect-0>
       <LinkOptionRrm-0>False</LinkOptionRrm-0>
       <LinkOptionShowCFI-0>False</LinkOptionShowCFI-0>
       <LinkOptionRrmValue-0 />
     </Instance>
     <Instance Guid="2584cb35-e8a6-473b-a8f3-b4f7be9e18fa">
+      <HexOptionCheckOutputRomArea-DefaultValue>False</HexOptionCheckOutputRomArea-DefaultValue>
       <HexOptionCrc-DefaultValue>False</HexOptionCrc-DefaultValue>
       <HexOptionForm-DefaultValue>Stype</HexOptionForm-DefaultValue>
       <HexOptionOtherAdditionalOptions-DefaultValue />
@@ -1562,10 +1589,11 @@ noCFG_PKTMON
       <HexOptionRecordS-DefaultValue>None</HexOptionRecordS-DefaultValue>
       <HexOptionChangeMessageInformation-DefaultValue>None</HexOptionChangeMessageInformation-DefaultValue>
       <HexOptionCrcType-DefaultValue>Msb</HexOptionCrcType-DefaultValue>
-      <HexOptionDivisionOutputFile-DefaultValue />
+      <HexOptionLoadAddress-DefaultValue />
       <HexOptionSpace-DefaultValue>None</HexOptionSpace-DefaultValue>
       <HexOptionChangeMessageInformationNumber-DefaultValue />
       <HexOptionCrcInitialValue-DefaultValue />
+      <HexOptionDivisionOutputFile-DefaultValue />
       <HexOptionSpaceValue-DefaultValue>FF</HexOptionSpaceValue-DefaultValue>
       <HexOptionChangeMessageWarning-DefaultValue>None</HexOptionChangeMessageWarning-DefaultValue>
       <HexOptionCrcEndian-DefaultValue>Little</HexOptionCrcEndian-DefaultValue>
@@ -1580,6 +1608,7 @@ noCFG_PKTMON
       <HexOptionS9-DefaultValue>False</HexOptionS9-DefaultValue>
       <IsLockedByUser>False</IsLockedByUser>
       <TimeTagModified--0>-8586774179948595501</TimeTagModified--0>
+      <HexOptionCheckOutputRomArea-0>False</HexOptionCheckOutputRomArea-0>
       <HexOptionCrc-0>False</HexOptionCrc-0>
       <HexOptionForm-0>Stype</HexOptionForm-0>
       <HexOptionOtherAdditionalOptions-0 />
@@ -1595,10 +1624,11 @@ noCFG_PKTMON
       <HexOptionRecordS-0>S3</HexOptionRecordS-0>
       <HexOptionChangeMessageInformation-0>None</HexOptionChangeMessageInformation-0>
       <HexOptionCrcType-0>Msb</HexOptionCrcType-0>
-      <HexOptionDivisionOutputFile-0 />
+      <HexOptionLoadAddress-0 />
       <HexOptionSpace-0>Value</HexOptionSpace-0>
       <HexOptionChangeMessageInformationNumber-0 />
       <HexOptionCrcInitialValue-0 />
+      <HexOptionDivisionOutputFile-0 />
       <HexOptionSpaceValue-0>FF</HexOptionSpaceValue-0>
       <HexOptionChangeMessageWarning-0>None</HexOptionChangeMessageWarning-0>
       <HexOptionCrcEndian-0>Little</HexOptionCrcEndian-0>
@@ -1633,14 +1663,15 @@ noCFG_PKTMON
       <LibOptionOutputFileName-DefaultValue>%ProjectName%.lib</LibOptionOutputFileName-DefaultValue>
       <LibOptionShowSymbol-DefaultValue>False</LibOptionShowSymbol-DefaultValue>
       <LibOptionChangeMessageInformationNumber-DefaultValue />
-      <LibOptionLibraryLibMalloc-DefaultValue>False</LibOptionLibraryLibMalloc-DefaultValue>
+      <LibOptionLibraryStandard2-DefaultValue>None</LibOptionLibraryStandard2-DefaultValue>
       <LibOptionPreLibCommands-DefaultValue />
       <LibOptionShowSection-DefaultValue>False</LibOptionShowSection-DefaultValue>
       <LibOptionChangeMessageWarning-DefaultValue>None</LibOptionChangeMessageWarning-DefaultValue>
-      <LibOptionLibraryRuntime-DefaultValue>False</LibOptionLibraryRuntime-DefaultValue>
+      <LibOptionLibraryLibMalloc-DefaultValue>False</LibOptionLibraryLibMalloc-DefaultValue>
       <LibOptionPostLibCommands-DefaultValue />
       <LibOptionShowXreference-DefaultValue>False</LibOptionShowXreference-DefaultValue>
       <LibOptionChangeMessageWarningNumber-DefaultValue />
+      <LibOptionLibraryRuntime-DefaultValue>False</LibOptionLibraryRuntime-DefaultValue>
       <LibOptionOtherAdditionalOptions-DefaultValue />
       <LibOptionShowTotalSize-DefaultValue>False</LibOptionShowTotalSize-DefaultValue>
       <LibOptionChangeMessageError-DefaultValue>None</LibOptionChangeMessageError-DefaultValue>
@@ -1667,14 +1698,15 @@ noCFG_PKTMON
       <LibOptionOutputFileName-0>%ProjectName%.lib</LibOptionOutputFileName-0>
       <LibOptionShowSymbol-0>False</LibOptionShowSymbol-0>
       <LibOptionChangeMessageInformationNumber-0 />
-      <LibOptionLibraryLibMalloc-0>False</LibOptionLibraryLibMalloc-0>
+      <LibOptionLibraryStandard2-0>None</LibOptionLibraryStandard2-0>
       <LibOptionPreLibCommands-0 />
       <LibOptionShowSection-0>False</LibOptionShowSection-0>
       <LibOptionChangeMessageWarning-0>None</LibOptionChangeMessageWarning-0>
-      <LibOptionLibraryRuntime-0>False</LibOptionLibraryRuntime-0>
+      <LibOptionLibraryLibMalloc-0>False</LibOptionLibraryLibMalloc-0>
       <LibOptionPostLibCommands-0 />
       <LibOptionShowXreference-0>False</LibOptionShowXreference-0>
       <LibOptionChangeMessageWarningNumber-0 />
+      <LibOptionLibraryRuntime-0>False</LibOptionLibraryRuntime-0>
       <LibOptionOtherAdditionalOptions-0 />
       <LibOptionShowTotalSize-0>False</LibOptionShowTotalSize-0>
       <LibOptionChangeMessageError-0>None</LibOptionChangeMessageError-0>
@@ -2050,6 +2082,14 @@ noCFG_PKTMON
       <ItemAddTime>636601117085635739</ItemAddTime>
       <ItemAddTimeCount>1</ItemAddTimeCount>
     </Instance>
+    <Instance Guid="1908da36-d90a-4d6a-a3c0-eaadbd323643">
+      <ItemAddTime>636891291826264982</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="1c02294f-728f-4fca-90f0-07d473a647ff">
+      <ItemAddTime>636891291826264982</ItemAddTime>
+      <ItemAddTimeCount>1</ItemAddTimeCount>
+    </Instance>
     <Instance Guid="f782db2c-1c42-4ca1-af6a-53a3a5067217">
       <TimeTagModified-SourceItem0--0>-8587720036646824581</TimeTagModified-SourceItem0--0>
       <SourceItem0-IsLockedByUser>False</SourceItem0-IsLockedByUser>
@@ -2227,6 +2267,14 @@ noCFG_PKTMON
       <SourceItem48-IsLockedByUser>False</SourceItem48-IsLockedByUser>
       <SourceItem48-BuildingTarget-0>True</SourceItem48-BuildingTarget-0>
       <SourceItem48-IndividualCompileOption-0>False</SourceItem48-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem49--0>-8586481069028510826</TimeTagModified-SourceItem49--0>
+      <SourceItem49-IsLockedByUser>False</SourceItem49-IsLockedByUser>
+      <SourceItem49-BuildingTarget-0>True</SourceItem49-BuildingTarget-0>
+      <SourceItem49-IndividualCompileOption-0>False</SourceItem49-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem50--0>-8586481069028510826</TimeTagModified-SourceItem50--0>
+      <SourceItem50-IsLockedByUser>False</SourceItem50-IsLockedByUser>
+      <SourceItem50-BuildingTarget-0>True</SourceItem50-BuildingTarget-0>
+      <SourceItem50-IndividualCompileOption-0>False</SourceItem50-IndividualCompileOption-0>
     </Instance>
     <Instance Guid="0b7e78c3-aadd-45ee-9f9d-ffac6141eeb2">
       <TimeTagModified-SourceItem9--0>-8587695222820463075</TimeTagModified-SourceItem9--0>
@@ -2800,7 +2848,7 @@ noCFG_PKTMON
   </Class>
   <Class Guid="18ae40a2-ced0-4b3c-8ee8-890cea9e5a20">
     <Instance Guid="18ae40a2-ced0-4b3c-8ee8-890cea9e5a20">
-      <CodeGeneratorData>﻿&lt;SerializableData&gt;
+      <CodeGeneratorData0>&lt;DataSign&gt;&lt;SerializableData&gt;
   &lt;SerializableData name="39a9d609-9774-41fe-9e4e-5c50dfa1451e"&gt;
     &lt;DataElement key="piorfixed" value="False"&gt;
     &lt;/DataElement&gt;
@@ -2989,6 +3037,38 @@ noCFG_PKTMON
       &lt;/SerializableData&gt;
       &lt;SerializableData name="INTLVI"&gt;
         &lt;DataElement key="ISRName" value="r_lvd_interrupt"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTIIC00"&gt;
+        &lt;DataElement key="ISRName" value="r_iic00_interrupt"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTSR0"&gt;
+        &lt;DataElement key="ISRName" value="r_uart0_interrupt_receive"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTST0"&gt;
+        &lt;DataElement key="ISRName" value="r_uart0_interrupt_send"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTCSI00"&gt;
+        &lt;DataElement key="ISRName" value="r_csi00_interrupt"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTSR1"&gt;
+        &lt;DataElement key="ISRName" value="r_uart1_interrupt_receive"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTST1"&gt;
+        &lt;DataElement key="ISRName" value="r_uart1_interrupt_send"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTIIC20"&gt;
+        &lt;DataElement key="ISRName" value="r_iic20_interrupt"&gt;
+        &lt;/DataElement&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="INTCSI20"&gt;
+        &lt;DataElement key="ISRName" value="r_csi20_interrupt"&gt;
         &lt;/DataElement&gt;
       &lt;/SerializableData&gt;
     &lt;/SerializableData&gt;
@@ -4401,6 +4481,8 @@ noCFG_PKTMON
     &lt;DataElement key="DATAFLASH" value="UNUSE"&gt;
     &lt;/DataElement&gt;
     &lt;DataElement key="CreationDateType" value="OutputDate"&gt;
+    &lt;/DataElement&gt;
+    &lt;DataElement key="GenerateFolder" value=".\"&gt;
     &lt;/DataElement&gt;
   &lt;/SerializableData&gt;
   &lt;SerializableData name="6b704b16-cf94-4c9e-98b5-3d172383f648"&gt;
@@ -14425,6 +14507,1170 @@ noCFG_PKTMON
       &lt;/SerializableData&gt;
     &lt;/SerializableData&gt;
     &lt;SerializableData name="RL78G1D_SAU"&gt;
+      &lt;SerializableData name="SAU0"&gt;
+        &lt;SerializableData name="Channel0"&gt;
+          &lt;SerializableData name="CHANNEL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="4"&gt;
+            &lt;/DataElement&gt;
+            &lt;DataElement key="SelectedContentItem" value="Unused"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="使用しない"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="Unused"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="UART0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="CSI00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCL00,SDA00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTIIC00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_IIC00_Create,R_IIC00_Master_Send,R_IIC00_Master_Receive,R_IIC00_Stop,R_IIC00_StartCondition,R_IIC00_StopCondition,r_iic00_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="IIC_USED"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="IIC00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="IIC"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+          &lt;SerializableData name="DETAIL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="6"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value="RxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Receive,r_uart0_interrupt_receive"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_RECEIVE"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value="TxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTST0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Send,r_uart0_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_TRANSMIT"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value="RxD0,TxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR0,INTST0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Receive,R_UART0_Send,r_uart0_interrupt_receive,r_uart0_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_BOTH"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCK00,SI00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI00_Create,R_CSI00_Start,R_CSI00_Stop,R_CSI00_Receive,r_csi00_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_RECEIVE,CSI_MODE=_4000_SAU_RECEPTION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem5"&gt;
+              &lt;DataElement key="Pin" value="SCK00,SO00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI00_Create,R_CSI00_Start,R_CSI00_Stop,R_CSI00_Send,r_csi00_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_TRANSMIT,CSI_MODE=_8000_SAU_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem6"&gt;
+              &lt;DataElement key="Pin" value="SCK00,SI00,SO00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI00"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI00_Create,R_CSI00_Start,R_CSI00_Stop,R_CSI00_Send_Receive,r_csi00_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_BOTH,CSI_MODE=_C000_SAU_RECEPTION_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+        &lt;/SerializableData&gt;
+        &lt;SerializableData name="Channel1"&gt;
+          &lt;SerializableData name="CHANNEL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="4"&gt;
+            &lt;/DataElement&gt;
+            &lt;DataElement key="SelectedContentItem" value="Unused"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="使用しない"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="Unused"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="UART0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="CSI01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCL01,SDA01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTIIC01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_IIC01_Create,R_IIC01_Master_Send,R_IIC01_Master_Receive,R_IIC01_Stop,R_IIC01_StartCondition,R_IIC01_StopCondition,r_iic01_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="IIC_USED"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="IIC01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="IIC"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+          &lt;SerializableData name="DETAIL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="6"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value="RxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Receive,r_uart0_interrupt_receive"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_RECEIVE"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value="TxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTST0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Send,r_uart0_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_TRANSMIT"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value="RxD0,TxD0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR0,INTST0"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART0_Create,R_UART0_Start,R_UART0_Stop,R_UART0_Receive,R_UART0_Send,r_uart0_interrupt_receive,r_uart0_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_BOTH"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCK01,SI01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI01_Create,R_CSI01_Start,R_CSI01_Stop,R_CSI01_Receive,r_csi01_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_RECEIVE,CSI_MODE=_4000_SAU_RECEPTION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem5"&gt;
+              &lt;DataElement key="Pin" value="SCK01,SO01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI01_Create,R_CSI01_Start,R_CSI01_Stop,R_CSI01_Send,r_csi01_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_TRANSMIT,CSI_MODE=_8000_SAU_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem6"&gt;
+              &lt;DataElement key="Pin" value="SCK01,SI01,SO01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI01"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI01_Create,R_CSI01_Start,R_CSI01_Stop,R_CSI01_Send_Receive,r_csi01_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_BOTH,CSI_MODE=_C000_SAU_RECEPTION_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+        &lt;/SerializableData&gt;
+        &lt;SerializableData name="Channel2"&gt;
+          &lt;SerializableData name="CHANNEL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="4"&gt;
+            &lt;/DataElement&gt;
+            &lt;DataElement key="SelectedContentItem" value="Unused"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="使用しない"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="Unused"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="UART1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="CSI10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCL10,SDA10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTIIC10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_IIC10_Create,R_IIC10_Master_Send,R_IIC10_Master_Receive,R_IIC10_Stop,R_IIC10_StartCondition,R_IIC10_StopCondition,r_iic10_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="IIC_USED"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="IIC10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="IIC"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+          &lt;SerializableData name="DETAIL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="6"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value="RxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Receive,r_uart1_interrupt_receive"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_RECEIVE"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value="TxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTST1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Send,r_uart1_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_TRANSMIT"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value="RxD1,TxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR1,INTST1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Receive,R_UART1_Send,r_uart1_interrupt_receive,r_uart1_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_BOTH"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCK10,SI10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI10_Create,R_CSI10_Start,R_CSI10_Stop,R_CSI10_Receive,r_csi10_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_RECEIVE,CSI_MODE=_4000_SAU_RECEPTION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem5"&gt;
+              &lt;DataElement key="Pin" value="SCK10,SO10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI10_Create,R_CSI10_Start,R_CSI10_Stop,R_CSI10_Send,r_csi10_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_TRANSMIT,CSI_MODE=_8000_SAU_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem6"&gt;
+              &lt;DataElement key="Pin" value="SCK10,SI10,SO10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI10"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI10_Create,R_CSI10_Start,R_CSI10_Stop,R_CSI10_Send_Receive,r_csi10_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_BOTH,CSI_MODE=_C000_SAU_RECEPTION_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+        &lt;/SerializableData&gt;
+        &lt;SerializableData name="Channel3"&gt;
+          &lt;SerializableData name="CHANNEL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="4"&gt;
+            &lt;/DataElement&gt;
+            &lt;DataElement key="SelectedContentItem" value="Unused"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="使用しない"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="Unused"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="UART1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="CSI11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCL11,SDA11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTIIC11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_IIC11_Create,R_IIC11_Master_Send,R_IIC11_Master_Receive,R_IIC11_Stop,R_IIC11_StartCondition,R_IIC11_StopCondition,r_iic11_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="IIC_USED"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="IIC11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="IIC"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+          &lt;SerializableData name="DETAIL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="6"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value="RxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Receive,r_uart1_interrupt_receive"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_RECEIVE"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value="TxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTST1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Send,r_uart1_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_TRANSMIT"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value="RxD1,TxD1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR1,INTST1"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART1_Create,R_UART1_Start,R_UART1_Stop,R_UART1_Receive,R_UART1_Send,r_uart1_interrupt_receive,r_uart1_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_BOTH"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCK11,SI11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI11_Create,R_CSI11_Start,R_CSI11_Stop,R_CSI11_Receive,r_csi11_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_RECEIVE,CSI_MODE=_4000_SAU_RECEPTION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem5"&gt;
+              &lt;DataElement key="Pin" value="SCK11,SO11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI11_Create,R_CSI11_Start,R_CSI11_Stop,R_CSI11_Send,r_csi11_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_TRANSMIT,CSI_MODE=_8000_SAU_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem6"&gt;
+              &lt;DataElement key="Pin" value="SCK11,SI11,SO11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI11"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI11_Create,R_CSI11_Start,R_CSI11_Stop,R_CSI11_Send_Receive,r_csi11_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_BOTH,CSI_MODE=_C000_SAU_RECEPTION_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+        &lt;/SerializableData&gt;
+      &lt;/SerializableData&gt;
+      &lt;SerializableData name="SAU1"&gt;
+        &lt;SerializableData name="Channel0"&gt;
+          &lt;SerializableData name="CHANNEL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="4"&gt;
+            &lt;/DataElement&gt;
+            &lt;DataElement key="SelectedContentItem" value="Unused"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="使用しない"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="Unused"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="UART2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="CSI20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCL20,SDA20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTIIC20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_IIC20_Create,R_IIC20_Master_Send,R_IIC20_Master_Receive,R_IIC20_Stop,R_IIC20_StartCondition,R_IIC20_StopCondition,r_iic20_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="IIC_USED"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="IIC20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="IIC"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="True"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+          &lt;SerializableData name="DETAIL_FUNCTION"&gt;
+            &lt;DataElement key="ContentItemCount" value="6"&gt;
+            &lt;/DataElement&gt;
+            &lt;SerializableData name="ContentItem1"&gt;
+              &lt;DataElement key="Pin" value="RxD2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART2_Create,R_UART2_Start,R_UART2_Stop,R_UART2_Receive,r_uart2_interrupt_receive"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_RECEIVE"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem2"&gt;
+              &lt;DataElement key="Pin" value="TxD2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTST2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART2_Create,R_UART2_Start,R_UART2_Stop,R_UART2_Send,r_uart2_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_TRANSMIT"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem3"&gt;
+              &lt;DataElement key="Pin" value="RxD2,TxD2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTSR2,INTST2"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_UART2_Create,R_UART2_Start,R_UART2_Stop,R_UART2_Receive,R_UART2_Send,r_uart2_interrupt_receive,r_uart2_interrupt_send"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="UART_BOTH"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="UART_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem4"&gt;
+              &lt;DataElement key="Pin" value="SCK20,SI20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI20_Create,R_CSI20_Start,R_CSI20_Stop,R_CSI20_Receive,r_csi20_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_RECEIVE,CSI_MODE=_4000_SAU_RECEPTION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_R"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem5"&gt;
+              &lt;DataElement key="Pin" value="SCK20,SO20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI20_Create,R_CSI20_Start,R_CSI20_Stop,R_CSI20_Send,r_csi20_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_TRANSMIT,CSI_MODE=_8000_SAU_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_T"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+            &lt;SerializableData name="ContentItem6"&gt;
+              &lt;DataElement key="Pin" value="SCK20,SI20,SO20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Int" value="INTCSI20"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Fun" value="R_CSI20_Create,R_CSI20_Start,R_CSI20_Stop,R_CSI20_Send_Receive,r_csi20_interrupt"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Tag" value="CSI_BOTH,CSI_MODE=_C000_SAU_RECEPTION_TRANSMISSION"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Text" value="送信/受信機能"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomInValidMessage" value=""&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Attach" value="CSI_TR"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="MutexType" value="NoMutex"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="Visible" value="False"&gt;
+              &lt;/DataElement&gt;
+              &lt;DataElement key="CustomValid" value="Valid"&gt;
+              &lt;/DataElement&gt;
+            &lt;/SerializableData&gt;
+          &lt;/SerializableData&gt;
+        &lt;/SerializableData&gt;
+      &lt;/SerializableData&gt;
     &lt;/SerializableData&gt;
     &lt;SerializableData name="RL78G1D_IICA"&gt;
       &lt;SerializableData name="IICA0"&gt;
@@ -16581,7 +17827,7 @@ noCFG_PKTMON
     &lt;DataElement key="name" value="CCRL"&gt;
     &lt;/DataElement&gt;
   &lt;/SerializableData&gt;
-&lt;/SerializableData&gt;</CodeGeneratorData>
+&lt;/SerializableData&gt;&lt;DataSign&gt;</CodeGeneratorData0>
       <CodeGeneratorFilesGuid>388cc028-3e40-4c2f-b658-74b08858d2be</CodeGeneratorFilesGuid>
     </Instance>
   </Class>

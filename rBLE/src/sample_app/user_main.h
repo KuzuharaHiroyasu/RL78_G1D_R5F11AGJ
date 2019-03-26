@@ -331,6 +331,8 @@ typedef struct{
 	DS_VUART		vuart;			/* 仮想UART(BLE) */
 }DS;
 
+#define ACL_DEVICE_ADR			0x1C				// 加速度センサデバイスアドレス
+
 
 /******************/
 /*  外部参照宣言  */

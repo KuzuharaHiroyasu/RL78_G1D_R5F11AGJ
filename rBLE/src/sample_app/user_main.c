@@ -92,7 +92,9 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 
 extern void test_cpu_com_send( void );
 
-
+void main_acl_read(void);
+void com_srv_send( UB* tx_data, UB len );
+void drv_uart1_send_start( void );
 
 //変数定義
 /* Status */
@@ -103,7 +105,8 @@ ke_state_t cpu_com_state[ CPU_COM_IDX_MAX ] = {0};
 T_UNIT s_unit;					//RD8001暫定：staticへ変更予定
 STATIC DS s_ds;
 
-
+int acc_cnt = 0;
+RING_BUF drv_uart1_send_ring;									/* 送信リングバッファ用コントローラ */
 
 // OS関連
 // イベント解析処理(OS)　※通信バッファを使用している
@@ -708,10 +711,13 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 //	ke_time_t now_time;
 	uint8_t *ke_msg;
 	MEAS meas;
+	int dbg_len;
+	char dbg_tx_data[50] = {0};
 	
 	// 受信日時格納
 	s_unit.last_sensing_data_rcv = ke_time();
-	
+
+#if 0
 	// センサーデータ格納
 	memcpy( &meas.info.byte[0], &s_ds.cpu_com.input.rcv_data[0], CPU_COM_SND_DATA_SIZE_SENSOR_DATA );
 	
@@ -732,8 +738,39 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 		s_unit.acl_y[s_unit.acl_cnt] = meas.info.dat.acl_y;
 		s_unit.acl_z[s_unit.acl_cnt] = meas.info.dat.acl_z;
 	}
+#endif	
 	
+	// マイク用(呼吸、イビキ)開始
+//H1Dのまま移行したのでビルドエラー	
+//	R_DAC1_Set_ConversionValue( 0x0000 );
+//	R_AMP0_Start();		// ■AMP0 ON
+//	R_PGA1_Start();		// ■PGA1 ON
+
+	wait_ms( 2 );
+	adc_ibiki_kokyu( &s_unit.ibiki_val[s_unit.ibiki_cnt], &s_unit.kokyu_val[s_unit.kokyu_cnt] );
 	
+	if(acc_cnt == 0)
+	{
+		// 加速度センサ取得
+		main_acl_read();
+		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,%d,%d,%d\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
+									      , s_unit.ibiki_val[s_unit.ibiki_cnt]
+									      , s_unit.acl_x[s_unit.acl_cnt]
+									      , s_unit.acl_y[s_unit.acl_cnt]
+									      , s_unit.acl_z[s_unit.acl_cnt]);
+	} else {
+		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,999,0,0\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
+									     , s_unit.ibiki_val[s_unit.ibiki_cnt]);
+	}
+	acc_cnt++;
+	if(acc_cnt == 10)
+	{
+		acc_cnt = 0;
+	}
+	
+	com_srv_send( &dbg_tx_data[0], dbg_len );
+
+	#if 0	
 	// データフルで演算呼出
 	if( s_unit.sekishoku_cnt >= ( DATA_SIZE_SPO2 - 1 )){
 		// 赤色→赤外の順番
@@ -754,6 +791,7 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
+#endif
 	
 	INC_MAX( s_unit.sekigai_cnt, MEAS_SEKIGAI_CNT_MAX );
 	INC_MAX( s_unit.sekishoku_cnt, MEAS_SEKISHOKU_CNT_MAX );
@@ -1452,4 +1490,56 @@ STATIC void main_prg_hd_read_eep_record( void )
 	s_unit.prg_hd_eep_record_cnt_rd++;
 }
 
+void main_acl_read(void)
+{
+	UB rd_data[10];
+	
+	// INT_SOURCE1		
+	i2c_read_sub( ACL_DEVICE_ADR, 0x16, &rd_data[0], 1 );
+	if( 0 == ( rd_data[0] & 0x10 )){
+		// データ未達
+		return;
+	}
+	
+	// データ取得
+	i2c_read_sub( ACL_DEVICE_ADR, 0x06, &rd_data[0], 6 );
+	s_unit.acl_x[s_unit.acl_cnt] = rd_data[1];
+	s_unit.acl_y[s_unit.acl_cnt] = rd_data[3];
+	s_unit.acl_z[s_unit.acl_cnt] = rd_data[5];
+	
+	// INT_REL読み出し　※割り込み要求クリア
+	i2c_read_sub( ACL_DEVICE_ADR, 0x1A, &rd_data[0], 1 );
+}
 
+void com_srv_send( UB* tx_data, UB len )
+{
+#if FUNC_DEBUG_LOG == ON
+	RING_BUF* p_ring_buf;
+	UB i = 0;
+	UB ret;
+	
+	p_ring_buf = &drv_uart1_send_ring;
+	
+	/* 送信バッファを全て書き込み */
+	for(i = 0; i < len; i++){
+		ret = write_ring_buf(p_ring_buf, (UB)tx_data[i] );
+		if(ret != E_OK){
+			break;
+		}
+	}
+	
+	/* 送信開始 */
+	drv_uart1_send_start();
+#endif
+}
+
+void drv_uart1_send_start( void )
+{
+	UB snd_data;
+	
+	if(E_OK == read_ring_buf( &drv_uart1_send_ring, &snd_data )){
+        STMK1 = 1U;    /* disable INTST1 interrupt */
+		TXD0 = snd_data;
+        STMK1 = 0U;    /* enable INTST1 interrupt */
+	}
+}
