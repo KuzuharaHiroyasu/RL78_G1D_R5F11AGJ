@@ -48,13 +48,13 @@ Global variables and functions
 /* End user code. Do not edit comment generated here */
 static unsigned short adc_sub( unsigned char ad_type);
 
-void adc_ibiki_kokyu( unsigned short* ibiki, unsigned short* kokyu )
+void adc_ibiki_kokyu( uint16_t* ibiki, uint16_t* kokyu )
 {
 	*ibiki = adc_sub( ADCHANNEL2 );
 	*kokyu = adc_sub( ADCHANNEL3 );
 }
 
-void adc_dench( unsigned short* dench )
+void adc_dench( uint16_t* dench )
 {
 	*dench = adc_sub( ADCHANNEL18 );
 }

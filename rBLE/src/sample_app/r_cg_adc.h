@@ -170,6 +170,8 @@ typedef enum
     ADAVREFP
 } test_channel_t;
 
+typedef unsigned short      uint16_t;
+
 /***********************************************************************************************************************
 Global functions
 ***********************************************************************************************************************/
@@ -179,9 +181,8 @@ void R_ADC_Stop(void);
 void R_ADC_Set_OperationOn(void);
 void R_ADC_Set_OperationOff(void);
 void R_ADC_Get_Result(unsigned short * const buffer);
-void adc_ibiki_kokyu( unsigned short* ibiki, unsigned short* kokyu );
-void adc_dench( unsigned short* dench );
-
+void adc_ibiki_kokyu( uint16_t* ibiki, uint16_t* kokyu );
+void adc_dench( uint16_t* dench );
 
 /* Start user code for function. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
