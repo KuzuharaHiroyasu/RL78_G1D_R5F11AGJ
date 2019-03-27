@@ -93,8 +93,6 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 extern void test_cpu_com_send( void );
 
 void main_acl_read(void);
-void com_srv_send( UB* tx_data, UB len );
-void drv_uart1_send_start( void );
 
 //変数定義
 /* Status */
@@ -106,7 +104,6 @@ T_UNIT s_unit;					//RD8001暫定：staticへ変更予定
 STATIC DS s_ds;
 
 int acc_cnt = 0;
-RING_BUF drv_uart1_send_ring;									/* 送信リングバッファ用コントローラ */
 
 // OS関連
 // イベント解析処理(OS)　※通信バッファを使用している
@@ -1511,35 +1508,3 @@ void main_acl_read(void)
 	i2c_read_sub( ACL_DEVICE_ADR, 0x1A, &rd_data[0], 1 );
 }
 
-void com_srv_send( UB* tx_data, UB len )
-{
-#if FUNC_DEBUG_LOG == ON
-	RING_BUF* p_ring_buf;
-	UB i = 0;
-	UB ret;
-	
-	p_ring_buf = &drv_uart1_send_ring;
-	
-	/* 送信バッファを全て書き込み */
-	for(i = 0; i < len; i++){
-		ret = write_ring_buf(p_ring_buf, (UB)tx_data[i] );
-		if(ret != E_OK){
-			break;
-		}
-	}
-	
-	/* 送信開始 */
-	drv_uart1_send_start();
-#endif
-}
-
-void drv_uart1_send_start( void )
-{
-	UB snd_data;
-	
-	if(E_OK == read_ring_buf( &drv_uart1_send_ring, &snd_data )){
-        STMK1 = 1U;    /* disable INTST1 interrupt */
-		TXD0 = snd_data;
-        STMK1 = 0U;    /* enable INTST1 interrupt */
-	}
-}

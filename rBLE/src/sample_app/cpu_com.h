@@ -219,7 +219,8 @@ extern void drv_uart0_data_init( void );
 //extern RING_BUF* drv_uart0_get_snd_ring( void );
 //extern RING_BUF* drv_uart0_get_rcv_ring( void );
 extern UB cpu_com_get_busy( void );
-
+extern void com_srv_send( UB* tx_data, UB len );
+void drv_uart0_send_start( void );
 
 
 

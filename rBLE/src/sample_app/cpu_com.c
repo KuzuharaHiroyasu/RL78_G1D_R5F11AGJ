@@ -1066,3 +1066,34 @@ RING_BUF* drv_uart0_get_rcv_ring( void )
 	return &drv_uart0_rcv_ring;
 }
 
+void drv_uart0_send_start( void )
+{
+	UB snd_data;
+	
+	if(E_OK == read_ring_buf( &drv_uart0_send_ring, &snd_data )){
+        STMK0 = 1U;    /* disable INTST1 interrupt */
+		TXD0 = snd_data;
+        STMK0 = 0U;    /* enable INTST1 interrupt */
+	}
+}
+
+void com_srv_send( UB* tx_data, UB len )
+{
+	RING_BUF* p_ring_buf;
+	UB i = 0;
+	UB ret;
+	
+	p_ring_buf = &drv_uart0_send_ring;
+	
+	/* 送信バッファを全て書き込み */
+	for(i = 0; i < len; i++){
+		ret = write_ring_buf(p_ring_buf, (UB)tx_data[i] );
+		if(ret != E_OK){
+			break;
+		}
+	}
+	
+	/* 送信開始 */
+	drv_uart0_send_start();
+}
+
