@@ -113,6 +113,8 @@ static void led_pin_init(void)
 
     write1_sfr(P1, 6, 1);
 #endif
+	P1_bit.no5 = 0;
+	P1_bit.no6 = 0;
 }
 
 

@@ -56,15 +56,16 @@ Global variables and functions
 ***********************************************************************************************************************/
 void R_PORT_Create(void)
 {
-#if 0
+#if 1
 	// 自動生成
-    P0 = _00_Pn3_OUTPUT_0;
-    P1 = _00_Pn0_OUTPUT_0;
-    POM0 = _08_POMn3_NCH_ON;
-    PMC0 = _04_PMCn2_NOT_USE | _00_PMCn3_DI_ON | _F3_PMC0_DEFAULT;
-    PM0 = _01_PMn0_NOT_USE | _02_PMn1_NOT_USE | _04_PMn2_NOT_USE | _00_PMn3_MODE_OUTPUT | _80_PM0_DEFAULT;
-    PM1 = _00_PMn0_MODE_OUTPUT | _02_PMn1_NOT_USE | _04_PMn2_NOT_USE | _08_PMn3_NOT_USE | _10_PMn4_NOT_USE | 
-          _20_PMn5_NOT_USE | _40_PMn6_NOT_USE;
+    P0 = _01_Pn0_OUTPUT_1 | _02_Pn1_OUTPUT_1;
+    P1 = _10_Pn4_OUTPUT_1 | _20_Pn5_OUTPUT_1;
+    P2 = _01_Pn0_OUTPUT_1;
+    ADPC = _01_ADPC_DI_ON;
+    PM0 = _00_PMn0_MODE_OUTPUT | _00_PMn1_MODE_OUTPUT | _04_PMn2_NOT_USE | _08_PMn3_NOT_USE | _80_PM0_DEFAULT;
+    PM1 = _01_PMn0_NOT_USE | _02_PMn1_NOT_USE | _04_PMn2_NOT_USE | _08_PMn3_MODE_INPUT | _00_PMn4_MODE_OUTPUT | 
+          _00_PMn5_MODE_OUTPUT | _40_PMn6_MODE_INPUT;
+    PM2 = _00_PMn0_MODE_OUTPUT | _02_PMn1_MODE_INPUT | _04_PMn2_MODE_INPUT | _08_PMn3_MODE_INPUT | _F0_PM2_DEFAULT;
 #else
 	// プラットフォームと競合しない様に修正
 	//出力初期値
