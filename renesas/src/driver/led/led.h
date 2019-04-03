@@ -33,17 +33,17 @@
  ****************************************************************************************
  */
 #if (defined(_USE_REL_RL78) || defined(_USE_GCC_RL78))
- ///LED01 is pin 0 of Port 12
- #define LED01        P12.0
+ ///LED01 is pin 5 of Port 1
+ #define LED01        P1.5
  
- ///LED2 is pin 7 on Port 14
- #define LED02        P14.7
+ ///LED02 is pin 6 on Port 1
+ #define LED02        P1.6
 #else
- ///LED01 is pin 0 of Port 12
- #define LED01        P12_bit.no0
+ ///LED01 is pin 5 of Port 1
+ #define LED01        P1_bit.no5
  
- ///LED2 is pin 7 on Port 14
- #define LED02        P14_bit.no7
+ ///LED02 is pin 6 on Port 1
+ #define LED02        P1_bit.no6
 #endif
 
 ///LED on value is actually false
@@ -141,6 +141,9 @@ static void led_pin_init(void);
  */
 __IRQ void led_timer_isr(void);
 
+void led1_write(bool sw);
+void led2_write(bool sw);
+ 	
 /// @} module
 
 #endif // LED_H_

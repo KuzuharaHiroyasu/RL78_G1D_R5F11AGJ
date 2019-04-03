@@ -113,8 +113,8 @@ static void led_pin_init(void)
 
     write1_sfr(P1, 6, 1);
 #endif
-	P1_bit.no5 = 0;
-	P1_bit.no6 = 0;
+	LED01 = 0;
+	LED02 = 0;
 }
 
 
@@ -261,4 +261,27 @@ __IRQ void led_timer_isr (void)
 }
 #endif
 
+void led1_write(bool sw)
+{
+	if(sw)
+	{
+		LED01 = 1;
+	}
+	else
+	{
+		LED01 = 0;
+	}
+}
+ 	
+void led2_write(bool sw)
+{
+	if(sw)
+	{
+		LED02 = 1;
+	}
+	else
+	{
+		LED02 = 0;
+	}
+}
 /// @} module
