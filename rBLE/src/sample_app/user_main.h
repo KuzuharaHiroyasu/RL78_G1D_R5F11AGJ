@@ -114,6 +114,7 @@ typedef enum{
 
 #define		MEAS_SEKIGAI_CNT_MAX		140
 #define		MEAS_SEKISHOKU_CNT_MAX		140
+#define		MEAS_PHOTO_CNT_MAX			140
 #define		MEAS_KOKYU_CNT_MAX			200
 #define		MEAS_IBIKI_CNT_MAX			200
 #define		MEAS_ACL_CNT_MAX			20
@@ -153,7 +154,8 @@ typedef struct{
 		UB	byte[CPU_COM_SND_DATA_SIZE_SENSOR_DATA];
 		struct{
 			H	sekigaival;		// 差動入力の為に符号あり
-			H	sekishoku_val;	// 差動入力の為に符号あり
+//			H	sekishoku_val;	// 差動入力の為に符号あり
+			UH	photo_val;
 			UH	kokyu_val;		
 			UH	ibiki_val;		
 			B acl_x;
@@ -230,7 +232,8 @@ typedef struct{
 	
 	// 機器データ(演算前)
 	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり
-	H	sekishoku_val[MEAS_SEKISHOKU_CNT_MAX];	// 差動入力の為に符号あり
+//	H	sekishoku_val[MEAS_SEKISHOKU_CNT_MAX];	// 差動入力の為に符号あり
+	UH	photo_val[MEAS_PHOTO_CNT_MAX];
 	UH	kokyu_val[MEAS_KOKYU_CNT_MAX];		
 	UH	ibiki_val[MEAS_IBIKI_CNT_MAX];		
 	B	acl_x[MEAS_ACL_CNT_MAX];
@@ -238,7 +241,8 @@ typedef struct{
 	B	acl_z[MEAS_ACL_CNT_MAX];
 	// 機器データ(演算前)回数
 	UB	sekigai_cnt;
-	UB	sekishoku_cnt;	// 差動入力の為に符号あり
+//	UB	sekishoku_cnt;	// 差動入力の為に符号あり
+	UB	photo_cnt;
 	UB	kokyu_cnt;		
 	UB	ibiki_cnt;		
 	UB	acl_cnt;

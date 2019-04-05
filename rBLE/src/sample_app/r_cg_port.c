@@ -56,11 +56,11 @@ Global variables and functions
 ***********************************************************************************************************************/
 void R_PORT_Create(void)
 {
-#if 1
+#if 0
 	// é©ìÆê∂ê¨
-    P0 = _01_Pn0_OUTPUT_1 | _02_Pn1_OUTPUT_1;
-    P1 = _10_Pn4_OUTPUT_1 | _20_Pn5_OUTPUT_1;
-    P2 = _01_Pn0_OUTPUT_1;
+    P0 = _00_Pn0_OUTPUT_0 | _00_Pn1_OUTPUT_0;
+    P1 = _00_Pn4_OUTPUT_0 | _00_Pn5_OUTPUT_0;
+    P2 = _00_Pn0_OUTPUT_0;
     ADPC = _01_ADPC_DI_ON;
     PM0 = _00_PMn0_MODE_OUTPUT | _00_PMn1_MODE_OUTPUT | _04_PMn2_NOT_USE | _08_PMn3_NOT_USE | _80_PM0_DEFAULT;
     PM1 = _01_PMn0_NOT_USE | _02_PMn1_NOT_USE | _04_PMn2_NOT_USE | _08_PMn3_MODE_INPUT | _00_PMn4_MODE_OUTPUT | 

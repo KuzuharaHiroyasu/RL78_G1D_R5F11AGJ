@@ -745,6 +745,7 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 
 	wait_ms( 2 );
 	adc_ibiki_kokyu( &s_unit.ibiki_val[s_unit.ibiki_cnt], &s_unit.kokyu_val[s_unit.kokyu_cnt] );
+	adc_photo_sensor( &s_unit.photo_val[s_unit.photo_cnt]);
 	
 	if(acc_cnt == 0)
 	{
@@ -791,7 +792,7 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 #endif
 	
 	INC_MAX( s_unit.sekigai_cnt, MEAS_SEKIGAI_CNT_MAX );
-	INC_MAX( s_unit.sekishoku_cnt, MEAS_SEKISHOKU_CNT_MAX );
+	INC_MAX( s_unit.photo_cnt, MEAS_PHOTO_CNT_MAX );
 	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
 	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
 	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
@@ -1058,14 +1059,14 @@ static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_ta
 
 static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-#if FUNC_DEBUG_CALC_NON == OFF
+#if FUNC_DEBUG_CALC_NON == ON
 	calculator_pulse_oximeter_red(&s_unit.sekishoku_val[0]);
 	s_unit.sekishoku_cnt = 0;
 	s_unit.calc.info.dat.myaku_val = get_sinpak();
 #else
 	// ダミーデータ
-	s_unit.sekishoku_cnt = 0;
-	s_unit.calc.info.dat.spo2_val = (UB)s_unit.sekishoku_val[0];
+//	s_unit.p = 0;
+//	s_unit.calc.info.dat.spo2_val = (UB)s_unit.sekishoku_val[0];
 #endif
 	
 	return (KE_MSG_CONSUMED);

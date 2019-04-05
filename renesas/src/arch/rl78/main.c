@@ -372,6 +372,9 @@ _MAINCODE void main( void )
     else
 #endif
     {
+    	// ìdåπON
+    	
+    	
         /* call arch main */
         arch_main();
     }

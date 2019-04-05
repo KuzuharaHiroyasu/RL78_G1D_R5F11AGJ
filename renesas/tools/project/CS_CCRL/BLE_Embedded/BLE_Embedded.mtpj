@@ -133,7 +133,7 @@
       <LibOptionLibraryRuntime-DefaultValue>False</LibOptionLibraryRuntime-DefaultValue>
       <LinkOptionLibraryRuntime-DefaultValue>True</LinkOptionLibraryRuntime-DefaultValue>
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586474406058751709</TimeTagModified--0>
+      <TimeTagModified--0>-8586471646279106604</TimeTagModified--0>
       <BuildMode-0>DefaultBuild</BuildMode-0>
       <Memo-0 />
       <OutputMessageFormat-0>%TargetFiles%</OutputMessageFormat-0>
@@ -161,7 +161,7 @@
       <TemporaryFolder-0 />
       <GeneralOptionEdition-0>None</GeneralOptionEdition-0>
       <GeneralOptionOtherAdditionalOptions-0 />
-      <LastCompilerVersion-0>V1.03.00</LastCompilerVersion-0>
+      <LastCompilerVersion-0>V1.08.00</LastCompilerVersion-0>
     </Instance>
     <Instance Guid="86bebc9e-2f6f-4e72-83c8-8883e6cf6d33">
       <COptionAsmPath-DefaultValue>False</COptionAsmPath-DefaultValue>

@@ -361,7 +361,7 @@ void arch_main_ent(void)
     {
 
         //LED activity
-//        led_blink();
+        led_blink();
 
         // schedule the BLE stack
         rwble_schedule();

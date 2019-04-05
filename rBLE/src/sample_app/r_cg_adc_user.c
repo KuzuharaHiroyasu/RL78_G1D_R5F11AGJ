@@ -59,6 +59,11 @@ void adc_dench( uint16_t* dench )
 	*dench = adc_sub( ADCHANNEL18 );
 }
 
+void adc_photo_sensor(uint16_t* photo)
+{
+	*photo = adc_sub( ADCHANNEL1 );
+}
+
 static unsigned short adc_sub( unsigned char ad_type)
 {
 	unsigned short ad_val;
