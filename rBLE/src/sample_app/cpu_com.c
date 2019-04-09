@@ -1071,9 +1071,9 @@ void drv_uart0_send_start( void )
 	UB snd_data;
 	
 	if(E_OK == read_ring_buf( &drv_uart0_send_ring, &snd_data )){
-        STMK0 = 1U;    /* disable INTST1 interrupt */
+		STMK0 = 1U;    /* disable INTST1 interrupt */
 		TXD0 = snd_data;
-        STMK0 = 0U;    /* enable INTST1 interrupt */
+		STMK0 = 0U;    /* enable INTST1 interrupt */
 	}
 }
 

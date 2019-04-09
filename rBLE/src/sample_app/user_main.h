@@ -155,7 +155,7 @@ typedef struct{
 		struct{
 			H	sekigaival;		// 差動入力の為に符号あり
 //			H	sekishoku_val;	// 差動入力の為に符号あり
-			UH	photo_val;
+			H	photo_val;
 			UH	kokyu_val;		
 			UH	ibiki_val;		
 			B acl_x;
@@ -233,7 +233,7 @@ typedef struct{
 	// 機器データ(演算前)
 	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり
 //	H	sekishoku_val[MEAS_SEKISHOKU_CNT_MAX];	// 差動入力の為に符号あり
-	UH	photo_val[MEAS_PHOTO_CNT_MAX];
+	H	photo_val[MEAS_PHOTO_CNT_MAX];
 	UH	kokyu_val[MEAS_KOKYU_CNT_MAX];		
 	UH	ibiki_val[MEAS_IBIKI_CNT_MAX];		
 	B	acl_x[MEAS_ACL_CNT_MAX];

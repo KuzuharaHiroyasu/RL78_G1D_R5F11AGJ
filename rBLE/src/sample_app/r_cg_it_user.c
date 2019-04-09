@@ -60,7 +60,8 @@ static void __near r_it_interrupt(void)
 {
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
-//    timer_10ms_set();
+    // コメントアウトしてはいけない！（重要）
+    timer_10ms_set();
 }
 
 /* Start user code for adding. Do not edit comment generated here */

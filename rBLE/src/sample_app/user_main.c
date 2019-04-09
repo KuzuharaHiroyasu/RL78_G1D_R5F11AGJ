@@ -165,6 +165,8 @@ static int_t cpu_com_evt(ke_msg_id_t const msgid, void const *param, ke_task_id_
 	
 	main_cpu_com_proc();	//通信サービスアプリ
 	user_main_mode();
+	
+	main_cpu_com_rcv_sensor_res();
 	{
 		uint8_t *ke_msg;
 
@@ -714,29 +716,6 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 	// 受信日時格納
 	s_unit.last_sensing_data_rcv = ke_time();
 
-#if 0
-	// センサーデータ格納
-	memcpy( &meas.info.byte[0], &s_ds.cpu_com.input.rcv_data[0], CPU_COM_SND_DATA_SIZE_SENSOR_DATA );
-	
-	if( s_unit.sekigai_cnt < MEAS_SEKIGAI_CNT_MAX ){
-		s_unit.sekigai_val[s_unit.sekigai_cnt] = meas.info.dat.sekigaival;
-	}
-	if( s_unit.sekishoku_cnt < MEAS_SEKISHOKU_CNT_MAX ){
-		s_unit.sekishoku_val[s_unit.sekishoku_cnt] = meas.info.dat.sekishoku_val;
-	}
-	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
-		s_unit.kokyu_val[s_unit.kokyu_cnt] = meas.info.dat.kokyu_val;
-	}
-	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
-		s_unit.ibiki_val[s_unit.ibiki_cnt] = meas.info.dat.ibiki_val;
-	}
-	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
-		s_unit.acl_x[s_unit.acl_cnt] = meas.info.dat.acl_x;
-		s_unit.acl_y[s_unit.acl_cnt] = meas.info.dat.acl_y;
-		s_unit.acl_z[s_unit.acl_cnt] = meas.info.dat.acl_z;
-	}
-#endif	
-	
 	// マイク用(呼吸、イビキ)開始
 //H1Dのまま移行したのでビルドエラー	
 //	R_DAC1_Set_ConversionValue( 0x0000 );
@@ -744,22 +723,24 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 //	R_PGA1_Start();		// ■PGA1 ON
 
 	wait_ms( 2 );
-	adc_ibiki_kokyu( &s_unit.ibiki_val[s_unit.ibiki_cnt], &s_unit.kokyu_val[s_unit.kokyu_cnt] );
-	adc_photo_sensor( &s_unit.photo_val[s_unit.photo_cnt]);
+//	adc_ibiki_kokyu( &s_unit.ibiki_val[s_unit.ibiki_cnt], &s_unit.kokyu_val[s_unit.kokyu_cnt] );
+//	adc_photo_sensor( &s_unit.photo_val[s_unit.photo_cnt]);
 	
 	if(acc_cnt == 0)
 	{
 		// 加速度センサ取得
 		main_acl_read();
-		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,%d,%d,%d\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
-									      , s_unit.ibiki_val[s_unit.ibiki_cnt]
-									      , s_unit.acl_x[s_unit.acl_cnt]
-									      , s_unit.acl_y[s_unit.acl_cnt]
-									      , s_unit.acl_z[s_unit.acl_cnt]);
+//		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,%d,%d,%d\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
+//									      , s_unit.ibiki_val[s_unit.ibiki_cnt]
+//									      , s_unit.acl_x[s_unit.acl_cnt]
+//									      , s_unit.acl_y[s_unit.acl_cnt]
+//									      , s_unit.acl_z[s_unit.acl_cnt]);
 	} else {
-		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,999,0,0\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
-									     , s_unit.ibiki_val[s_unit.ibiki_cnt]);
+//		dbg_len = sprintf((char*)dbg_tx_data, "0,0,%d,%d,999,0,0\r\n", s_unit.kokyu_val[s_unit.kokyu_cnt]
+//									     , s_unit.ibiki_val[s_unit.ibiki_cnt]);
 	}
+
+	dbg_len = sprintf((char*)dbg_tx_data, "0,0,500,500,200,200,200\r\n");
 	acc_cnt++;
 	if(acc_cnt == 10)
 	{
@@ -767,29 +748,6 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 	}
 	
 	com_srv_send( &dbg_tx_data[0], dbg_len );
-
-	#if 0	
-	// データフルで演算呼出
-	if( s_unit.sekishoku_cnt >= ( DATA_SIZE_SPO2 - 1 )){
-		// 赤色→赤外の順番
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_SEKISHOKU, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-	}
-	if( s_unit.sekigai_cnt >= ( DATA_SIZE_SPO2 - 1 )){
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_SEKIGAI, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-	}
-	
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-	}
-
-	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-	}
-#endif
 	
 	INC_MAX( s_unit.sekigai_cnt, MEAS_SEKIGAI_CNT_MAX );
 	INC_MAX( s_unit.photo_cnt, MEAS_PHOTO_CNT_MAX );
@@ -798,14 +756,6 @@ STATIC void main_cpu_com_rcv_sensor_res( void )
 	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
 
 	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	__no_operation();
-	
-	
-	
-	
 }
 
 STATIC void main_cpu_com_rcv_mode_chg( void )
