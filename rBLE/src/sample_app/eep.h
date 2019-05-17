@@ -68,9 +68,6 @@
 #define EEP_I2C_LOCK_ERR_VAL			10000		// I2C異常判定回数(ロック)
 
 
-#define	I2C_WAIT						255			// スタートコンディション待ち ※数百us程度なので最大値を設定しておく
-
-
 /************************************************************/
 /* 型定義													*/
 /************************************************************/
@@ -81,16 +78,9 @@
 /************************************************************/
 extern void eep_init( void );
 
-extern void R_IICA0_Create(void);
-extern void R_IICA0_StopCondition(void);
 extern void eep_write( UW wr_adrs, UB* wr_data, UH len, UB wait_flg );
 extern void eep_read( UW rd_adrs, UB* rd_data, UH len );
 extern void eep_setting_area_erase( void );
-extern void i2c_set_snd_flg( UB data );
-extern void i2c_set_rcv_flg( UB data );
-extern void i2c_set_err_flg( UB data );
-
-
 
 #endif
 

@@ -29,8 +29,11 @@
 #include "r_cg_port.h"
 #include "r_cg_intp.h"
 #include "r_cg_it.h"
+#include "r_cg_adc.h"
 
 /* ƒ~ƒhƒ‹ */
+#include "i2c.h"
+#include "com_srv.h"
 #include "eep.h"
 #include "cpu_com.h"
 #include "calc_data.h"

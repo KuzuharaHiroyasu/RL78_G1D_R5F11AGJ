@@ -26,6 +26,7 @@
 
 // プロトタイプ宣言
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+STATIC void make_send_data(char* pBuff);
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_rest(void);
@@ -103,6 +104,12 @@ void main_vuart_snd_alarm_info( UB type, UB data );
 STATIC void AlarmSnore(UB oldstate, UB newstate);
 STATIC void AlarmApnea(UB oldstate, UB newstate);
 
+// ACL関連
+STATIC void main_acl_init(void);
+STATIC void main_acl_stop(void);
+STATIC void main_acl_start(void);
+STATIC void main_acl_read(void);
+
 // 以降演算部の処理
 static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -134,6 +141,32 @@ STATIC DS s_ds;
 #include	"user_main_tbl.h"		// ユーザーテーブル実体定義
 
 /************************************************************************/
+/* 関数     : app_evt_usr_1												*/
+/* 関数名   : ユーザーイベント(10ms周期)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.05.13 Axia Soft Design mmura		初版作成			*/
+/************************************************************************/
+/* 機能 : ユーザーイベント(10ms周期)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+void codeptr app_evt_usr_1(void) 
+{ 
+	ke_evt_clear(KE_EVT_USR_1_BIT); 
+
+#if FUNC_DEBUG_LOG == ON
+	{
+		uint8_t *ke_msg;
+
+		ke_msg = ke_msg_alloc( USER_MAIN_CYC_ACT, USER_MAIN_ID, USER_MAIN_ID, 0 );
+
+		ke_msg_send(ke_msg);
+	}
+#endif
+}
+
+/************************************************************************/
 /* 関数     : app_evt_usr_2												*/
 /* 関数名   : ユーザーイベント(1秒周期)									*/
 /* 引数     : なし														*/
@@ -150,6 +183,7 @@ void codeptr app_evt_usr_2(void)
 	
 	ke_evt_clear(KE_EVT_USR_2_BIT);
 	
+#if FUNC_DEBUG_LOG != ON
 	// 秒タイマーカウントダウン
 	DEC_MIN( s_unit.timer_sec ,0 );
 	
@@ -187,7 +221,7 @@ void codeptr app_evt_usr_2(void)
 
 	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
 	ke_msg_send(ke_msg);
-
+#endif
 }
 
 /************************************************************************/
@@ -205,6 +239,7 @@ void codeptr app_evt_usr_3(void)
 { 
 	ke_evt_clear(KE_EVT_USR_3_BIT); 
 
+#if FUNC_DEBUG_LOG != ON
 	{
 		uint8_t *ke_msg;
 
@@ -212,7 +247,7 @@ void codeptr app_evt_usr_3(void)
 
 		ke_msg_send(ke_msg);
 	}
-
+#endif
 }
 
 /************************************************************************/
@@ -228,6 +263,12 @@ void codeptr app_evt_usr_3(void)
 /************************************************************************/
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
+#if FUNC_DEBUG_LOG == ON
+	char dbg_tx_data[50] = {0};
+	char dummydata[] = "abcdefghijk\r\n";
+	int dbg_len = sizeof(dummydata);
+	com_srv_send(dummydata, dbg_len);
+#else
 	cpu_com_proc();			// CPU間通信サービス
 	
 	main_vuart_proc();		// VUART通信サービス
@@ -235,6 +276,7 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 	main_cpu_com_proc();	// 通信サービスアプリ
 	
 	user_main_mode();		// メインモード処理
+#endif
 
 	return (KE_MSG_CONSUMED);
 }
@@ -276,6 +318,7 @@ void user_main_timer_10ms_set( void )
 {
 	s_unit.tick_10ms++;
 	s_unit.tick_10ms_sec++;
+	s_unit.tick_10ms_new++;
 	s_unit.elapsed_time++;
 }
 
@@ -293,6 +336,35 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	// 50ms周期
+	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+#if FUNC_DEBUG_LOG == ON
+		char dbg_tx_data[50] = {0};
+		int dbg_len;
+		
+		// 呼吸音、いびき音取得
+		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+		
+		// 加速度取得
+		s_unit.acl_timing+=1;
+		if(s_unit.acl_timing >= ACL_TIMING_VAL){
+			s_unit.acl_timing = 0;
+			main_acl_read();
+		}else{
+			s_unit.meas.info.dat.acl_x = 99;
+			s_unit.meas.info.dat.acl_y = 99;
+			s_unit.meas.info.dat.acl_z = 99;
+		}
+		
+		make_send_data(dbg_tx_data);
+		dbg_len = strlen(dbg_tx_data);
+		com_srv_send(dbg_tx_data, dbg_len);
+#else
+		ke_evt_set(KE_EVT_USR_1_BIT);
+#endif
+		
+		s_unit.tick_10ms_new = 0;
+	}
 	// 20ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
@@ -306,6 +378,131 @@ void user_main_timer_cyc( void )
 	}
 }
 
+/************************************************************************/
+/* 関数     : make_send_data											*/
+/* 関数名   : 送信データ作成処理										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.05.14 Axia Soft Design mmura		初版作成			*/
+/************************************************************************/
+/* 機能 : タイマー周期処理												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void make_send_data(char* pBuff)
+{
+	// 呼吸音, いびき音, 加速度(X), 加速度(Y), 加速度(Z), フォトセンサー値
+	UB tmp;
+	UH next;
+	UB index = 0;
+	
+	tmp = s_unit.meas.info.dat.kokyu_val / 10000;
+	next = s_unit.meas.info.dat.kokyu_val % 10000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 1000;
+	next = next % 1000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 100;
+	next = next % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	tmp = s_unit.meas.info.dat.ibiki_val / 10000;
+	next = s_unit.meas.info.dat.ibiki_val % 10000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 1000;
+	next = next % 1000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 100;
+	next = next % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	
+	if(s_unit.meas.info.dat.acl_x >= 0){
+		tmp = s_unit.meas.info.dat.acl_x / 100;
+		next = s_unit.meas.info.dat.acl_x % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}else{
+		UB acl_x = -1 * s_unit.meas.info.dat.acl_x;
+		pBuff[index++] = '-';
+		tmp = acl_x / 100;
+		next = acl_x % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}
+	
+	if(s_unit.meas.info.dat.acl_y >= 0){
+		tmp = s_unit.meas.info.dat.acl_y / 100;
+		next = s_unit.meas.info.dat.acl_y % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}else{
+		UB acl_y = -1 * s_unit.meas.info.dat.acl_y;
+		pBuff[index++] = '-';
+		tmp = acl_y / 100;
+		next = acl_y % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}
+	
+	if(s_unit.meas.info.dat.acl_z >= 0){
+		tmp = s_unit.meas.info.dat.acl_z / 100;
+		next = s_unit.meas.info.dat.acl_z % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}else{
+		UB acl_z = -1 * s_unit.meas.info.dat.acl_z;
+		pBuff[index++] = '-';
+		tmp = acl_z / 100;
+		next = acl_z % 100;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 10;
+		next = next % 10;
+		pBuff[index++] = '0' + tmp;
+		tmp = next % 10;
+		pBuff[index++] = '0' + tmp;
+		pBuff[index++] = ',';
+	}
+	
+	pBuff[index++] = '0';
+	pBuff[index++] = '\r';
+	pBuff[index++] = '\n';
+}
 
 /************************************************************************/
 /* 関数     : time_get_elapsed_time										*/
@@ -362,7 +559,11 @@ void user_main_init( void )
 {
 	// ミドル初期化
 	cpu_com_init();
+	com_srv_init();
+	i2c_init();
 	eep_init();
+	main_acl_init();
+	main_acl_start();
 	
 	// メインのデータ初期化
 	memset( &s_unit, 0, sizeof(s_unit) );
@@ -1541,13 +1742,6 @@ STATIC void main_cpu_com_snd_mode_chg( void )
 void main_cpu_com_snd_pc_log( UB* data, UB size )
 {
 #if FUNC_DEBUG_LOG == ON
-	int i = 0;
-	
-	s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PC_LOG;
-	for( i =  0; i < size; i++ ){
-		s_ds.cpu_com.order.snd_data[i] = data[i];
-	}
-	s_ds.cpu_com.order.data_size = size;
 #endif
 }
 
@@ -3168,3 +3362,125 @@ STATIC void AlarmApnea(UB oldstate, UB newstate)
 		}
 	}
 }
+
+//================================
+//ACL関連
+//================================
+/************************************************************************/
+/* 関数     : main_acl_init												*/
+/* 関数名   : 加速度センサ初期化										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.13 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 加速度センサ初期化 ※初期状態は停止にしておく					*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void main_acl_init(void)
+{
+	UB rd_data[2];
+	
+	wait_ms( 30 );		// 加速度センサ　※電源ON待ち
+
+	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_WHO_AM_I, &rd_data[0], 1 );
+	if( rd_data[0] != ACL_REG_RECOGNITION_CODE ){
+		err_info( ERR_ID_ACL );
+	}
+	
+	main_acl_stop();
+}
+
+/************************************************************************/
+/* 関数     : main_acl_stop												*/
+/* 関数名   : 加速度センサ停止											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.11 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 加速度センサ停止												*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void main_acl_stop(void)
+{
+	UB rd_data[2];
+	UB wr_data[2];
+	
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0x00;
+	// 動作モード設定
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+	
+	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_CTRL_REG1, &rd_data[0], 1 );
+	if( rd_data[0] != 0x00 ){
+		err_info( ERR_ID_ACL );
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_acl_stop												*/
+/* 関数名   : 加速度センサスタート										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.11 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 加速度センサスタート											*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void main_acl_start(void)
+{
+	UB wr_data[2];
+	
+	// 動作モード初期化
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0x00;
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+	
+	// 動作モード設定
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0x20;
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+
+	// 動作モード開始
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0xA0;
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+	
+	
+}
+
+/************************************************************************/
+/* 関数     : main_acl_stop												*/
+/* 関数名   : 加速度センサ読出し										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.11 Axia Soft Design 西島 稔	初版作成			*/
+/************************************************************************/
+/* 機能 : 加速度センサス読出し											*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void main_acl_read(void)
+{
+	UB rd_data[10];
+	
+	// INT_SOURCE1		
+	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
+	if( 0 == ( rd_data[0] & BIT04 )){
+		// データ未達
+		err_info( ERR_ID_ACL );
+		return;
+	}
+	
+	// データ取得
+	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
+	s_unit.meas.info.dat.acl_x = rd_data[1];
+	s_unit.meas.info.dat.acl_y = rd_data[3];
+	s_unit.meas.info.dat.acl_z = rd_data[5];
+	
+	// INT_REL読み出し　※割り込み要求クリア
+	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
+}
+

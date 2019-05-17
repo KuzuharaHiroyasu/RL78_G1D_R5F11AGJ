@@ -368,7 +368,7 @@ void arch_main_ent(void)
 		user_main_timer_cyc();
 
         // schedule the BLE stack
-        rwble_schedule();
+        // rwble_schedule();
 
         // Checks for sleep have to be done with interrupt disabled
         GLOBAL_INT_DISABLE();

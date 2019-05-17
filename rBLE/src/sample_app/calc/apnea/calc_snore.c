@@ -28,7 +28,7 @@ static void Judge(void);
 /* 変数定義													*/
 /************************************************************/
 static UB	SnoreFlg_; // ONカウント中 or OFFカウント中
-static UH	SnoreCnt_; // ON連続回数, OFF連続回数 兼用
+static UB	SnoreCnt_; // ON連続回数, OFF連続回数 兼用
 static B	SnoreTime_[RIREKI];
 static UB	SnoreState_;		// いびき
 

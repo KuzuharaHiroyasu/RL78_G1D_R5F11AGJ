@@ -417,8 +417,8 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#else
 		//16MHzŽž
-        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));	//9600bps
-//        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_8MHZ)));	//19200bps
+//        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_4MHZ)));	//9600bps
+        write_sfr(SPS0L, (uint8_t)((read_sfr(SPS0L) | UART_VAL_SPS_8MHZ)));	//19200bps
 		write_sfrp(UART_TXD_SDR, (uint16_t)0xCE00U);
 		write_sfrp(UART_RXD_SDR, (uint16_t)0xCE00U);
 		#endif

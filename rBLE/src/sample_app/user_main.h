@@ -48,6 +48,7 @@
 #endif
 
 
+#define  KE_EVT_USR_1_BIT			CO_BIT(31 - KE_EVT_USR_1) 
 #define  KE_EVT_USR_2_BIT			CO_BIT(31 - KE_EVT_USR_2) 
 #define  KE_EVT_USR_3_BIT			CO_BIT(31 - KE_EVT_USR_3) 
 
@@ -111,6 +112,7 @@ typedef enum{
 	ERR_ID_I2C						,			/* I2C(汎用) */
 	ERR_ID_MAIN						,			/* MAIN(汎用) */
 	ERR_ID_CPU_COM					,			/* CPU間通信(汎用) */
+	ERR_ID_ACL						,			/* 加速度センサ(汎用) */
 
 	ERR_ID_CPU_COM_ERR = 40			,			/* CPU間通信異常 */
 	ERR_ID_CPU_COM_RCV_RING			,			/* CPU間通信受信リングバッファ ※演算中はリングバッファを引き取れないので発生してしまう */
@@ -391,6 +393,7 @@ typedef struct{
 	// timer
 	UH tick_10ms;
 	UH tick_10ms_sec;
+	UH tick_10ms_new;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	
 	UW last_time_dench_zanryou_min;			// 電池残量低下時間[10ms]
@@ -425,6 +428,11 @@ typedef struct{
 	// 異常関連デバッグ用途
 	UW err_cnt;				//異常回数(デバッグ用途)
 	ERR_ID last_err_id;		//前回異常ID(デバッグ用途)
+	
+	// 
+	MEAS meas;				/* 計測値(50ms) */
+	UH acl_timing;
+	
 }T_UNIT;
 
 
@@ -573,6 +581,24 @@ typedef struct{
 	DS_VUART		vuart;			/* 仮想UART(BLE) */
 }DS;
 
+// 加速度センサ
+#define ACL_DEVICE_ADR			0x1C				// 加速度センサデバイスアドレス
+#define ACL_TIMING_VAL			10					// 加速度センサ処理タイミング
+#define I2C_LOCK_ERR_VAL		1000				// ロック異常判定閾値
+
+#define I2C_WAIT		255					// スタートコンディション待ち ※200us程度なので最大値を設定しておく
+
+// レジスタアドレス
+#define ACL_REG_ADR_WHO_AM_I			0x0F				// WHO AM I
+#define ACL_REG_ADR_DATA_XYZ			0x06				// XOUT,YOUT,ZOUT
+#define ACL_REG_ADR_INT_SRC1			0x16				// INT_SOURCE1
+#define ACL_REG_ADR_INT_REL				0x1A				// INT_REL
+#define ACL_REG_ADR_CTRL_REG1			0x1B				// CTRL_REG1
+#define ACL_REG_ADR_CTRL_REG2			0x1F				// CTRL_REG2
+
+
+// レジスタデータ
+#define ACL_REG_RECOGNITION_CODE		0x35				// 認識コード(0x35)
 
 /******************/
 /*  外部参照宣言  */
