@@ -35,7 +35,7 @@ const struct ke_state_handler user_main_default_handler = KE_STATE_HANDLER_NONE;
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 0, 15};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 1, 1};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */

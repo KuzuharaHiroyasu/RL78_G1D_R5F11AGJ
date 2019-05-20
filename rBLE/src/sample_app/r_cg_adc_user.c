@@ -52,18 +52,17 @@ static unsigned short adc_sub( unsigned char ad_type);
 
 void adc_ibiki_kokyu( uint16_t* ibiki, uint16_t* kokyu )
 {
+	R_ADC_Set_OperationOn();
 	*ibiki = adc_sub( ADCHANNEL2 );
-	wait_ms(1);
 	*kokyu = adc_sub( ADCHANNEL3 );
+	R_ADC_Set_OperationOff();
 }
 
 static unsigned short adc_sub( unsigned char ad_type)
 {
 	unsigned short ad_val;
 	
-	R_ADC_Create();
 	ADS = ad_type;
-	R_ADC_Set_OperationOn();
 	R_ADC_Start();
 	
 	while(1){

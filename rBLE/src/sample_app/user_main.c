@@ -564,6 +564,7 @@ void user_main_init( void )
 	eep_init();
 	main_acl_init();
 	main_acl_start();
+	R_ADC_Create();
 	
 	// メインのデータ初期化
 	memset( &s_unit, 0, sizeof(s_unit) );
