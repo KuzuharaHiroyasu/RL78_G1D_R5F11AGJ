@@ -238,7 +238,7 @@ typedef struct{
 			B acl_x;
 			B acl_y;
 			B acl_z;
-			B dummy;			// 空き[パディング調整]
+			UH photoref_val;			// フォトリフレクタ
 		}dat;
 	}info;
 }MEAS;

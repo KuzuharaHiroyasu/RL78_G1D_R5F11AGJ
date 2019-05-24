@@ -303,7 +303,7 @@ _PLF_CODE static void plf_port_init(void)
     write_sfr(PM0,  0xEF);
 //    write_sfr(PM1,  0x7F);
     write_sfr(PM1,  0x7E);		//RD8001暫定：一部のポート修正
-    write_sfr(PM2,  0x0F);
+    write_sfr(PM2,  0x0E);
     write_sfr(PM3,  0xFD);
     write_sfr(PM4,  0x01);
     write_sfr(PM5,  0x00);

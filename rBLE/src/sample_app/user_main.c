@@ -336,6 +336,8 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	uint16_t photoref_off_val, photoref_on_val;
+	int16_t ret_photoref_val;
 	// 50ms周期
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 #if FUNC_DEBUG_LOG == ON
@@ -344,16 +346,35 @@ void user_main_timer_cyc( void )
 		
 		// 呼吸音、いびき音取得
 		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-		
-		// 加速度取得
+				
 		s_unit.acl_timing+=1;
 		if(s_unit.acl_timing >= ACL_TIMING_VAL){
 			s_unit.acl_timing = 0;
+			// 加速度取得
 			main_acl_read();
-		}else{
+			
+			// 接触センサー値取得
+			// OFF
+			adc_photoreflector( &photoref_off_val );
+			
+			// ON
+			P2_bit.no0 = 0;
+			wait_ms(1);
+			adc_photoreflector( &photoref_on_val );
+			P2_bit.no0 = 1;
+			
+			ret_photoref_val = photoref_on_val - photoref_off_val;
+			if( 0 < ret_photoref_val )
+			{
+				s_unit.meas.info.dat.photoref_val = ret_photoref_val;
+			} else {
+				s_unit.meas.info.dat.photoref_val = 0;
+			}
+		}else {
 			s_unit.meas.info.dat.acl_x = 99;
 			s_unit.meas.info.dat.acl_y = 99;
 			s_unit.meas.info.dat.acl_z = 99;
+			s_unit.meas.info.dat.photoref_val = 0;
 		}
 		
 		make_send_data(dbg_tx_data);
@@ -396,26 +417,9 @@ STATIC void make_send_data(char* pBuff)
 	UH next;
 	UB index = 0;
 	
-	tmp = s_unit.meas.info.dat.kokyu_val / 10000;
-	next = s_unit.meas.info.dat.kokyu_val % 10000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 1000;
-	next = next % 1000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 100;
-	next = next % 100;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 10;
-	next = next % 10;
-	pBuff[index++] = '0' + tmp;
-	tmp = next % 10;
-	pBuff[index++] = '0' + tmp;
-	pBuff[index++] = ',';
-	tmp = s_unit.meas.info.dat.ibiki_val / 10000;
-	next = s_unit.meas.info.dat.ibiki_val % 10000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 1000;
-	next = next % 1000;
+	// 呼吸音
+	tmp = s_unit.meas.info.dat.kokyu_val / 1000;
+	next = s_unit.meas.info.dat.kokyu_val % 1000;
 	pBuff[index++] = '0' + tmp;
 	tmp = next / 100;
 	next = next % 100;
@@ -427,6 +431,21 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	pBuff[index++] = ',';
 	
+	// いびき音
+	tmp = s_unit.meas.info.dat.ibiki_val / 1000;
+	next = s_unit.meas.info.dat.ibiki_val % 1000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 100;
+	next = next % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	
+	// 加速度(X)
 	if(s_unit.meas.info.dat.acl_x >= 0){
 		tmp = s_unit.meas.info.dat.acl_x / 100;
 		next = s_unit.meas.info.dat.acl_x % 100;
@@ -451,6 +470,7 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
+	// 加速度(Y)
 	if(s_unit.meas.info.dat.acl_y >= 0){
 		tmp = s_unit.meas.info.dat.acl_y / 100;
 		next = s_unit.meas.info.dat.acl_y % 100;
@@ -475,6 +495,7 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
+	// 加速度(Z)
 	if(s_unit.meas.info.dat.acl_z >= 0){
 		tmp = s_unit.meas.info.dat.acl_z / 100;
 		next = s_unit.meas.info.dat.acl_z % 100;
@@ -499,7 +520,16 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
-	pBuff[index++] = '0';
+	// フォトセンサー
+	tmp = s_unit.meas.info.dat.photoref_val / 100;
+	next = s_unit.meas.info.dat.photoref_val % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
 }
