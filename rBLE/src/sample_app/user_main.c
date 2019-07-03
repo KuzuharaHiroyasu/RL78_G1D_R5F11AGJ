@@ -2760,7 +2760,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
 	UB state;
-	calculator_apnea(&s_unit.kokyu_val[0]);
+	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	s_unit.kokyu_cnt = 0;
 	newstate = get_state();
 	AlarmApnea(s_unit.calc.info.dat.state, newstate);

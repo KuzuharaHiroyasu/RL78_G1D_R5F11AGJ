@@ -10,18 +10,13 @@
 #include "apnea_param.h"
 #include "../calc_data.h"
 
-// 演算を軽量化するための定義
-#define LIGHT_PROC
-//#define SNORE_PROC
-
 /************************************************************/
 /* プロトタイプ宣言											*/
 /************************************************************/
-#ifndef LIGHT_PROC
-void calc_pp(const double* pData, int DSize, double Param1);
-#endif
 void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3, double Param4);
-void calc_snore(const double* pData, int DSize, double Param);
+void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize);
+void heartBeat_Remov(double* dc_, double* movave_, const UH* data_snore, UW datasize);
+void init_before_raw(void);
 extern int	peak_modify_a(const double in_data[] , H in_res[] , double ot_data[] , double ot_hz[] , int size , double delta, double th);
 extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int peak );
 
@@ -32,19 +27,13 @@ extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int
 /************************************************************/
 /* 変数定義													*/
 /************************************************************/
-#ifndef LIGHT_PROC
-double	result_peak[BUF_SIZE];			// 結果ピーク間隔
-int		result_peak_size;
-#endif
 static int		apnea_ = APNEA_NONE;	// 呼吸状態
-#ifdef SNORE_PROC
-static int		snore_ = SNORE_OFF;		// いびき
-#endif
+double  before_raw[PREVIOUS_DATA_NUM];
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
 /* 関数名   : 無呼吸判定演算											*/
-/* 引数     : int *data : 波形データ									*/
+/* 引数     : int *data : 波形データ(呼吸音)									*/
 /*          : int len   : 波形データサイズ								*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2017.07.12 Axia Soft Design mmura	初版作成				*/
@@ -54,166 +43,49 @@ static int		snore_ = SNORE_OFF;		// いびき
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-void calculator_apnea(const UH *data)
+void calculator_apnea(const UH *data_apnea, const UH *data_snore)
 {
 	UW datasize;						// 波形データのバイト数
 	double* ptest1;
+	double* movave_;
 	int ii, jj;
 	
 	//データサイズ制限
 	datasize = DATA_SIZE_APNEA;
 	
-	// 移動平均
-	ptest1 = &temp_dbl_buf0[0];							//calloc
+	// 演算用データ移行
+	ptest1 = &temp_dbl_buf0[0];	//calloc
+	movave_ = &temp_dbl_buf2[0];	
+	
+	for(ii=0; ii < datasize; ++ii){
+		ptest1[ii] = data_apnea[ii];
+	}
+	
+	// エッジ強調移動平均
+	edgeWeighted_MovAve(ptest1, movave_, datasize);
+	
+	// 心拍除去
+	heartBeat_Remov(ptest1, movave_, data_snore, datasize);
+	
+	// 現在のデータの末尾を保管（要素197, 198, 199）
+	before_raw[0] = data_apnea[197];
+	before_raw[1] = data_apnea[198];
+	before_raw[2] = data_apnea[199];
+	
 	for(ii=0;ii<datasize;++ii){
-		ptest1[ii]=0;
+		movave_[ii]=0;
 		for(jj=0;jj<APNEA_PARAM_AVE_NUM;++jj){
 			if((ii-jj)>=0){
-				ptest1[ii]+=data[ii-jj];
+				movave_[ii]+=ptest1[ii-jj];
 			}
 		}
-		ptest1[ii] /= (double)APNEA_PARAM_AVE_NUM;
-		ptest1[ii] /= APNEA_PARAM_RAW;
+		movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
+		movave_[ii] /= APNEA_PARAM_RAW;
 	}
-#ifndef LIGHT_PROC
-	// (21) - (34)
-	calc_pp(ptest1, datasize, APNEA_PARAM_PEAK_THRE);
-#endif
 	
 	// (35) - (47)
-	calc_apnea(ptest1, datasize, APNEA_PARAM_AVE_CNT, APNEA_PARAM_AVE_THRE, APNEA_PARAM_BIN_THRE, APNEA_PARAM_APNEA_THRE);
-	
-#ifdef SNORE_PROC
-	// (48) - (56)
-	calc_snore(ptest1, datasize, APNEA_PARAM_SNORE);
-#endif
-	
-	// (57)
-	
+	calc_apnea(movave_, datasize, APNEA_PARAM_AVE_CNT, APNEA_PARAM_AVE_THRE, APNEA_PARAM_BIN_THRE, APNEA_PARAM_APNEA_THRE);
 }
-
-#ifndef LIGHT_PROC
-/************************************************************************/
-/* 関数     : calc_pp													*/
-/* 関数名   : ピーク間隔演算処理										*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2017.07.12 Axia Soft Design mmura	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/************************************************************************/
-/* 注意事項 :															*/
-/* なし																	*/
-/************************************************************************/
-void calc_pp(const double* pData, int DSize, double Param1)
-{
-	int16_t* ppeak1;
-	double* ppdata1;
-	double* pf1;
-	int peakcnt1;
-	
-	int16_t* ppeak2;
-	double* ppdata2;
-	double* pf2;
-	int peakcnt2;
-	
-	double* ppdata3;
-	int peakpos;
-	double max;
-	//double pos;
-	
-	int peakcnt;
-	double* ppos;
-	double* pinterval;
-	int ppcnt;
-	double* pp2;
-	double* pp5;
-	
-	int ii;
-	int jj;
-	
-	// (22) = Param1
-	
-	// (23)
-	// (24) = peak1
-	ppeak1 = &temp_int_buf0[0];	
-	ppdata1 = &temp_dbl_buf1[0];
-	pf1 = &temp_dbl_buf2[0];	
-	peak_vallay_a(pData, ppeak1, DSize, 3, 1);
-	peakcnt1 = peak_modify_a(pData, ppeak1, ppdata1, pf1, DSize, 1.0, 0.0);
-	
-	// (25) = peakcnt2
-	// (26) = f2
-	// (27) = peak2
-	ppeak2 = &temp_int_buf0[0];	
-	ppdata2 = &temp_dbl_buf0[0];
-	pf2 = &temp_dbl_buf3[0];	
-	peak_vallay_a(ppdata1, ppeak2, peakcnt1, 3, 1);
-	peakcnt2 = peak_modify_a(ppdata1, ppeak2, ppdata2, pf2, peakcnt1, 1.0, Param1);
-	
-	ppdata3 = &temp_dbl_buf0[0];
-	peakpos = 0;
-	for(ii=0;ii<peakcnt2;++ii){
-		peakpos = (int)(pf2[ii] + 0.5);
-		ppdata3[ii] = pf1[peakpos] * 0.01f;
-	}
-	
-	// (28) - (30)
-	max = pData[0];
-	//pos = 0;
-	for(ii=1;ii<DSize;++ii){
-		if(max < pData[ii]){
-			max = pData[ii];
-			//pos = ii;
-		}
-	}
-	
-	peakcnt = peakcnt2;
-	ppos = ppdata3;
-	pinterval = &temp_dbl_buf1[0];
-	pinterval[0] = ppos[0];
-	for(ii=0;ii<peakcnt;++ii){
-		pinterval[ii+1] = ppos[ii+1] - ppos[ii];
-	}
-	
-	// (31) - (33)
-	ppcnt = 0;
-	pp2 = &temp_dbl_buf2[0];
-	pp5 = &temp_dbl_buf3[0];
-	for(ii=1;ii<peakcnt;++ii){
-		if(pinterval[ii] >= 10){
-			pp2[ppcnt] = ppos[ii-1];
-			pp5[ppcnt] = ppos[ii];
-			ppcnt += 1;
-		}
-	}
-	// (34)
-	if(ppcnt >= 1){
-		int size = (int)(pp5[ppcnt-1] + 0.5);
-		int rpos = 0;
-		double* presult = &temp_dbl_buf0[0];				//calloc
-		for(ii=0;ii<ppcnt;++ii){
-			int loop2;
-			int loop5;
-			loop2 = (int)(pp2[ii] + 0.5) -1;
-			for(jj=rpos;jj<loop2;++jj){
-				presult[rpos] = 0;
-				rpos+=1;
-			}
-			loop5 = (int)(pp5[ii] + 0.5) - 1;
-			for(jj=rpos;jj<loop5;++jj){
-				presult[rpos] = max;
-				rpos+=1;
-			}
-		}
-		memcpy(result_peak, presult, size * sizeof(double));
-		result_peak_size = size;
-	}else{
-		result_peak[0] = 0x00;
-		result_peak_size = 0;
-	}
-}
-#endif
 
 /************************************************************************/
 /* 関数     : calc_apnea												*/
@@ -229,49 +101,13 @@ void calc_pp(const double* pData, int DSize, double Param1)
 /************************************************************************/
 void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3, double Param4)
 {
-	double* pave;
-	int datasize;
 	double* prms;
 	double* ppoint;
-	double ave = 0.0f;
+	int datasize;
 	int ii;
 	int jj;
-	int min=0;
 	int loop=0;
 	int apnea=0;
-	
-	// (35) = Param1
-	// (36) = Param2
-	// (40) = Param3
-	
-	// (37)
-	pave = &temp_dbl_buf1[0];
-	for(ii=0;ii<DSize;++ii){
-		min=0;
-		loop=0;
-		ave = 0.0f;
-		if(ii <= DSize-1){
-			int tmp = DSize-1 - ii;
-			if(tmp > Param1){
-				min = Param1;
-			}else{
-				min = tmp;
-			}
-			loop = min * 2 + 1;
-			min = ii - min;
-			if(min < 0){
-				min = 0;
-			}
-		}else{
-			min = 0;
-			loop = ii * 2 + 1;
-		}
-		for(jj=0;jj<loop;++jj){
-			ave += pData[min+jj];
-		}
-		ave /= loop;
-		pave[ii] = ave;
-	}
 	
 	// (41) ... 使用していないため省略
 	// (42)
@@ -304,21 +140,24 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 		apnea_ = APNEA_NORMAL;
 	}
 	else if(datasize > 9){
-		apnea_ = APNEA_WARN;
+		apnea_ = APNEA_ERROR;
 		loop = datasize - 9;
-		for(ii=0;ii<loop;++ii){
+		for(ii = 0; ii < loop; ++ii){
 			apnea = 0;
-			for(jj=0;jj<9;++jj){
+			for(jj = 0; jj < datasize; ++jj){
 				apnea += ppoint[ii + jj];
-			}
-			if(apnea != 0){
-				apnea_ = APNEA_NORMAL;
+				if(APNEA_JUDGE_CNT < apnea){
+					// 通常呼吸と判断した時点で抜ける
+					apnea_ = APNEA_NORMAL;
+					break;
+				}
 			}
 		}
 	}else{
 		apnea_ = APNEA_NORMAL;
 	}
 	
+/* //低呼吸も無呼吸と判定するため
 	// 完全無呼吸の判定
 	if(apnea_ == APNEA_WARN){
 		apnea_ = APNEA_ERROR;
@@ -329,115 +168,198 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 			}
 		}
 	}
+*/
 }
 
-#ifdef SNORE_PROC
 /************************************************************************/
-/* 関数     : calc_snore												*/
-/* 関数名   : いびき演算処理											*/
+/* 関数     : edgeWeighted_MovAve										*/
+/* 関数名   : エッジ強調移動平均										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴 : 2017.07.12 Axia Soft Design mmura	初版作成				*/
+/* 変更履歴 : 															*/
 /************************************************************************/
 /* 機能 :																*/
 /************************************************************************/
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-void calc_snore(const double* pData, int DSize, double Param)
+void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize)
 {
-	double* pbase_x_y2;
-	
-	int cnt;
-	int active;
-	double* p_x_y2;
-	int pos;
-	
-	int intervalsize;
-	double* pinterval;
-	
-	int intervalsize2;
-	// double snorecnt;
-	
 	int ii;
-	// (48) = Param
 	
-	// 結果[いびき]を入れる箱
-	pbase_x_y2 = &temp_dbl_buf1[0];							//calloc
-	
-	// (49)
-	for(ii=0;ii<DSize;++ii){
-		if(pData[ii] < Param){
-			pbase_x_y2[ii] = 1;
-		}else{
-			pbase_x_y2[ii] = 0;
-		}
-	}
-	
-	// (51)
-	cnt=0;
-	active = FALSE;
-	for(ii=0;ii<DSize;++ii){
-		if((pbase_x_y2[ii] >= 1) && (active == FALSE)){
-			active = TRUE;
-			cnt += 1;
-		}else if(pbase_x_y2[ii] < 1){
-			active = FALSE;
-		}else{
-			// なにもしない
-		}
-	}
-	p_x_y2 = &temp_dbl_buf0[0];								//calloc
-	pos = 0;
-	active = FALSE;
-	for(ii=0;ii<DSize;++ii){
-		if((pbase_x_y2[ii] >= 1) && (active == FALSE)){
-			active = TRUE;
-			p_x_y2[pos] = ii * 0.05;
-			pos += 1;
-		}else if(pbase_x_y2[ii] < 1){
-			active = FALSE;
-		}else{
-			// なにもしない
-		}
-	}
-	
-	// (54) pinterval[1] - pinterval[intervalsize] までが 呼吸間隔
-	intervalsize = cnt;
-	pinterval = &temp_dbl_buf1[0];
-	for(ii=1;ii<intervalsize;++ii){
-		pinterval[ii] = p_x_y2[ii+1] - p_x_y2[ii];
-	}
-	
-	// (55)
-	snore_ = SNORE_OFF;
-	intervalsize2 = 0;
-	for(ii=0;ii<intervalsize;++ii){
-		// 3 <= x <= 5 以外の値を0にする
-		if((3.0f <= pinterval[ii]) && (pinterval[ii] <= 5.0f)){
-			// そのまま
-			snore_ = SNORE_ON;
-			intervalsize2 += 1;
-		}else{
-			pinterval[ii] = 0.0f;
-		}
-	}
-	
-	// (56)
-	// snorecnt = intervalsize2 * 2;
-}
-#endif
+	// エッジ強調移動平均
+	for (ii = 0; ii < datasize; ++ii) {
+		movave_[ii] = 0;
 
-// 状態を取得
+		if ((ii - 2) >= 0)
+		{//要素2以上
+			if ((ii + 2) <= (datasize - 1))
+			{// 要素197まで
+				movave_[ii] += dc_[ii - 2] * 0.1;
+				movave_[ii] += dc_[ii - 1];
+				movave_[ii] += dc_[ii] * 20;
+				movave_[ii] += dc_[ii + 1];
+				movave_[ii] += dc_[ii + 2] * 0.1;
+				movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
+			}
+		}
+		else if (before_raw[ii] != -1)
+		{// 過去データがあるか
+			movave_[ii] += before_raw[ii + 1] * 0.1;
+			if (ii == 0)
+			{
+				movave_[ii] += before_raw[ii + 2];
+			}
+			else {
+				movave_[ii] += dc_[ii - 1];
+			}
+			movave_[ii] += dc_[ii] * 20;
+			movave_[ii] += dc_[ii + 1];
+			movave_[ii] += dc_[ii + 2] * 0.1;
+			movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
+		}
+	}
+}
+
+/************************************************************************/
+/* 関数     : heartBeat_Remov											*/
+/* 関数名   : 心拍除去													*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+void heartBeat_Remov(double* dc_, double* movave_, const UH* data_snore, UW datasize)
+{
+	boolean before_under = FALSE;
+	boolean after_under = FALSE;
+	int i, j;
+	int pastDataNum = 0;
+	
+	// 心拍除去
+	for (i = 0; i < datasize; i++)
+	{
+		if (i <= datasize - 4)
+		{
+			if (movave_[i] >= MAX_THRESHOLD && data_snore[i] <= MIN_THRESHOLD)
+			{// エッジ強調1000以上、いびき音100以下
+				if (i < 3)
+				{
+				// 0 ～ 2まで
+					// 前150ms確認
+					if (i == 0)
+					{// データ配列の先頭
+						if (before_raw[0] < MIN_THRESHOLD || before_raw[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
+						{
+							before_under = TRUE;
+							pastDataNum = 3;
+						}
+					}
+					else if (i == 1)
+					{// データ配列2番目
+						if (dc_[0] < MIN_THRESHOLD || before_raw[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
+						{
+							before_under = TRUE;
+							pastDataNum = 2;
+						}
+					}
+					else if (i == 2)
+					{// データ配列3番目
+						if (dc_[0] < MIN_THRESHOLD || dc_[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
+						{
+							before_under = TRUE;
+							pastDataNum = 1;
+						}
+					}
+					// 前に該当データがある場合は後150ms確認
+					if (before_under)
+					{
+						for (j = 1; j < 4; j++)
+						{
+							if (dc_[i + j] < MIN_THRESHOLD)
+							{
+								after_under = TRUE;
+							}
+						}
+					}
+				}
+				else {
+				// 3 ～ 196まで
+					// 前後150ms確認
+					for (j = 1; j < 4; j++)
+					{
+						// 前150ms確認
+						if (dc_[i - j] < MIN_THRESHOLD)
+						{
+							before_under = TRUE;
+						}
+						// 後150ms確認
+						if (dc_[i + j] < MIN_THRESHOLD)
+						{
+							after_under = TRUE;
+						}
+					}
+				}
+
+				if (before_under && after_under)
+				{// 前後に該当箇所がある場合
+					for (j = -3 + pastDataNum; j < 4; j++)
+					{// 前後150ms分0にする
+						dc_[i + j] = 0;
+					}
+				}
+				// フラグリセット
+				before_under = FALSE;
+				after_under = FALSE;
+				pastDataNum = 0;
+			}
+		}
+	}
+}
+
+/************************************************************************/
+/* 関数     : get_state													*/
+/* 関数名   : 状態取得													*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
 UB get_state(void)
 {
 	UB ret = 0;
 	ret |= ((apnea_ << 6) & 0xC0);
-#ifdef SNORE_PROC
-	ret |= (snore_ & 0x01);
-#endif
 	
 	return ret;
+}
+
+/************************************************************************/
+/* 関数     : init_before_raw													*/
+/* 関数名   : 前のデータの初期化													*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+void init_before_raw(void)
+{ // 測定開始時に呼び出す！(場所未定)
+	int i;
+	for(i = 0; i < PREVIOUS_DATA_NUM; i++)
+	{
+		before_raw[i] = -1;
+	}
 }
 
 /*==============================================================================*/

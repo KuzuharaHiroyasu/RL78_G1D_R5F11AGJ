@@ -19,6 +19,11 @@
 #define APNEA_ERROR		2	// 完全無呼吸
 #define APNEA_NONE		3	// 判定エラー
 
+#define APNEA_JUDGE_CNT 2	// 無呼吸判定カウント
+#define PREVIOUS_DATA_NUM 3	// 前のデータ150ms分
+#define MAX_THRESHOLD			1000
+#define MIN_THRESHOLD			100
+
 /************************************************************/
 /* 						型定義								*/
 /************************************************************/
@@ -27,7 +32,7 @@
 /************************************************************/
 /*					外部参照宣言							*/
 /************************************************************/
-extern void	calculator_apnea(const UH *data);
+extern void	calculator_apnea(const UH *data_apnea, const UH *data_snore);
 extern UB	get_state(void);
 
 #endif	/*_CALC_APNEA_H_*/
