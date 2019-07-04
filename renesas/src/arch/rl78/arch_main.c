@@ -316,7 +316,7 @@ void arch_main_ent(void)
     GLOBAL_INT_START();
     
 #ifdef USE_FW_UPDATE_PROFILE
-    push_sw2_start( &FW_Update_push_sw_int );
+//    push_sw2_start( &FW_Update_push_sw_int );
 #endif
 
     // rBLE Initialize

@@ -339,6 +339,7 @@ void user_main_timer_cyc( void )
 	uint16_t photoref_off_val, photoref_on_val;
 	int16_t ret_photoref_val;
 	// 50msŽüŠú
+	
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 #if FUNC_DEBUG_LOG == ON
 		char dbg_tx_data[50] = {0};
@@ -359,10 +360,11 @@ void user_main_timer_cyc( void )
 			
 			// ON
 			P2_bit.no0 = 0;
+
 			wait_ms(1);
 			adc_photoreflector( &photoref_on_val );
 			P2_bit.no0 = 1;
-			
+
 			ret_photoref_val = photoref_on_val - photoref_off_val;
 			if( 0 < ret_photoref_val )
 			{
@@ -370,11 +372,17 @@ void user_main_timer_cyc( void )
 			} else {
 				s_unit.meas.info.dat.photoref_val = 0;
 			}
+			
+			// LED
+			P1_bit.no6 = 1;
+			P1_bit.no5 = 1;
 		}else {
 			s_unit.meas.info.dat.acl_x = 99;
 			s_unit.meas.info.dat.acl_y = 99;
 			s_unit.meas.info.dat.acl_z = 99;
 			s_unit.meas.info.dat.photoref_val = 0;
+//			P1_bit.no6 = 0;
+//			P1_bit.no5 = 0;
 		}
 		
 		make_send_data(dbg_tx_data);

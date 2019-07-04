@@ -302,7 +302,8 @@ _PLF_CODE static void plf_port_init(void)
     /* If ADPC == 0x00, it is not necessary to set PM24-PM27 and PM150-PM156 to output mode. */
     write_sfr(PM0,  0xEF);
 //    write_sfr(PM1,  0x7F);
-    write_sfr(PM1,  0x7E);		//RD8001暫定：一部のポート修正
+//    write_sfr(PM1,  0x7E);		//RD8001暫定：一部のポート修正
+    write_sfr(PM1,  0x1E);
     write_sfr(PM2,  0x0E);
     write_sfr(PM3,  0xFD);
     write_sfr(PM4,  0x01);
