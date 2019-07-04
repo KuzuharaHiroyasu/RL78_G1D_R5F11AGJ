@@ -8,15 +8,15 @@
 #include <math.h>
 #include "calc_apnea.h"
 #include "apnea_param.h"
+#include "movave_param.h"
 #include "../calc_data.h"
 
 /************************************************************/
 /* プロトタイプ宣言											*/
 /************************************************************/
 void calc_apnea(const double* pData, int DSize, int Param1, double Param2, double Param3, double Param4);
-void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize);
-void heartBeat_Remov(double* dc_, double* movave_, const UH* data_snore, UW datasize);
-void init_before_raw(void);
+void edgeWeighted_MovAve(const UH* data_apnea, double* movave_, UW datasize);
+void heartBeat_Remov(double* dc_, const UH *data_apnea, double* movave_, const UH* data_snore, UW datasize);
 extern int	peak_modify_a(const double in_data[] , H in_res[] , double ot_data[] , double ot_hz[] , int size , double delta, double th);
 extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int peak );
 
@@ -28,7 +28,6 @@ extern void peak_vallay_a(const double in[] , H ot[] , int size, int width , int
 /* 変数定義													*/
 /************************************************************/
 static int		apnea_ = APNEA_NONE;	// 呼吸状態
-double  before_raw[PREVIOUS_DATA_NUM];
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -46,41 +45,40 @@ double  before_raw[PREVIOUS_DATA_NUM];
 void calculator_apnea(const UH *data_apnea, const UH *data_snore)
 {
 	UW datasize;						// 波形データのバイト数
-	double* ptest1;
+	double* data_apnea_temp;
 	double* movave_;
-	int ii, jj;
+	int ii;
 	
 	//データサイズ制限
 	datasize = DATA_SIZE_APNEA;
 	
 	// 演算用データ移行
-	ptest1 = &temp_dbl_buf0[0];	//calloc
+	data_apnea_temp = &temp_dbl_buf0[0];	//calloc
 	movave_ = &temp_dbl_buf2[0];	
 	
-	for(ii=0; ii < datasize; ++ii){
-		ptest1[ii] = data_apnea[ii];
+	for(ii = 0; ii < datasize; ++ii){
+		data_apnea_temp[ii] = data_apnea[ii];
 	}
 	
 	// エッジ強調移動平均
-	edgeWeighted_MovAve(ptest1, movave_, datasize);
+	edgeWeighted_MovAve(data_apnea, movave_, datasize);
 	
 	// 心拍除去
-	heartBeat_Remov(ptest1, movave_, data_snore, datasize);
+	heartBeat_Remov(data_apnea_temp, data_apnea, movave_, data_snore, datasize);
 	
-	// 現在のデータの末尾を保管（要素197, 198, 199）
-	before_raw[0] = data_apnea[197];
-	before_raw[1] = data_apnea[198];
-	before_raw[2] = data_apnea[199];
-	
-	for(ii=0;ii<datasize;++ii){
-		movave_[ii]=0;
-		for(jj=0;jj<APNEA_PARAM_AVE_NUM;++jj){
-			if((ii-jj)>=0){
-				movave_[ii]+=ptest1[ii-jj];
-			}
+	// 除去後の呼吸音の移動平均
+	for (ii = 0; ii < datasize; ++ii) {
+		movave_[ii] = 0;
+		if (ii >= APNEA_PARAM_AVE_NUM_HALF && ii < (datasize - APNEA_PARAM_AVE_NUM_HALF))
+		{
+			movave_[ii] += data_apnea_temp[ii - 2];
+			movave_[ii] += data_apnea_temp[ii - 1];
+			movave_[ii] += data_apnea_temp[ii];
+			movave_[ii] += data_apnea_temp[ii + 1];
+			movave_[ii] += data_apnea_temp[ii + 2];
+			movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
+			movave_[ii] /= APNEA_PARAM_RAW;	// 生データ補正
 		}
-		movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
-		movave_[ii] /= APNEA_PARAM_RAW;
 	}
 	
 	// (35) - (47)
@@ -183,7 +181,7 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize)
+void edgeWeighted_MovAve(const UH* data_apnea, double* movave_, UW datasize)
 {
 	int ii;
 	
@@ -191,31 +189,13 @@ void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize)
 	for (ii = 0; ii < datasize; ++ii) {
 		movave_[ii] = 0;
 
-		if ((ii - 2) >= 0)
-		{//要素2以上
-			if ((ii + 2) <= (datasize - 1))
-			{// 要素197まで
-				movave_[ii] += dc_[ii - 2] * 0.1;
-				movave_[ii] += dc_[ii - 1];
-				movave_[ii] += dc_[ii] * 20;
-				movave_[ii] += dc_[ii + 1];
-				movave_[ii] += dc_[ii + 2] * 0.1;
-				movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
-			}
-		}
-		else if (before_raw[ii] != -1)
-		{// 過去データがあるか
-			movave_[ii] += before_raw[ii + 1] * 0.1;
-			if (ii == 0)
-			{
-				movave_[ii] += before_raw[ii + 2];
-			}
-			else {
-				movave_[ii] += dc_[ii - 1];
-			}
-			movave_[ii] += dc_[ii] * 20;
-			movave_[ii] += dc_[ii + 1];
-			movave_[ii] += dc_[ii + 2] * 0.1;
+		if (ii >= APNEA_PARAM_AVE_NUM_HALF && ii < (datasize - APNEA_PARAM_AVE_NUM_HALF))
+		{
+			movave_[ii] += data_apnea[ii - 2] * DIAMETER_END;
+			movave_[ii] += data_apnea[ii - 1] * DIAMETER_NEXT;
+			movave_[ii] += data_apnea[ii] * DIAMETER_CENTER;
+			movave_[ii] += data_apnea[ii + 1] * DIAMETER_NEXT;
+			movave_[ii] += data_apnea[ii + 2] * DIAMETER_END;
 			movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
 		}
 	}
@@ -233,89 +213,42 @@ void edgeWeighted_MovAve(const double* dc_, double* movave_, UW datasize)
 /* 注意事項 :															*/
 /* なし																	*/
 /************************************************************************/
-void heartBeat_Remov(double* dc_, double* movave_, const UH* data_snore, UW datasize)
+void heartBeat_Remov(double* dc_, const UH *data_apnea, double* movave_, const UH* data_snore, UW datasize)
 {
 	boolean before_under = FALSE;
 	boolean after_under = FALSE;
 	int i, j;
-	int pastDataNum = 0;
 	
 	// 心拍除去
 	for (i = 0; i < datasize; i++)
 	{
-		if (i <= datasize - 4)
+		if (i >= PREVIOUS_DATA_NUM && i < (datasize - PREVIOUS_DATA_NUM))
 		{
-			if (movave_[i] >= MAX_THRESHOLD && data_snore[i] <= MIN_THRESHOLD)
-			{// エッジ強調1000以上、いびき音100以下
-				if (i < 3)
+			if (movave_[i] >= MAX_EDGE_THRESHOLD && data_snore[i] <= MIN_SNORE_THRESHOLD)
+			{
+				for (j = 1; j <= PREVIOUS_DATA_NUM; j++)
 				{
-				// 0 ～ 2まで
-					// 前150ms確認
-					if (i == 0)
-					{// データ配列の先頭
-						if (before_raw[0] < MIN_THRESHOLD || before_raw[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
-						{
-							before_under = TRUE;
-							pastDataNum = 3;
-						}
-					}
-					else if (i == 1)
-					{// データ配列2番目
-						if (dc_[0] < MIN_THRESHOLD || before_raw[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
-						{
-							before_under = TRUE;
-							pastDataNum = 2;
-						}
-					}
-					else if (i == 2)
-					{// データ配列3番目
-						if (dc_[0] < MIN_THRESHOLD || dc_[1] < MIN_THRESHOLD || before_raw[2] < MIN_THRESHOLD)
-						{
-							before_under = TRUE;
-							pastDataNum = 1;
-						}
-					}
-					// 前に該当データがある場合は後150ms確認
-					if (before_under)
+					if (data_apnea[i - j] < MIN_BREATH_THRESHOLD)
 					{
-						for (j = 1; j < 4; j++)
-						{
-							if (dc_[i + j] < MIN_THRESHOLD)
-							{
-								after_under = TRUE;
-							}
-						}
+						before_under = TRUE;
+					}
+					if (data_apnea[i + j] < MIN_BREATH_THRESHOLD)
+					{
+						after_under = TRUE;
 					}
 				}
-				else {
-				// 3 ～ 196まで
-					// 前後150ms確認
-					for (j = 1; j < 4; j++)
-					{
-						// 前150ms確認
-						if (dc_[i - j] < MIN_THRESHOLD)
-						{
-							before_under = TRUE;
-						}
-						// 後150ms確認
-						if (dc_[i + j] < MIN_THRESHOLD)
-						{
-							after_under = TRUE;
-						}
-					}
-				}
-
+				
 				if (before_under && after_under)
-				{// 前後に該当箇所がある場合
-					for (j = -3 + pastDataNum; j < 4; j++)
-					{// 前後150ms分0にする
+				{
+					dc_[i] = 0;
+					for (j = 1; j <= PREVIOUS_DATA_NUM; j++)
+					{
+						dc_[i - j] = 0;
 						dc_[i + j] = 0;
 					}
 				}
-				// フラグリセット
 				before_under = FALSE;
 				after_under = FALSE;
-				pastDataNum = 0;
 			}
 		}
 	}
@@ -339,27 +272,6 @@ UB get_state(void)
 	ret |= ((apnea_ << 6) & 0xC0);
 	
 	return ret;
-}
-
-/************************************************************************/
-/* 関数     : init_before_raw													*/
-/* 関数名   : 前のデータの初期化													*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 															*/
-/************************************************************************/
-/* 機能 :																*/
-/************************************************************************/
-/* 注意事項 :															*/
-/* なし																	*/
-/************************************************************************/
-void init_before_raw(void)
-{ // 測定開始時に呼び出す！(場所未定)
-	int i;
-	for(i = 0; i < PREVIOUS_DATA_NUM; i++)
-	{
-		before_raw[i] = -1;
-	}
 }
 
 /*==============================================================================*/

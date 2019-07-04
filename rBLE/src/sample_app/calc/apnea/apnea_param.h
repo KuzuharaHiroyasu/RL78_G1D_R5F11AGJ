@@ -17,6 +17,7 @@
 
 // 移動平均データ数
 #define APNEA_PARAM_AVE_NUM				5
+#define APNEA_PARAM_AVE_NUM_HALF		(APNEA_PARAM_AVE_NUM / 2)
 
 // ピーク間隔50%閾値
 #define APNEA_PARAM_PEAK_THRE			87.85f

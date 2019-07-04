@@ -20,9 +20,6 @@
 #define APNEA_NONE		3	// 判定エラー
 
 #define APNEA_JUDGE_CNT 2	// 無呼吸判定カウント
-#define PREVIOUS_DATA_NUM 3	// 前のデータ150ms分
-#define MAX_THRESHOLD			1000
-#define MIN_THRESHOLD			100
 
 /************************************************************/
 /* 						型定義								*/
