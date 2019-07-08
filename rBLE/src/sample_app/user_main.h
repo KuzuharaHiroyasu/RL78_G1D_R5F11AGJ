@@ -206,6 +206,7 @@ typedef enum{
 
 
 ///10ms timer
+#define PERIOD_10SEC   1000U
 #define PERIOD_5SEC     500U
 #define PERIOD_1SEC     100U
 #define PERIOD_10MSEC   1U		//RD8001対応：定義追加
@@ -393,6 +394,7 @@ typedef struct{
 	// timer
 	UH tick_10ms;
 	UH tick_10ms_sec;
+	UH tick_10ms_10sec;
 	UH tick_10ms_new;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	

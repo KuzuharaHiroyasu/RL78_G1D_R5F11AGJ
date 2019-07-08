@@ -134,6 +134,7 @@ ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
 
 STATIC T_UNIT s_unit;
 STATIC DS s_ds;
+BOOL led_timer = false;
 
 /********************/
 /*     ’è”’è‹`     */
@@ -319,6 +320,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.tick_10ms++;
 	s_unit.tick_10ms_sec++;
 	s_unit.tick_10ms_new++;
+	s_unit.tick_10ms_10sec++;
 	s_unit.elapsed_time++;
 }
 
@@ -374,8 +376,8 @@ void user_main_timer_cyc( void )
 			}
 			
 			// LED
-			P1_bit.no6 = 1;
-			P1_bit.no5 = 1;
+//			P1_bit.no6 = 1;
+//			P1_bit.no5 = 1;
 		}else {
 			s_unit.meas.info.dat.acl_x = 99;
 			s_unit.meas.info.dat.acl_y = 99;
@@ -404,6 +406,21 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// ’x‚ê‚ª’~Ï‚µ‚È‚¢—l‚Éˆ—
 		ke_evt_set(KE_EVT_USR_2_BIT);
+		
+		// LED
+		if(!led_timer)
+		{
+			if(0 == read1_sfr( P1, 6))
+			{
+				P1_bit.no6 = 1;
+			}else{
+				P1_bit.no6 = 0;
+			}
+		}
+	}
+	
+	if( s_unit.tick_10ms_10sec >= (uint16_t)PERIOD_10SEC){
+		led_timer = true;
 	}
 }
 
