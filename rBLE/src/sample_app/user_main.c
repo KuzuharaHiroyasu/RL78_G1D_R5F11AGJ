@@ -117,6 +117,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
+STATIC void vib_start(void);
 
 
 /********************/
@@ -130,7 +131,9 @@ extern RBLE_STATUS FW_Update_Receiver_Start( void );
 /********************/
 /* Status */// プラットフォーム
 ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
-
+static int vib_count = 0;
+static int vib_ctl_num = 0;
+static BOOL vib_judge = true;
 
 STATIC T_UNIT s_unit;
 STATIC DS s_ds;
@@ -396,6 +399,13 @@ void user_main_timer_cyc( void )
 		
 		s_unit.tick_10ms_new = 0;
 	}
+	
+	// 10ms周期
+	if(s_unit.tick_10ms >= (uint16_t)PERIOD_10MSEC){
+		vib_start();
+		s_unit.tick_10ms = 0;
+	}
+	
 	// 20ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
@@ -419,8 +429,22 @@ void user_main_timer_cyc( void )
 		}
 	}
 	
+	// 10秒タイマー
 	if( s_unit.tick_10ms_10sec >= (uint16_t)PERIOD_10SEC){
-		led_timer = true;
+		s_unit.tick_10ms_10sec -= PERIOD_10SEC;	// 遅れが蓄積しない様に処理
+		if(led_timer)
+		{
+			led_timer = false;
+		} else{
+			led_timer = true;
+		}
+		
+//		if(vib_judge)
+//		{
+//			vib_judge = false;
+//		} else{
+//			vib_judge = true;
+//		}
 	}
 }
 
@@ -674,7 +698,8 @@ void user_main_init( void )
 
 #endif
 
-
+	P0_bit.no0 = 0;
+	P0_bit.no1 = 0;
 
 
 
@@ -3540,3 +3565,94 @@ STATIC void main_acl_read(void)
 	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
 
+/************************************************************************/
+/* 関数     : vib_start													*/
+/* 関数名   : バイブレーション開始										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 			*/
+/************************************************************************/
+/* 機能 : 											*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_start(void)
+{
+	if(vib_judge != false)
+	{// 判定ON
+		if(vib_count < 10)
+		{
+			switch (vib_ctl_num)
+			{
+				case 0:
+					P0_bit.no1 = 1;
+					P0_bit.no0 = 1;
+					break;
+				case 10:
+					P0_bit.no1 = 0;
+					break;
+				case 12:
+					P0_bit.no0 = 0;
+					break;
+				case 19:
+					vib_ctl_num = -1;
+					vib_count += 1;
+					break;
+				default:
+					break;
+			}
+			vib_ctl_num ++;
+		} else if(vib_count < 400){
+			vib_count++;
+		} else if(vib_count < 410){
+			switch (vib_ctl_num)
+			{
+				case 0:
+					P0_bit.no1 = 1;
+					P0_bit.no0 = 1;
+					break;
+				case 2:
+					P0_bit.no1 = 0;
+					break;
+				case 4:
+					P0_bit.no0 = 0;
+					break;
+				case 19:
+					vib_ctl_num = -1;
+					vib_count += 1;
+					break;
+				default:
+					break;
+			}
+			vib_ctl_num ++;
+		} else if(vib_count < 800){
+			vib_count++;
+		} else if(vib_count < 810){
+			switch (vib_ctl_num)
+			{
+				case 0:
+					P0_bit.no1 = 1;
+					P0_bit.no0 = 1;
+					break;
+				case 16:
+					P0_bit.no1 = 0;
+					break;
+				case 18:
+					P0_bit.no0 = 0;
+					break;
+				case 19:
+					vib_ctl_num = -1;
+					vib_count += 1;
+					break;
+				default:
+					break;
+			}
+			vib_ctl_num ++;
+		} else if(vib_count < 1200){
+			vib_count++;
+		} else {
+			vib_count = 0;
+			vib_ctl_num = 0;
+		}
+	}
+}

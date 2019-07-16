@@ -300,7 +300,8 @@ _PLF_CODE static void plf_port_init(void)
     /*Pin I/O mode setting*/
     /* Below setting is for the case of ADPC != 0x00. */
     /* If ADPC == 0x00, it is not necessary to set PM24-PM27 and PM150-PM156 to output mode. */
-    write_sfr(PM0,  0xEF);
+//    write_sfr(PM0,  0xEF);
+    write_sfr(PM0,  0xEC);
 //    write_sfr(PM1,  0x7F);
 //    write_sfr(PM1,  0x7E);		//RD8001暫定：一部のポート修正
     write_sfr(PM1,  0x1E);
