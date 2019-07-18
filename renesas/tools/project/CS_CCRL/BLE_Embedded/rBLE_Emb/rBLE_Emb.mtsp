@@ -730,6 +730,13 @@
       <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
       <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
     </Instance>
+    <Instance Guid="75b0bb52-7424-4158-9688-a1630947204f">
+      <Name>vibration.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\vibration.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
+    </Instance>
     <Instance Guid="5d87e470-1af1-4895-b3e3-12305348b912">
       <Name>apnea</Name>
       <Type>Category</Type>
@@ -1182,7 +1189,9 @@
       <SourceItemType57>CSource</SourceItemType57>
       <SourceItemGuid58>4ef1aa47-b5d5-4b49-baf9-58b73eb4e67e</SourceItemGuid58>
       <SourceItemType58>CSource</SourceItemType58>
-      <SourceItemCount>59</SourceItemCount>
+      <SourceItemGuid59>75b0bb52-7424-4158-9688-a1630947204f</SourceItemGuid59>
+      <SourceItemType59>CSource</SourceItemType59>
+      <SourceItemCount>60</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="6bb7060d-7e24-4135-bd9b-7db166417523">
@@ -2253,6 +2262,10 @@ noCFG_PKTMON
       <ItemAddTime>636934564920202370</ItemAddTime>
       <ItemAddTimeCount>1</ItemAddTimeCount>
     </Instance>
+    <Instance Guid="75b0bb52-7424-4158-9688-a1630947204f">
+      <ItemAddTime>636990514070772195</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
     <Instance Guid="f782db2c-1c42-4ca1-af6a-53a3a5067217">
       <TimeTagModified-SourceItem0--0>-8587720036646824581</TimeTagModified-SourceItem0--0>
       <SourceItem0-IsLockedByUser>False</SourceItem0-IsLockedByUser>
@@ -2466,6 +2479,10 @@ noCFG_PKTMON
       <SourceItem58-IsLockedByUser>False</SourceItem58-IsLockedByUser>
       <SourceItem58-BuildingTarget-0>True</SourceItem58-BuildingTarget-0>
       <SourceItem58-IndividualCompileOption-0>False</SourceItem58-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem59--0>-8586381846784003613</TimeTagModified-SourceItem59--0>
+      <SourceItem59-IsLockedByUser>False</SourceItem59-IsLockedByUser>
+      <SourceItem59-BuildingTarget-0>True</SourceItem59-BuildingTarget-0>
+      <SourceItem59-IndividualCompileOption-0>False</SourceItem59-IndividualCompileOption-0>
     </Instance>
     <Instance Guid="0b7e78c3-aadd-45ee-9f9d-ffac6141eeb2">
       <TimeTagModified-SourceItem9--0>-8587695222820463075</TimeTagModified-SourceItem9--0>
