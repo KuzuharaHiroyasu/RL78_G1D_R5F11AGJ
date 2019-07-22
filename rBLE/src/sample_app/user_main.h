@@ -398,6 +398,7 @@ typedef struct{
 	UH tick_10ms_new;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
+	UH tick_led_10ms;
 	
 	UW last_time_dench_zanryou_min;			// 電池残量低下時間[10ms]
 	

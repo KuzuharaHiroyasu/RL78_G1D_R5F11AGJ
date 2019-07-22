@@ -177,8 +177,8 @@ typedef void (* RESET_FUNC )( void );
         /* fatal problem in software design (HEAP area is insufficient) */
         case CO_ERROR_HW_MEM_ALLOC_FAIL:
             /* LED1/2 OFF */
-            write1_sfrbit(LED01, OFF);
-            write1_sfrbit(LED02, OFF);
+//            write1_sfrbit(LED01, OFF);
+//            write1_sfrbit(LED02, OFF);
             break;
 
         /* fatal problem in board circuit design */
@@ -186,8 +186,8 @@ typedef void (* RESET_FUNC )( void );
         case CO_ERROR_HW_RF_INITIAL_ERR:
         case CO_ERROR_HW_RF_WAKEUP_ERR:
             /* LED1/2 ON */
-            write1_sfrbit(LED01, ON);
-            write1_sfrbit(LED02, ON);
+//            write1_sfrbit(LED01, ON);
+//            write1_sfrbit(LED02, ON);
             break;
 
         /* other error */
