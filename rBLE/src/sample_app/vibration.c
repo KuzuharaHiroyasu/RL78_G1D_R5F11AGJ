@@ -97,20 +97,20 @@ STATIC void vib_mode_weak(UH vib_timer)
 {
 	if(	20 <= vib_timer )
 	{
-//		P0_bit.no1 = 0; // •ÛŒ¯
-//		P0_bit.no0 = 0;
+//		VIB_CTL = 0; // •ÛŒ¯
+//		VIB_ENA = 0;
 		vib_orbit += 1;
 		reset_vib_timer();
 	} if( 5 <= vib_timer )
 	{
-		P0_bit.no0 = 0;
+		VIB_ENA = 0;
 	} if( 3 <= vib_timer )
 	{
-		P0_bit.no1 = 0;
+		VIB_CTL = 0;
 	} else
 	{
-		P0_bit.no1 = 1;
-		P0_bit.no0 = 1;
+		VIB_CTL = 1;
+		VIB_ENA = 1;
 	}
 }
 
@@ -129,20 +129,20 @@ STATIC void vib_mode_during(UH vib_timer)
 {
 	if(	20 <= vib_timer )
 	{
-//		P0_bit.no1 = 0; // •ÛŒ¯
-//		P0_bit.no0 = 0;
+//		VIB_CTL = 0; // •ÛŒ¯
+//		VIB_ENA = 0;
 		vib_orbit += 1;
 		reset_vib_timer();
 	} if( 13 <= vib_timer )
 	{
-		P0_bit.no0 = 0;
+		VIB_ENA = 0;
 	} if( 11 <= vib_timer )
 	{
-		P0_bit.no1 = 0;
+		VIB_CTL = 0;
 	} else
 	{
-		P0_bit.no1 = 1;
-		P0_bit.no0 = 1;
+		VIB_CTL = 1;
+		VIB_ENA = 1;
 	}	
 }
 
@@ -161,20 +161,20 @@ STATIC void vib_mode_strength(UH vib_timer)
 {
 	if(	20 <= vib_timer )
 	{
-//		P0_bit.no1 = 0; // •ÛŒ¯
-//		P0_bit.no0 = 0;
+//		VIB_CTL = 0; // •ÛŒ¯
+//		VIB_ENA = 0;
 		vib_orbit += 1;
 		reset_vib_timer();
 	} if( 19 <= vib_timer )
 	{
-		P0_bit.no0 = 0;
+		VIB_ENA = 0;
 	} if( 17 <= vib_timer )
 	{
-		P0_bit.no1 = 0;
+		VIB_CTL = 0;
 	} else
 	{
-		P0_bit.no1 = 1;
-		P0_bit.no0 = 1;
+		VIB_CTL = 1;
+		VIB_ENA = 1;
 	}	
 }
 
@@ -193,14 +193,14 @@ STATIC void vib_mode_standby(UH vib_timer)
 {
 	if(	80 <= vib_timer )
 	{
-		P0_bit.no1 = 0;
-		P0_bit.no0 = 0;
+		VIB_CTL = 0;
+		VIB_ENA = 0;
 		vib_orbit = 3;
 		reset_vib_timer();
 	} else
 	{
-		P0_bit.no1 = 1;
-		P0_bit.no0 = 1;
+		VIB_CTL = 1;
+		VIB_ENA = 1;
 	}	
 }
 
@@ -219,13 +219,13 @@ STATIC void vib_mode_sensing(UH vib_timer)
 {
 	if(	10 <= vib_timer )
 	{
-		P0_bit.no1 = 0;
-		P0_bit.no0 = 0;
+		VIB_CTL = 0;
+		VIB_ENA = 0;
 		vib_orbit = 3;
 		reset_vib_timer();
 	} else
 	{
-		P0_bit.no1 = 1;
-		P0_bit.no0 = 1;
+		VIB_CTL = 1;
+		VIB_ENA = 1;
 	}
 }

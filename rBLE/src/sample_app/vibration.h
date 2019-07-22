@@ -11,6 +11,9 @@
 
 #include	"sys.h"
 
+
+#define VIB_CTL		P0_bit.no1
+#define VIB_ENA		P0_bit.no0
 #define VIB_ORBIT	3	// ƒoƒCƒuŽü‰ñ
 
 
