@@ -23,6 +23,7 @@
 #include	"header.h"				//ユーザー定義
 
 #include	"r_vuart_app.h"
+#include	"vibration.h"
 
 // プロトタイプ宣言
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -328,6 +329,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.tick_10ms_sec++;
 	s_unit.tick_10ms_new++;
 	s_unit.elapsed_time++;
+	s_unit.tick_vib_10ms_sec++;
 }
 
 
@@ -3613,4 +3615,9 @@ STATIC UH main_photo_read(void)
 	}
 	
 	return ret_photoref_val;
+}
+
+void reset_vib_timer(void)
+{
+	s_unit.tick_vib_10ms_sec = 0;
 }

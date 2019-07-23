@@ -395,6 +395,7 @@ typedef struct{
 	UH tick_10ms_sec;
 	UH tick_10ms_new;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
+	UH tick_vib_10ms_sec;
 	
 	UW last_time_dench_zanryou_min;			// 電池残量低下時間[10ms]
 	
@@ -618,5 +619,6 @@ extern void main_set_bd_adrs( UB* bda);
 extern void user_main_timer_10ms_set( void );
 extern void user_main_timer_cyc( void );
 extern UW time_get_elapsed_time( void );
+extern void reset_vib_timer(void);
 
 #endif // __MAIN_USR_INC__
