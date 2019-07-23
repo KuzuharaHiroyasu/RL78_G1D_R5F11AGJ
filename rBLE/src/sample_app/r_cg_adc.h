@@ -176,6 +176,7 @@ void R_ADC_Get_Result(uint16_t * const buffer);
 
 /* Start user code for function. Do not edit comment generated here */
 void adc_ibiki_kokyu( uint16_t* ibiki, uint16_t* kokyu );
+void adc_photoreflector( uint16_t* photoref );
 
 /* End user code. Do not edit comment generated here */
 #endif

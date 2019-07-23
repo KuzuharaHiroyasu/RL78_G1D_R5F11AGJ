@@ -119,7 +119,8 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
-
+// フォトセンサー
+STATIC UH main_photo_read(void);
 
 /********************/
 /*     外部参照     */
@@ -351,16 +352,19 @@ void user_main_timer_cyc( void )
 		
 		// 呼吸音、いびき音取得
 		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-		
-		// 加速度取得
+				
 		s_unit.acl_timing+=1;
 		if(s_unit.acl_timing >= ACL_TIMING_VAL){
 			s_unit.acl_timing = 0;
+			// 加速度取得
 			main_acl_read();
+			// フォトセンサー値取得
+			s_unit.meas.info.dat.photoref_val = main_photo_read();
 		}else{
 			s_unit.meas.info.dat.acl_x = 99;
 			s_unit.meas.info.dat.acl_y = 99;
 			s_unit.meas.info.dat.acl_z = 99;
+			s_unit.meas.info.dat.photoref_val = 0;
 		}
 		
 		make_send_data(dbg_tx_data);
@@ -379,6 +383,9 @@ void user_main_timer_cyc( void )
 			s_unit.acl_timing = 0;
 			main_acl_read();
 			user_main_calc_data_set_acl();
+			
+			// フォトセンサー値取得
+			s_unit.meas.info.dat.photoref_val = main_photo_read();
 		}
 
 #endif
@@ -485,26 +492,9 @@ STATIC void make_send_data(char* pBuff)
 	UH next;
 	UB index = 0;
 	
-	tmp = s_unit.meas.info.dat.kokyu_val / 10000;
-	next = s_unit.meas.info.dat.kokyu_val % 10000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 1000;
-	next = next % 1000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 100;
-	next = next % 100;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 10;
-	next = next % 10;
-	pBuff[index++] = '0' + tmp;
-	tmp = next % 10;
-	pBuff[index++] = '0' + tmp;
-	pBuff[index++] = ',';
-	tmp = s_unit.meas.info.dat.ibiki_val / 10000;
-	next = s_unit.meas.info.dat.ibiki_val % 10000;
-	pBuff[index++] = '0' + tmp;
-	tmp = next / 1000;
-	next = next % 1000;
+	// 呼吸音
+	tmp = s_unit.meas.info.dat.kokyu_val / 1000;
+	next = s_unit.meas.info.dat.kokyu_val % 1000;
 	pBuff[index++] = '0' + tmp;
 	tmp = next / 100;
 	next = next % 100;
@@ -516,6 +506,21 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	pBuff[index++] = ',';
 	
+	// いびき音
+	tmp = s_unit.meas.info.dat.ibiki_val / 1000;
+	next = s_unit.meas.info.dat.ibiki_val % 1000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 100;
+	next = next % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	
+	// 加速度(X)
 	if(s_unit.meas.info.dat.acl_x >= 0){
 		tmp = s_unit.meas.info.dat.acl_x / 100;
 		next = s_unit.meas.info.dat.acl_x % 100;
@@ -540,6 +545,7 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
+	// 加速度(Y)
 	if(s_unit.meas.info.dat.acl_y >= 0){
 		tmp = s_unit.meas.info.dat.acl_y / 100;
 		next = s_unit.meas.info.dat.acl_y % 100;
@@ -564,6 +570,7 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
+	// 加速度(Z)
 	if(s_unit.meas.info.dat.acl_z >= 0){
 		tmp = s_unit.meas.info.dat.acl_z / 100;
 		next = s_unit.meas.info.dat.acl_z % 100;
@@ -588,7 +595,16 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = ',';
 	}
 	
-	pBuff[index++] = '0';
+	// フォトセンサー
+	tmp = s_unit.meas.info.dat.photoref_val / 100;
+	next = s_unit.meas.info.dat.photoref_val % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
 }
@@ -3574,3 +3590,27 @@ STATIC void main_acl_read(void)
 	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
 
+STATIC UH main_photo_read(void)
+{
+	UH photoref_off_val;
+	UH photoref_on_val;
+	UH ret_photoref_val = 0;
+	
+	// フォトセンサー値取得
+	// OFF
+	adc_photoreflector( &photoref_off_val );
+	
+	// ON
+	P2_bit.no0 = 0;
+
+	wait_ms(1);
+	adc_photoreflector( &photoref_on_val );
+	P2_bit.no0 = 1;
+	
+	if(photoref_on_val > photoref_off_val)
+	{
+		ret_photoref_val = photoref_on_val - photoref_off_val;
+	}
+	
+	return ret_photoref_val;
+}

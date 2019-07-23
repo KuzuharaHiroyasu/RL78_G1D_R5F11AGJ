@@ -63,7 +63,6 @@ void R_ADC_Create(void)
     ADIF = 0U;  /* clear INTAD interrupt flag */
     /* The reset status of ADPC is analog input, so it's unnecessary to set. */
     /* Set ANI0 - ANI3 pin */
-    PM2 |= 0x0FU;
     ADM0 = _28_AD_CONVERSION_CLOCK_5 | _00_AD_TIME_MODE_NORMAL_1;
     ADM1 = _00_AD_TRIGGER_SOFTWARE | _20_AD_CONVMODE_ONESELECT;
     ADM2 = _00_AD_POSITIVE_VDD | _00_AD_NEGATIVE_VSS | _00_AD_AREA_MODE_1 | _00_AD_RESOLUTION_10BIT;

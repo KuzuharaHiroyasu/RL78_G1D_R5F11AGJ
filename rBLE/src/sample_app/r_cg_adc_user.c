@@ -58,6 +58,13 @@ void adc_ibiki_kokyu( uint16_t* ibiki, uint16_t* kokyu )
 	R_ADC_Set_OperationOff();
 }
 
+void adc_photoreflector( uint16_t* photoref )
+{
+	R_ADC_Set_OperationOn();
+	*photoref = adc_sub( ADCHANNEL1 );
+	R_ADC_Set_OperationOff();
+}
+
 static unsigned short adc_sub( unsigned char ad_type)
 {
 	unsigned short ad_val;
