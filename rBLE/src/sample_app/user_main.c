@@ -28,6 +28,8 @@
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 STATIC void make_send_data(char* pBuff);
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
+STATIC void user_main_calc_data_set_acl( void );
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_rest(void);
 STATIC void user_main_mode_idle_com(void);
@@ -205,6 +207,10 @@ void codeptr app_evt_usr_2(void)
 	}
 #endif
 	
+	// RD8001:加速度演算暫定追加
+	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
+	ke_msg_send(ke_msg);
+	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
 		return;
 	}
@@ -219,8 +225,9 @@ void codeptr app_evt_usr_2(void)
 	}
 	
 
-	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
-	ke_msg_send(ke_msg);
+	// RD8001:加速度演算暫定削除
+//	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
+//	ke_msg_send(ke_msg);
 #endif
 }
 
@@ -360,7 +367,20 @@ void user_main_timer_cyc( void )
 		dbg_len = strlen(dbg_tx_data);
 		com_srv_send(dbg_tx_data, dbg_len);
 #else
-		ke_evt_set(KE_EVT_USR_1_BIT);
+//		ke_evt_set(KE_EVT_USR_1_BIT);
+		
+		// 呼吸音、いびき音取得
+		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+		user_main_calc_data_set_kyokyu_ibiki();
+		
+		// 加速度取得
+		s_unit.acl_timing+=1;
+		if(s_unit.acl_timing >= ACL_TIMING_VAL){
+			s_unit.acl_timing = 0;
+			main_acl_read();
+			user_main_calc_data_set_acl();
+		}
+
 #endif
 		
 		s_unit.tick_10ms_new = 0;
@@ -376,6 +396,75 @@ void user_main_timer_cyc( void )
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
 		ke_evt_set(KE_EVT_USR_2_BIT);
 	}
+}
+
+/************************************************************************/
+/* 関数     : user_main_calc_data_set_kokyu_ibiki						*/
+/* 関数名   : 演算データセット処理(呼吸・いびき)						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.07.19 Axia Soft Design 和田	初版作成				*/
+/************************************************************************/
+/* 機能 : 演算データセット処理(呼吸・いびき)							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
+{
+	uint8_t *ke_msg;
+	
+	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
+		s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
+	}
+	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
+		s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
+	}
+	
+	// データフルで演算呼出
+	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+
+	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+	
+	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
+	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
+
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	
+}
+
+/************************************************************************/
+/* 関数     : user_main_calc_data_set_acl								*/
+/* 関数名   : 演算データセット処理(加速)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.07.19 Axia Soft Design 和田	初版作成				*/
+/************************************************************************/
+/* 機能 : 演算データセット処理(加速)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void user_main_calc_data_set_acl( void )
+{
+	uint8_t *ke_msg;
+	
+	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
+		s_unit.acl_x[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_x;
+		s_unit.acl_y[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_y;
+		s_unit.acl_z[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_z;
+	}
+	
+	// 加速の演算はユーザーイベント(1秒周期)で実施する
+	
+	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
+
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	
 }
 
 /************************************************************************/

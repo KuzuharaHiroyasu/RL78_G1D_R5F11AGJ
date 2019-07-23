@@ -276,6 +276,15 @@ _PLF_CODE static void plf_port_init(void)
     write1_sfr(P2, 3, PORT_LATCH);  // for SDIR
 #endif
 
+    // 以前R_PORT_Createで実施していた処理
+    //出力初期値
+    write1_sfr(P0, 3, 0);
+    write1_sfr(P1, 0, 0);
+    write1_sfr(POM0, 3, 1);
+    write1_sfr(PMC0, 3, 0);
+    write1_sfr(PM0, 3, 0);
+    write1_sfr(PM1, 0, 0);
+
     //P0.2 Digital i/o
     write1_sfr(PMC0, 2, 0);
     //P0.3 Digital i/o
@@ -300,6 +309,7 @@ _PLF_CODE static void plf_port_init(void)
     /*Pin I/O mode setting*/
     /* Below setting is for the case of ADPC != 0x00. */
     /* If ADPC == 0x00, it is not necessary to set PM24-PM27 and PM150-PM156 to output mode. */
+#if 0
     write_sfr(PM0,  0xEF);
 //    write_sfr(PM1,  0x7F);
     write_sfr(PM1,  0x7E);		//RD8001暫定：一部のポート修正
@@ -315,6 +325,23 @@ _PLF_CODE static void plf_port_init(void)
     write_sfr(PM12, 0xFF);
     write_sfr(PM14, 0x81);
     write_sfr(PM15, 0x80);
+#else
+    write_sfr(PM0,  0xEC);
+    write_sfr(PM1,  0x0A);		//RD8001暫定：一部のポート修正
+    write_sfr(PM2,  0x0E);
+    write_sfr(PM3,  0xFD);
+    write_sfr(PM4,  0x01);
+    write_sfr(PM5,  0x00);
+    write_sfr(PM6,  0x03);
+    write_sfr(PM7,  0xF7);
+    write_sfr(PM8,  0x00);
+    write_sfr(PM10, 0xF8);
+    write_sfr(PM11, 0xFC);
+    write_sfr(PM12, 0xFF);
+    write_sfr(PM14, 0x81);
+    write_sfr(PM15, 0x80);
+#endif
+
 #endif
 }
 

@@ -364,11 +364,11 @@ void arch_main_ent(void)
     {
         //LED activity
 //        led_blink();
-		// ユーザータイマー処理
-		user_main_timer_cyc();
+        // ユーザータイマー処理
+        user_main_timer_cyc();
 
         // schedule the BLE stack
-        // rwble_schedule();
+        rwble_schedule();
 
         // Checks for sleep have to be done with interrupt disabled
         GLOBAL_INT_DISABLE();

@@ -68,12 +68,12 @@ void R_PORT_Create(void)
 #else
 	// プラットフォームと競合しない様に修正
 	//出力初期値
-    P0_bit.no3 = 0;
-    P1_bit.no0 = 0;
-    POM0 |= _08_POMn3_NCH_ON;
-    PMC0 &= ~0x08;
-    PM0 &= ~0x08;
-    PM1 &= ~0x01;
+//    P0_bit.no3 = 0;
+//    P1_bit.no0 = 0;
+//    POM0 |= _08_POMn3_NCH_ON;
+//    PMC0 &= ~0x08;
+//    PM0 &= ~0x08;
+//    PM1 &= ~0x01;
     
     
 #endif
