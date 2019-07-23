@@ -23,7 +23,6 @@
 #include	"header.h"				//ユーザー定義
 
 #include	"r_vuart_app.h"
-#include	"vibration.h"
 
 // プロトタイプ宣言
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
