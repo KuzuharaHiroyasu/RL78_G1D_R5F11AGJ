@@ -18,6 +18,8 @@
 
 
 typedef enum{
+	VIB_MODE_ON,		// ON(単純動作)
+	VIB_MODE_OFF,		// OFF(単純動作)
 	VIB_MODE_WEAK,		// 弱
 	VIB_MODE_DURING,	// 中
 	VIB_MODE_STRENGTH,	// 強
@@ -30,6 +32,6 @@ typedef enum{
 /*  外部参照宣言  */
 /******************/
 extern void vib_start(UH vib_timer);
-extern void vib_on(VIB_MODE mode);
+extern void set_vib(VIB_MODE mode);
 
 #endif // __VIBRATION_INC__

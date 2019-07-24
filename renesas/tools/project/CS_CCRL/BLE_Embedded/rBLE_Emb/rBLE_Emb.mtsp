@@ -310,6 +310,11 @@
       <Type>Category</Type>
       <ParentItem>ead20ba7-026f-487d-aa45-4b1d6b5d4ca4</ParentItem>
     </Instance>
+    <Instance Guid="ddbffdd3-d9f7-4692-9a08-10a9f92359c0">
+      <Name>vibration</Name>
+      <Type>Category</Type>
+      <ParentItem>ead20ba7-026f-487d-aa45-4b1d6b5d4ca4</ParentItem>
+    </Instance>
     <Instance Guid="3cd31f20-5e31-4c46-81a7-f2e4196b3fed">
       <Name>cc_rl</Name>
       <Type>Category</Type>
@@ -564,6 +569,20 @@
       <RelativePath>..\..\..\..\..\src\driver\codeflash\cc_rl\fsl_types.h</RelativePath>
       <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
       <ParentItem>f395e8e3-fd8c-4f9b-9a40-d3c1bcb87714</ParentItem>
+    </Instance>
+    <Instance Guid="e4e6fca6-35f8-4cc7-97ad-d6ae2337b875">
+      <Name>vibration.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\src\driver\vibration\vibration.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>ddbffdd3-d9f7-4692-9a08-10a9f92359c0</ParentItem>
+    </Instance>
+    <Instance Guid="fca316f2-dca0-484f-9ec3-c6b9d5202dee">
+      <Name>vibration.h</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\src\driver\vibration\vibration.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>ddbffdd3-d9f7-4692-9a08-10a9f92359c0</ParentItem>
     </Instance>
     <Instance Guid="98637416-8be9-4a19-9cc0-5871b64c8475">
       <Name>sample</Name>
@@ -1182,7 +1201,9 @@
       <SourceItemType57>CSource</SourceItemType57>
       <SourceItemGuid58>4ef1aa47-b5d5-4b49-baf9-58b73eb4e67e</SourceItemGuid58>
       <SourceItemType58>CSource</SourceItemType58>
-      <SourceItemCount>59</SourceItemCount>
+      <SourceItemGuid59>e4e6fca6-35f8-4cc7-97ad-d6ae2337b875</SourceItemGuid59>
+      <SourceItemType59>CSource</SourceItemType59>
+      <SourceItemCount>60</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="6bb7060d-7e24-4135-bd9b-7db166417523">
@@ -1343,14 +1364,15 @@
       <COptionCheckLanguageExtension-DefaultValue>False</COptionCheckLanguageExtension-DefaultValue>
       <COptionMisraIntermodule-DefaultValue>False</COptionMisraIntermodule-DefaultValue>
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586437856214919504</TimeTagModified--0>
+      <TimeTagModified--0>-8586377331775648678</TimeTagModified--0>
       <COptionAsmPath-0>True</COptionAsmPath-0>
       <COptionChangeMessageError-0>No</COptionChangeMessageError-0>
       <COptionCharacterSet-0>Sjis</COptionCharacterSet-0>
       <COptionConvertCc-0>Ca78k0r</COptionConvertCc-0>
       <COptionDblSize-0>True</COptionDblSize-0>
       <COptionG-0>True</COptionG-0>
-      <COptionI-0>..\..\..\..\..\src\driver\codeflash\cc_rl
+      <COptionI-0>..\..\..\..\..\src\driver\vibration
+..\..\..\..\..\src\driver\codeflash\cc_rl
 ..\..\..\..\..\src\driver\codeflash
 ..\..\..\..\..\..\rBLE\src\sample_profile\vuart
 ..\..\..\..\..\src\driver\peak
@@ -1584,7 +1606,7 @@ noCFG_PKTMON
       <LinkOptionShowCFI-DefaultValue>False</LinkOptionShowCFI-DefaultValue>
       <LinkOptionRrmValue-DefaultValue />
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586726532935270025</TimeTagModified--0>
+      <TimeTagModified--0>-8586377334429836896</TimeTagModified--0>
       <LinkOptionAutoSectionLayout-0>True</LinkOptionAutoSectionLayout-0>
       <LinkOptionCpu-0>False</LinkOptionCpu-0>
       <LinkOptionDebug-0>Debug</LinkOptionDebug-0>
@@ -1796,7 +1818,7 @@ noCFG_PKTMON
       <LibOptionChangeMessageError-DefaultValue>None</LibOptionChangeMessageError-DefaultValue>
       <LibOptionChangeMessageErrorNumber-DefaultValue />
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586749843266071833</TimeTagModified--0>
+      <TimeTagModified--0>-8586377334429836896</TimeTagModified--0>
       <LibOptionDebug-0>Debug</LibOptionDebug-0>
       <LibOptionForm-0>LibraryU</LibOptionForm-0>
       <LibOptionInput-0 />
@@ -2253,6 +2275,14 @@ noCFG_PKTMON
       <ItemAddTime>636934564920202370</ItemAddTime>
       <ItemAddTimeCount>1</ItemAddTimeCount>
     </Instance>
+    <Instance Guid="fca316f2-dca0-484f-9ec3-c6b9d5202dee">
+      <ItemAddTime>636995029079197128</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="e4e6fca6-35f8-4cc7-97ad-d6ae2337b875">
+      <ItemAddTime>636995025984682560</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
     <Instance Guid="f782db2c-1c42-4ca1-af6a-53a3a5067217">
       <TimeTagModified-SourceItem0--0>-8587720036646824581</TimeTagModified-SourceItem0--0>
       <SourceItem0-IsLockedByUser>False</SourceItem0-IsLockedByUser>
@@ -2466,6 +2496,10 @@ noCFG_PKTMON
       <SourceItem58-IsLockedByUser>False</SourceItem58-IsLockedByUser>
       <SourceItem58-BuildingTarget-0>True</SourceItem58-BuildingTarget-0>
       <SourceItem58-IndividualCompileOption-0>False</SourceItem58-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem59--0>-8586377334870093248</TimeTagModified-SourceItem59--0>
+      <SourceItem59-IsLockedByUser>False</SourceItem59-IsLockedByUser>
+      <SourceItem59-BuildingTarget-0>True</SourceItem59-BuildingTarget-0>
+      <SourceItem59-IndividualCompileOption-0>False</SourceItem59-IndividualCompileOption-0>
     </Instance>
     <Instance Guid="0b7e78c3-aadd-45ee-9f9d-ffac6141eeb2">
       <TimeTagModified-SourceItem9--0>-8587695222820463075</TimeTagModified-SourceItem9--0>
