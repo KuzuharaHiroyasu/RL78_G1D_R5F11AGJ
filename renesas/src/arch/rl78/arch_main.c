@@ -177,8 +177,8 @@ typedef void (* RESET_FUNC )( void );
         /* fatal problem in software design (HEAP area is insufficient) */
         case CO_ERROR_HW_MEM_ALLOC_FAIL:
             /* LED1/2 OFF */
-            write1_sfrbit(LED01, OFF);
-            write1_sfrbit(LED02, OFF);
+//            write1_sfrbit(LED01, OFF);
+//            write1_sfrbit(LED02, OFF);
             break;
 
         /* fatal problem in board circuit design */
@@ -186,8 +186,8 @@ typedef void (* RESET_FUNC )( void );
         case CO_ERROR_HW_RF_INITIAL_ERR:
         case CO_ERROR_HW_RF_WAKEUP_ERR:
             /* LED1/2 ON */
-            write1_sfrbit(LED01, ON);
-            write1_sfrbit(LED02, ON);
+//            write1_sfrbit(LED01, ON);
+//            write1_sfrbit(LED02, ON);
             break;
 
         /* other error */
@@ -316,7 +316,7 @@ void arch_main_ent(void)
     GLOBAL_INT_START();
     
 #ifdef USE_FW_UPDATE_PROFILE
-    push_sw2_start( &FW_Update_push_sw_int );
+//    push_sw2_start( &FW_Update_push_sw_int );
 #endif
 
     // rBLE Initialize
