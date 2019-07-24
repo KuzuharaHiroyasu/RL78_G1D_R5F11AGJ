@@ -584,7 +584,11 @@ typedef struct{
 
 // 加速度センサ
 #define ACL_DEVICE_ADR			0x1C				// 加速度センサデバイスアドレス
-#define ACL_TIMING_VAL			10					// 加速度センサ処理タイミング
+#if FUNC_DEBUG_LOG == ON
+#define ACL_TIMING_VAL			10					// 加速度センサ・フォトセンサ処理タイミング
+#else
+#define ACL_TIMING_VAL			100					// 加速度センサ・フォトセンサ処理タイミング
+#endif
 #define I2C_LOCK_ERR_VAL		1000				// ロック異常判定閾値
 
 #define I2C_WAIT		255					// スタートコンディション待ち ※200us程度なので最大値を設定しておく
