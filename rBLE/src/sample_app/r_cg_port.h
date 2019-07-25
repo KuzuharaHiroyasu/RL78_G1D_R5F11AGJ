@@ -173,11 +173,6 @@ Macro definitions
 #define _7F_PMC14_DEFAULT       (0x7FU) /* PMC14 default value */
 
 
-
-#define DRV_O_PORT_H1D_INT		P1_bit.no0
-#define DRV_O_PORT_H1D_RESET	P0_bit.no3
-
-
 /***********************************************************************************************************************
 Typedef definitions
 ***********************************************************************************************************************/
@@ -186,9 +181,6 @@ Typedef definitions
 Global functions
 ***********************************************************************************************************************/
 void R_PORT_Create(void);
-void drv_o_port_h1d_int( UB data );
-void drv_o_port_h1d_reset( UB data );
-
 /* Start user code for function. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 #endif

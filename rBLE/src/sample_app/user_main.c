@@ -644,10 +644,6 @@ void user_system_init( void )
 	R_PORT_Create();
 	R_INTC_Create();
 	R_IT_Create();
-	
-	//RD8001暫定：H1D側リセット解除タイミング要検討。プラットフォーム。サブクロックが止まるとBLE関連が死ぬ
-	// H1Dのリセット解除はBLE処理前に必要
-	drv_o_port_h1d_reset( OFF );
 }
 
 /************************************************************************/
@@ -2993,25 +2989,7 @@ bool user_main_sleep(void)
 #else
 	bool ret = true;
 	
-	if( ON == drv_intp_read_h1d_int() ){
-		ret = false;
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}else{
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}
-	
 	if( OFF == cpu_com_get_can_sleep() ){
-		ret = false;
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}else{
-		// ポートOFFタイミングが無い為にここでOFFする
-		drv_o_port_h1d_int( OFF );
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}
-	
-	// H1Dプログラム書き換え中はスリープ無効
-	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
-		drv_o_port_h1d_int( ON );	// H1D側も起こしておく
 		ret = false;
 		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
