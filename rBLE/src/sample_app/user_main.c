@@ -113,8 +113,8 @@ STATIC void main_acl_start(void);
 STATIC void main_acl_read(void);
 
 // ˆÈ~‰‰ŽZ•”‚Ìˆ—
-static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+//static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+//static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -719,11 +719,6 @@ void user_main_init( void )
 #endif
 
 #endif
-
-
-
-
-
 
 }
 
@@ -2782,6 +2777,7 @@ void ds_set_vuart_send_status( UB status )
 // ============================
 // ˆÈ~‰‰ŽZ•”‚Ìˆ—
 // ============================
+/*
 static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -2810,7 +2806,6 @@ static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_ta
 	return (KE_MSG_CONSUMED);
 }
 
-
 static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -2825,6 +2820,7 @@ static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_
 	
 	return (KE_MSG_CONSUMED);
 }
+*/
 
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
@@ -3594,6 +3590,8 @@ STATIC UH main_photo_read(void)
 
 	wait_ms(1);
 	adc_photoreflector( &photoref_on_val );
+	
+	// OFF
 	P2_bit.no0 = 1;
 	
 	if(photoref_on_val > photoref_off_val)
