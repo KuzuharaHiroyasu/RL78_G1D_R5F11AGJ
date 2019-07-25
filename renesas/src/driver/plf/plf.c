@@ -278,9 +278,19 @@ _PLF_CODE static void plf_port_init(void)
 
     // 以前R_PORT_Createで実施していた処理
     //出力初期値
-    write1_sfr(P0, 3, 0);
-    write1_sfr(P1, 0, 0);
-    write1_sfr(POM0, 3, 1);
+	write1_sfr(P0, 0, 0);	// バイブレータEN
+	write1_sfr(P0, 1, 0);	// バイブレータ制御
+	write1_sfr(P0, 2, 0);	// 予備（呼吸音用ADC入力2）未使用なのでLOWのOUTPUTにしておく
+	write1_sfr(P0, 3, 0);	// 予備（いびき用ADC入力2）未使用なのでLOWのOUTPUTにしておく
+    write1_sfr(P1, 0, 0);	// 予備（バイブレータEN）  未使用なのでLOWのOUTPUTにしておく
+	write1_sfr(P1, 1, 0);	// 予備RXD（パソコン通信） 未使用なのでLOWのOUTPUTにしておく
+	write1_sfr(P1, 2, 0);	// 予備TXD（パソコン通信） 未使用なのでLOWのOUTPUTにしておく
+	write1_sfr(P1, 4, 1);	// 電源
+    write1_sfr(P1, 5, 0);	// LED(黄)
+    write1_sfr(P1, 6, 0);	// LED(緑)
+	write1_sfr(P2, 0, 1);	// フォトセンサー
+
+	write1_sfr(POM0, 3, 1);
     write1_sfr(PMC0, 3, 0);
     write1_sfr(PM0, 3, 0);
     write1_sfr(PM1, 0, 0);
@@ -310,8 +320,8 @@ _PLF_CODE static void plf_port_init(void)
     /* Below setting is for the case of ADPC != 0x00. */
     /* If ADPC == 0x00, it is not necessary to set PM24-PM27 and PM150-PM156 to output mode. */
 
-    write_sfr(PM0,  0xEC);
-    write_sfr(PM1,  0x0A);		//RD8001暫定：一部のポート修正
+    write_sfr(PM0,  0xE0);
+    write_sfr(PM1,  0x08);		//RD8001暫定：一部のポート修正
     write_sfr(PM2,  0x0E);
     write_sfr(PM3,  0xFD);
     write_sfr(PM4,  0x01);
