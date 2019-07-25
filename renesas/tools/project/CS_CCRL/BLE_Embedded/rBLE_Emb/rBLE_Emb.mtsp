@@ -734,12 +734,6 @@
       <ParentItem>15383882-2044-462a-b659-7e96380bb4f5</ParentItem>
       <Property>2716e006-b8d0-450b-a136-2876d5bb81e6</Property>
     </Instance>
-    <Instance Guid="63d89bfd-a080-4a4e-8eeb-a418c0e263e5">
-      <Name>pulseoximeter</Name>
-      <Type>Category</Type>
-      <ParentItem>15383882-2044-462a-b659-7e96380bb4f5</ParentItem>
-      <Property>3f6f8d83-11e2-4b6f-acc7-5e052abdc681</Property>
-    </Instance>
     <Instance Guid="a00be12f-7494-43da-81af-b319a2f9b317">
       <Name>calc_data.c</Name>
       <Type>File</Type>
@@ -774,41 +768,6 @@
       <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\apnea\calc_snore.c</RelativePath>
       <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
       <ParentItem>5d87e470-1af1-4895-b3e3-12305348b912</ParentItem>
-    </Instance>
-    <Instance Guid="291cd6e3-02a8-417a-98aa-6970b737dee7">
-      <Name>cal_sp1.c</Name>
-      <Type>File</Type>
-      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\pulseoximeter\cal_sp1.c</RelativePath>
-      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
-      <ParentItem>63d89bfd-a080-4a4e-8eeb-a418c0e263e5</ParentItem>
-    </Instance>
-    <Instance Guid="142f9710-979d-45fb-8117-92f7ffbc3b14">
-      <Name>calc_pulseoximeter.c</Name>
-      <Type>File</Type>
-      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\pulseoximeter\calc_pulseoximeter.c</RelativePath>
-      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
-      <ParentItem>63d89bfd-a080-4a4e-8eeb-a418c0e263e5</ParentItem>
-    </Instance>
-    <Instance Guid="20c52a93-7fcc-4648-8426-e0bdfe12c7c0">
-      <Name>ifft.c</Name>
-      <Type>File</Type>
-      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\pulseoximeter\ifft.c</RelativePath>
-      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
-      <ParentItem>63d89bfd-a080-4a4e-8eeb-a418c0e263e5</ParentItem>
-    </Instance>
-    <Instance Guid="9902e736-7092-4c21-a1e3-4a1bd09860f7">
-      <Name>peak_modify.c</Name>
-      <Type>File</Type>
-      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\pulseoximeter\peak_modify.c</RelativePath>
-      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
-      <ParentItem>63d89bfd-a080-4a4e-8eeb-a418c0e263e5</ParentItem>
-    </Instance>
-    <Instance Guid="337b709c-737d-4f64-a1fb-2e5a1a6b7661">
-      <Name>peak_vallay.c</Name>
-      <Type>File</Type>
-      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\calc\pulseoximeter\peak_vallay.c</RelativePath>
-      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
-      <ParentItem>63d89bfd-a080-4a4e-8eeb-a418c0e263e5</ParentItem>
     </Instance>
     <Instance Guid="27ec6a2d-444d-4e17-829c-0caad8c73a6a">
       <Name>vuart</Name>
@@ -1017,9 +976,6 @@
     <Instance Guid="2716e006-b8d0-450b-a136-2876d5bb81e6">
       <MemoCount>0</MemoCount>
     </Instance>
-    <Instance Guid="3f6f8d83-11e2-4b6f-acc7-5e052abdc681">
-      <MemoCount>0</MemoCount>
-    </Instance>
     <Instance Guid="272ccda7-4796-4b75-89c0-1fa8c286e4f7">
       <MemoCount>0</MemoCount>
     </Instance>
@@ -1160,23 +1116,13 @@
       <SourceItemType47>CSource</SourceItemType47>
       <SourceItemGuid48>23baddb3-effa-44ac-a98c-c55ffea91e93</SourceItemGuid48>
       <SourceItemType48>CSource</SourceItemType48>
-      <SourceItemGuid49>291cd6e3-02a8-417a-98aa-6970b737dee7</SourceItemGuid49>
+      <SourceItemGuid49>81c55978-5ede-48de-869f-113bafbb0307</SourceItemGuid49>
       <SourceItemType49>CSource</SourceItemType49>
-      <SourceItemGuid50>142f9710-979d-45fb-8117-92f7ffbc3b14</SourceItemGuid50>
+      <SourceItemGuid50>8c87bdfb-27a3-478e-aca7-7ccdda83566d</SourceItemGuid50>
       <SourceItemType50>CSource</SourceItemType50>
-      <SourceItemGuid51>20c52a93-7fcc-4648-8426-e0bdfe12c7c0</SourceItemGuid51>
+      <SourceItemGuid51>4ef1aa47-b5d5-4b49-baf9-58b73eb4e67e</SourceItemGuid51>
       <SourceItemType51>CSource</SourceItemType51>
-      <SourceItemGuid52>9902e736-7092-4c21-a1e3-4a1bd09860f7</SourceItemGuid52>
-      <SourceItemType52>CSource</SourceItemType52>
-      <SourceItemGuid53>337b709c-737d-4f64-a1fb-2e5a1a6b7661</SourceItemGuid53>
-      <SourceItemType53>CSource</SourceItemType53>
-      <SourceItemGuid54>81c55978-5ede-48de-869f-113bafbb0307</SourceItemGuid54>
-      <SourceItemType54>CSource</SourceItemType54>
-      <SourceItemGuid55>8c87bdfb-27a3-478e-aca7-7ccdda83566d</SourceItemGuid55>
-      <SourceItemType55>CSource</SourceItemType55>
-      <SourceItemGuid56>4ef1aa47-b5d5-4b49-baf9-58b73eb4e67e</SourceItemGuid56>
-      <SourceItemType56>CSource</SourceItemType56>
-      <SourceItemCount>57</SourceItemCount>
+      <SourceItemCount>52</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="6bb7060d-7e24-4135-bd9b-7db166417523">
@@ -1579,7 +1525,7 @@ noCFG_PKTMON
       <LinkOptionShowCFI-DefaultValue>False</LinkOptionShowCFI-DefaultValue>
       <LinkOptionRrmValue-DefaultValue />
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586375087392851249</TimeTagModified--0>
+      <TimeTagModified--0>-8586375084671619944</TimeTagModified--0>
       <LinkOptionAutoSectionLayout-0>True</LinkOptionAutoSectionLayout-0>
       <LinkOptionCpu-0>False</LinkOptionCpu-0>
       <LinkOptionDebug-0>Debug</LinkOptionDebug-0>
@@ -1791,7 +1737,7 @@ noCFG_PKTMON
       <LibOptionChangeMessageError-DefaultValue>None</LibOptionChangeMessageError-DefaultValue>
       <LibOptionChangeMessageErrorNumber-DefaultValue />
       <IsLockedByUser>False</IsLockedByUser>
-      <TimeTagModified--0>-8586375087392851249</TimeTagModified--0>
+      <TimeTagModified--0>-8586375084671619944</TimeTagModified--0>
       <LibOptionDebug-0>Debug</LibOptionDebug-0>
       <LibOptionForm-0>LibraryU</LibOptionForm-0>
       <LibOptionInput-0 />
@@ -2196,26 +2142,6 @@ noCFG_PKTMON
       <ItemAddTime>636645826847939901</ItemAddTime>
       <ItemAddTimeCount>2</ItemAddTimeCount>
     </Instance>
-    <Instance Guid="291cd6e3-02a8-417a-98aa-6970b737dee7">
-      <ItemAddTime>636645827126712391</ItemAddTime>
-      <ItemAddTimeCount>0</ItemAddTimeCount>
-    </Instance>
-    <Instance Guid="142f9710-979d-45fb-8117-92f7ffbc3b14">
-      <ItemAddTime>636645827126712391</ItemAddTime>
-      <ItemAddTimeCount>1</ItemAddTimeCount>
-    </Instance>
-    <Instance Guid="20c52a93-7fcc-4648-8426-e0bdfe12c7c0">
-      <ItemAddTime>636645827126712391</ItemAddTime>
-      <ItemAddTimeCount>2</ItemAddTimeCount>
-    </Instance>
-    <Instance Guid="9902e736-7092-4c21-a1e3-4a1bd09860f7">
-      <ItemAddTime>636645827126712391</ItemAddTime>
-      <ItemAddTimeCount>3</ItemAddTimeCount>
-    </Instance>
-    <Instance Guid="337b709c-737d-4f64-a1fb-2e5a1a6b7661">
-      <ItemAddTime>636645827126712391</ItemAddTime>
-      <ItemAddTimeCount>4</ItemAddTimeCount>
-    </Instance>
     <Instance Guid="23baddb3-effa-44ac-a98c-c55ffea91e93">
       <ItemAddTime>636682975044202249</ItemAddTime>
       <ItemAddTimeCount>0</ItemAddTimeCount>
@@ -2417,38 +2343,18 @@ noCFG_PKTMON
       <SourceItem48-IsLockedByUser>False</SourceItem48-IsLockedByUser>
       <SourceItem48-BuildingTarget-0>True</SourceItem48-BuildingTarget-0>
       <SourceItem48-IndividualCompileOption-0>False</SourceItem48-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem49--0>-8586726533728063417</TimeTagModified-SourceItem49--0>
+      <TimeTagModified-SourceItem49--0>-8587282771218360203</TimeTagModified-SourceItem49--0>
       <SourceItem49-IsLockedByUser>False</SourceItem49-IsLockedByUser>
       <SourceItem49-BuildingTarget-0>True</SourceItem49-BuildingTarget-0>
       <SourceItem49-IndividualCompileOption-0>False</SourceItem49-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem50--0>-8586726533728063417</TimeTagModified-SourceItem50--0>
+      <TimeTagModified-SourceItem50--0>-8587282771218360203</TimeTagModified-SourceItem50--0>
       <SourceItem50-IsLockedByUser>False</SourceItem50-IsLockedByUser>
       <SourceItem50-BuildingTarget-0>True</SourceItem50-BuildingTarget-0>
       <SourceItem50-IndividualCompileOption-0>False</SourceItem50-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem51--0>-8586726533728063417</TimeTagModified-SourceItem51--0>
+      <TimeTagModified-SourceItem51--0>-8586749845235272088</TimeTagModified-SourceItem51--0>
       <SourceItem51-IsLockedByUser>False</SourceItem51-IsLockedByUser>
       <SourceItem51-BuildingTarget-0>True</SourceItem51-BuildingTarget-0>
       <SourceItem51-IndividualCompileOption-0>False</SourceItem51-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem52--0>-8586726533728063417</TimeTagModified-SourceItem52--0>
-      <SourceItem52-IsLockedByUser>False</SourceItem52-IsLockedByUser>
-      <SourceItem52-BuildingTarget-0>True</SourceItem52-BuildingTarget-0>
-      <SourceItem52-IndividualCompileOption-0>False</SourceItem52-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem53--0>-8586726533728063417</TimeTagModified-SourceItem53--0>
-      <SourceItem53-IsLockedByUser>False</SourceItem53-IsLockedByUser>
-      <SourceItem53-BuildingTarget-0>True</SourceItem53-BuildingTarget-0>
-      <SourceItem53-IndividualCompileOption-0>False</SourceItem53-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem54--0>-8587282771218360203</TimeTagModified-SourceItem54--0>
-      <SourceItem54-IsLockedByUser>False</SourceItem54-IsLockedByUser>
-      <SourceItem54-BuildingTarget-0>True</SourceItem54-BuildingTarget-0>
-      <SourceItem54-IndividualCompileOption-0>False</SourceItem54-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem55--0>-8587282771218360203</TimeTagModified-SourceItem55--0>
-      <SourceItem55-IsLockedByUser>False</SourceItem55-IsLockedByUser>
-      <SourceItem55-BuildingTarget-0>True</SourceItem55-BuildingTarget-0>
-      <SourceItem55-IndividualCompileOption-0>False</SourceItem55-IndividualCompileOption-0>
-      <TimeTagModified-SourceItem56--0>-8586749845235272088</TimeTagModified-SourceItem56--0>
-      <SourceItem56-IsLockedByUser>False</SourceItem56-IsLockedByUser>
-      <SourceItem56-BuildingTarget-0>True</SourceItem56-BuildingTarget-0>
-      <SourceItem56-IndividualCompileOption-0>False</SourceItem56-IndividualCompileOption-0>
     </Instance>
     <Instance Guid="0b7e78c3-aadd-45ee-9f9d-ffac6141eeb2">
       <TimeTagModified-SourceItem9--0>-8587695222820463075</TimeTagModified-SourceItem9--0>
