@@ -641,7 +641,6 @@ UW time_get_elapsed_time( void )
 /************************************************************************/
 void user_system_init( void )
 {
-	R_PORT_Create();
 	R_INTC_Create();
 	R_IT_Create();
 }
