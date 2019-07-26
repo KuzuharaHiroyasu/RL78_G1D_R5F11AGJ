@@ -1478,7 +1478,7 @@ STATIC SYSTEM_MODE evt_idle_rest( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_REST;
 	
-	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
 			system_mode = SYSTEM_MODE_NON;
 	}
 
@@ -1518,7 +1518,7 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
-	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
 			system_mode = SYSTEM_MODE_NON;
 	}
 	
@@ -1637,7 +1637,7 @@ STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_H1D;
 	
-	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
 			system_mode = SYSTEM_MODE_NON;
 	}
 
@@ -1659,7 +1659,7 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_G1D;
 	
-	if( s_unit.denchi_sts == DENCH_ZANRYO_STS_MIN ){
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
 			system_mode = SYSTEM_MODE_NON;
 	}
 
@@ -1976,14 +1976,14 @@ STATIC void main_cpu_com_rcv_sts_res( void )
 	s_unit.date.sec		 = s_ds.cpu_com.input.rcv_data[9];
 
 	// 電池状態更新
-	s_unit.denchi_sts = s_ds.cpu_com.input.rcv_data[10];
+	s_unit.battery_sts = s_ds.cpu_com.input.rcv_data[10];
 	
 	now_time = time_get_elapsed_time();
 	
-	if(( DENCH_ZANRYO_STS_MIN == s_unit.denchi_sts ) &&
-	   (( now_time - s_unit.last_time_dench_zanryou_min ) > TIME_CNT_DENCH_ZANRYO_MIN_INTERVAL )){
+	if(( BAT_LEVEL_STS_MIN == s_unit.battery_sts ) &&
+	   (( now_time - s_unit.last_time_battery_level_min ) > TIME_CNT_BAT_LEVEL_MIN_INTERVAL )){
 		evt_act( EVENT_DENCH_LOW );			// 電池残量低下
-		s_unit.last_time_dench_zanryou_min = now_time;
+		s_unit.last_time_battery_level_min = now_time;
 	}
 }
 
@@ -2396,7 +2396,7 @@ STATIC void main_vuart_rcv_info( void )
 	
 	tx[0] = VUART_CMD_INFO;
 	tx[1] = result;
-	tx[2] = s_unit.denchi_sts;
+	tx[2] = s_unit.battery_sts;
 	main_vuart_send( &tx[0], VUART_SND_LEN_INFO );
 }
 
@@ -3631,17 +3631,17 @@ void reset_vib_timer(void)
 /************************************************************************/
 void main_set_battery(void)
 {
-	UH battery_val = BATTERY_LEVEL_1_VAL;
+	UH battery_val = BAT_LEVEL_1_VAL;
 	
-	adc_dench( &battery_val );
+	adc_battery( &battery_val );
 	
-	if( battery_val >= BATTERY_LEVEL_1_VAL ){
-		s_unit.battery_sts = BATTERY_LEVEL_STS_MAX;
-	}else if( battery_val >= BATTERY_LEVEL_2_VAL ){
-		s_unit.battery_sts = BATTERY_LEVEL_STS_HIGH;
-	}else if( battery_val >= BATTERY_LEVEL_3_VAL ){
-		s_unit.battery_sts = BATTERY_LEVEL_STS_LOW;
+	if( battery_val >= BAT_LEVEL_1_VAL ){
+		s_unit.battery_sts = BAT_LEVEL_STS_MAX;
+	}else if( battery_val >= BAT_LEVEL_2_VAL ){
+		s_unit.battery_sts = BAT_LEVEL_STS_HIGH;
+	}else if( battery_val >= BAT_LEVEL_3_VAL ){
+		s_unit.battery_sts = BAT_LEVEL_STS_LOW;
 	}else{
-		s_unit.battery_sts = BATTERY_LEVEL_STS_MIN;
+		s_unit.battery_sts = BAT_LEVEL_STS_MIN;
 	}
 }

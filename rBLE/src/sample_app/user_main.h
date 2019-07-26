@@ -127,16 +127,16 @@ typedef enum{
 }ERR_ID;
 
 // 電池残量閾値
-#define BATTERY_LEVEL_1_VAL						(UH)( 1023.0 * (1.95 / 3.0 ))		// 1.95V以上
-#define BATTERY_LEVEL_2_VAL						(UH)( 1023.0 * (1.72 / 3.0 ))		// 1.72V以上
-#define BATTERY_LEVEL_3_VAL						(UH)( 1023.0 * (1.5 / 3.0 ))		// 1.5V以上
-#define BATTERY_LEVEL_CHG_FIN_VAL				(UH)( 1023.0 * (2.0 / 3.0 ))		// 2.0V以上
+#define BAT_LEVEL_1_VAL						(UH)( 1023.0 * (1.95 / 3.0 ))		// 1.95V以上
+#define BAT_LEVEL_2_VAL						(UH)( 1023.0 * (1.72 / 3.0 ))		// 1.72V以上
+#define BAT_LEVEL_3_VAL						(UH)( 1023.0 * (1.5 / 3.0 ))		// 1.5V以上
+#define BAT_LEVEL_CHG_FIN_VAL				(UH)( 1023.0 * (2.0 / 3.0 ))		// 2.0V以上
 
 // 電池残量状態
-#define BATTERY_LEVEL_STS_MAX					0	// 充電満タン
-#define BATTERY_LEVEL_STS_HIGH					1	// 数日持つ
-#define BATTERY_LEVEL_STS_LOW					2	// 残り１日持たない
-#define BATTERY_LEVEL_STS_MIN					3	// 電池残量なし
+#define BAT_LEVEL_STS_MAX					0	// 充電満タン
+#define BAT_LEVEL_STS_HIGH					1	// 数日持つ
+#define BAT_LEVEL_STS_LOW					2	// 残り１日持たない
+#define BAT_LEVEL_STS_MIN					3	// 電池残量なし
 
 
 // プログラムシーケンス
@@ -160,7 +160,7 @@ typedef enum{
 #define		TIME_CNT_DISP_SELF_CHECK_FIN			(300)		/* 自己診断完了表示(3秒) */
 
 
-#define		TIME_CNT_DENCH_ZANRYO_MIN_INTERVAL		(100)		/* 電池残量低下通知インターバル(1秒) */
+#define		TIME_CNT_BAT_LEVEL_MIN_INTERVAL		(100)		/* 電池残量低下通知インターバル(1秒) */
 
 
 
@@ -402,7 +402,7 @@ typedef struct{
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	
-	UW last_time_dench_zanryou_min;			// 電池残量低下時間[10ms]
+	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	
 	
 	// 以降ワーク領域
