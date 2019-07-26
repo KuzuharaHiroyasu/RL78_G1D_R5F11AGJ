@@ -182,4 +182,9 @@ Global functions
 ***********************************************************************************************************************/
 /* Start user code for function. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
+#define DRV_I_PORT_INSPECTION			P12_bit.no0			// åüç∏
+#define DRV_I_PORT_BAT_CHG_DETECT		P1_bit.no3			// ìdírè[ìdåüím
+
+extern UB drv_i_port_inspection( void );
+extern UB drv_i_port_bat_chg_detect( void );
 #endif
