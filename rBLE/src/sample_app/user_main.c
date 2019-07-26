@@ -1198,7 +1198,7 @@ STATIC void user_main_mode_get(void)
 			tx[3] = (( calc_eep.info.dat.ibiki_val & 0xff00 ) >> 8 );
 			tx[4] = calc_eep.info.dat.myaku_val;
 			tx[5] = calc_eep.info.dat.spo2_val;
-			tx[6] = calc_eep.info.dat.kubi;
+			tx[6] = calc_eep.info.dat.body_direct;
 			main_vuart_send( &tx[0], 7 );
 			s_unit.get_mode_calc_cnt++;
 		}
@@ -2567,7 +2567,7 @@ void main_vuart_rcv_data_calc( void )
 	s_unit.calc.info.dat.ibiki_val += s_ds.vuart.input.rcv_data[2];
 	s_unit.calc.info.dat.myaku_val = s_ds.vuart.input.rcv_data[4];
 	s_unit.calc.info.dat.spo2_val = s_ds.vuart.input.rcv_data[5];
-	s_unit.calc.info.dat.kubi = s_ds.vuart.input.rcv_data[6];
+	s_unit.calc.info.dat.body_direct = s_ds.vuart.input.rcv_data[6];
 	
 //	memcpy(&s_unit.calc.info.byte[0], &s_ds.vuart.input.rcv_data[1], ( VUART_CMD_LEN_DATA_CALC - VUART_CMD_ONLY_SIZE ));
 	user_main_calc_result();
@@ -2915,50 +2915,29 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	acc_x = s_unit.acl_x[s_unit.acl_cnt];
 //	acc_y = s_unit.acl_y[s_unit.acl_cnt];		//Œ»ó–¢Žg—p
 	acc_z = s_unit.acl_z[s_unit.acl_cnt];
-	
+
 	s_unit.acl_cnt = 0;
 	
-	// ƒf[ƒ^Ši”[
-#if 0
-	// 45‹‚Ý
-	if( acc_z > 48 ){
-		s_unit.calc.info.dat.kubi = 0;
-	}else if( acc_z > 16 ){
-		if( acc_x < 0 ){
-			s_unit.calc.info.dat.kubi = 1;	// 45‹
-		}else{
-			s_unit.calc.info.dat.kubi = 7;	// 315‹
+	// ‘Ì‚ÌŒü‚«”»’è
+	if( 0 <= acc_x )
+	{// ã or ¶
+		if( 0 <= acc_z )
+		{// ¶
+			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_LEFT;
+		} else {
+		 // ã
+			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_UP;
 		}
-	}else if( acc_z > -16 ){
-		if( acc_x < 0 ){
-			s_unit.calc.info.dat.kubi = 2;	// 90‹
-		}else{
-			s_unit.calc.info.dat.kubi = 6;	// 270‹
+	} else {
+	// ‰º or ‰E
+		if( 0 <= acc_z )
+		{// ‰º
+			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_DOWN;
+		} else {
+		 // ‰E
+			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_RIGHT;
 		}
-	}else if( acc_z > -48 ){
-		if( acc_x < 0 ){
-			s_unit.calc.info.dat.kubi = 3;	// 180‹
-		}else{
-			s_unit.calc.info.dat.kubi = 5;	// 225‹
-		}
-	}else{
-		s_unit.calc.info.dat.kubi = 4;	// 180‹
 	}
-#else
-	// 90‹‚Ý ¦64`-64‚Ì129•ªŠ„ 0‚Ì•ª”z‚ª1‘½‚¢
-	if( acc_z >= 32 ){
-		s_unit.calc.info.dat.kubi = 0;		// 0‹`45‹,316‹`360‹
-	}else if( acc_z >= -32 ){
-		if( acc_x < 0 ){
-			s_unit.calc.info.dat.kubi = 1;	// 46‹`135‹
-		}else{
-			s_unit.calc.info.dat.kubi = 3;	// 136‹`225‹
-		}
-	}else{
-		s_unit.calc.info.dat.kubi = 2;	// 226‹`315‹
-	}
-#endif
-
 	
 	return (KE_MSG_CONSUMED);
 }

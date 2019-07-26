@@ -138,6 +138,11 @@ typedef enum{
 #define BAT_LEVEL_STS_LOW					2	// 残り１日持たない
 #define BAT_LEVEL_STS_MIN					3	// 電池残量なし
 
+// 体の向き
+#define BODY_DIRECTION_LEFT					0	// 左向き
+#define BODY_DIRECTION_UP					1	// 上向き
+#define BODY_DIRECTION_RIGHT				2	// 右向き
+#define BODY_DIRECTION_DOWN					3	// 下向き
 
 // プログラムシーケンス
 typedef enum{
@@ -257,7 +262,7 @@ typedef struct{
 			UB	state;			/* 状態 */
 			UB	myaku_val;
 			UB	spo2_val;
-			UB	kubi;
+			UB	body_direct;		// 体の向き
 			UB	dummy_1;			/* 境界値調整用 */
 			UB	dummy_2;			/* 境界値調整用 */
 		}dat;
