@@ -3617,3 +3617,31 @@ void reset_vib_timer(void)
 {
 	s_unit.tick_vib_10ms_sec = 0;
 }
+
+/************************************************************************/
+/* 関数     : main_set_battery											*/
+/* 関数名   : 電池残量設定												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.26 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void main_set_battery(void)
+{
+	UH battery_val = BATTERY_LEVEL_1_VAL;
+	
+	adc_dench( &battery_val );
+	
+	if( battery_val >= BATTERY_LEVEL_1_VAL ){
+		s_unit.battery_sts = BATTERY_LEVEL_STS_MAX;
+	}else if( battery_val >= BATTERY_LEVEL_2_VAL ){
+		s_unit.battery_sts = BATTERY_LEVEL_STS_HIGH;
+	}else if( battery_val >= BATTERY_LEVEL_3_VAL ){
+		s_unit.battery_sts = BATTERY_LEVEL_STS_LOW;
+	}else{
+		s_unit.battery_sts = BATTERY_LEVEL_STS_MIN;
+	}
+}

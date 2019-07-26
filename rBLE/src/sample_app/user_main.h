@@ -126,12 +126,17 @@ typedef enum{
 	ERR_ID_MAX									/* 異常ID最大	*/
 }ERR_ID;
 
+// 電池残量閾値
+#define BATTERY_LEVEL_1_VAL						(UH)( 1023.0 * (1.95 / 3.0 ))		// 1.95V以上
+#define BATTERY_LEVEL_2_VAL						(UH)( 1023.0 * (1.72 / 3.0 ))		// 1.72V以上
+#define BATTERY_LEVEL_3_VAL						(UH)( 1023.0 * (1.5 / 3.0 ))		// 1.5V以上
+#define BATTERY_LEVEL_CHG_FIN_VAL				(UH)( 1023.0 * (2.0 / 3.0 ))		// 2.0V以上
 
-// 電池残量状態 ※H1D/G1D共通
-#define DENCH_ZANRYO_STS_MAX					0	// 充電満タン
-#define DENCH_ZANRYO_STS_HIGH					1	// 数日持つ
-#define DENCH_ZANRYO_STS_LOW					2	// 残り１日持たない
-#define DENCH_ZANRYO_STS_MIN					3	// 電池残量なし
+// 電池残量状態
+#define BATTERY_LEVEL_STS_MAX					0	// 充電満タン
+#define BATTERY_LEVEL_STS_HIGH					1	// 数日持つ
+#define BATTERY_LEVEL_STS_LOW					2	// 残り１日持たない
+#define BATTERY_LEVEL_STS_MIN					3	// 電池残量なし
 
 
 // プログラムシーケンス
@@ -355,7 +360,7 @@ typedef struct{
 	UW last_sensing_data_rcv;		//前回センシングデータ受信
 	UB sensing_flg;					// センシング中フラグ
 	
-	UB denchi_sts;			// 電池状態
+	UB battery_sts;			// 電池状態
 	H1D_INFO h1d;			// H1D情報
 	H1D_INFO h1d_last;		// H1D情報(前回)
 	

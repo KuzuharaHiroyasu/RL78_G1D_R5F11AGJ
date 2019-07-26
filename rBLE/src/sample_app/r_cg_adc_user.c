@@ -65,6 +65,13 @@ void adc_photoreflector( uint16_t* photoref )
 	R_ADC_Set_OperationOff();
 }
 
+void adc_battery( uint16_t* battery )
+{
+	R_ADC_Set_OperationOn();
+	*battery = adc_sub( ADCHANNEL18 );
+	R_ADC_Set_OperationOff();
+}
+
 static unsigned short adc_sub( unsigned char ad_type)
 {
 	unsigned short ad_val;
