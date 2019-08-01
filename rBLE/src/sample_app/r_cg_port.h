@@ -184,7 +184,9 @@ Global functions
 /* End user code. Do not edit comment generated here */
 #define DRV_I_PORT_INSPECTION			P12_bit.no0			// 検査
 #define DRV_I_PORT_BAT_CHG_DETECT		P1_bit.no3			// 電池充電検知
+#define DRV_I_PORT_POW_SW				P13_bit.no7			// 電源SW
 
 extern UB drv_i_port_inspection( void );
 extern UB drv_i_port_bat_chg_detect( void );
+extern UB drv_i_port_read_pow_sw( void );
 #endif

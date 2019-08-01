@@ -76,12 +76,13 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DATA_END,		VUART_CMD_LEN_DATA_END,		main_vuart_rcv_data_end			},	// END[受信はSET時]
 	{	VUART_CMD_DATA_FRAME,	VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
 	{	VUART_CMD_DATA_CALC,	VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
-	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// 機器データ[受信はSET時]
+	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// データ取得完了通知
 	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_vuart_rcv_prg_hd_record	},	// プログラム転送(データ)
 	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_vuart_rcv_prg_hd_result	},	// プログラム転送結果
 	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_vuart_rcv_prg_hd_update	},	// プログラム更新完了確認
-	{	VUART_CMD_ALARM_SET,	VUART_CMD_LEN_ALARM_SET,	main_vuart_rcv_alarm_set		},	// アラーム設定変更
-	{	VUART_CMD_ALARM_INFO,	0,							NULL							},	// アラーム通知[送信専用]
+	{	VUART_CMD_DEVICE_SET,	VUART_CMD_LEN_DEVICE_SET,	main_vuart_rcv_device_set		},	// デバイス設定変更
+//	{	VUART_CMD_ALARM_SET,	VUART_CMD_LEN_ALARM_SET,	main_vuart_rcv_alarm_set		},	// アラーム設定変更
+//	{	VUART_CMD_ALARM_INFO,	0,							NULL							},	// アラーム通知[送信専用]
 };
 
 /* モード別処理 */
@@ -103,7 +104,8 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 // モード				INITAL				IDLE_REST			IDLE_COM			SENSING			GET					PRG_H1D				PRG_G1D			SELF_CHECK		MOVE				NON
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW(短)		*/	{ evt_idle_rest,	evt_sensing,		evt_sensing_chg,	evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*電源SW押下(長)	*/	{ evt_non,			evt_initial,		evt_initial_chg,	evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+///*電源SW押下(長)	*/	{ evt_non,			evt_initial,		evt_initial_chg,	evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW押下(長)	*/	{ evt_non,			evt_sensing,		evt_sensing_chg,	evt_idle_com,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートON	*/	{ evt_idle_com,		evt_idle_com,		evt_non,			evt_idle_com,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,			evt_non,		evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電池残量低下		*/	{ evt_non,			evt_non,			evt_initial,		evt_initial,	evt_non,			evt_non,			evt_non,		evt_non,		evt_non,			evt_non },

@@ -45,6 +45,7 @@ STATIC void main_cpu_com_proc(void);
 STATIC void main_cpu_com_rcv_sts_res( void );
 STATIC void main_cpu_com_rcv_sensor_res( void );
 STATIC void main_cpu_com_rcv_mode_chg( void );
+STATIC void main_mode_chg( void );				// ■暫定
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
 STATIC void user_main_mode( void );
 STATIC void user_main_mode_common( void );
@@ -56,6 +57,7 @@ STATIC void main_vuart_rcv_date( void );
 STATIC void main_vuart_rcv_info( void );
 STATIC void main_vuart_rcv_version( void );
 STATIC void main_vuart_rcv_device_info( void );
+STATIC void sw_proc(void);
 STATIC void user_main_calc_result( void );
 STATIC void user_main_mode_sensing_before( void );
 STATIC void user_main_mode_sensing_after( void );
@@ -100,8 +102,9 @@ void main_vuart_rcv_data_calc( void );
 void main_vuart_rcv_data_end( void );
 STATIC void main_vuart_rcv_data_fin( void );
 void main_vuart_rcv_date( void );
-void main_vuart_rcv_alarm_set( void );
-void main_vuart_snd_alarm_info( UB type, UB data );
+void main_vuart_rcv_device_set( void );
+//void main_vuart_rcv_alarm_set( void );
+//void main_vuart_snd_alarm_info( UB type, UB data );
 
 STATIC void AlarmSnore(UB oldstate, UB newstate);
 STATIC void AlarmApnea(UB oldstate, UB newstate);
@@ -208,9 +211,9 @@ void codeptr app_evt_usr_2(void)
 	}
 #endif
 	
-	// RD8001:加速度演算暫定追加
-	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
-	ke_msg_send(ke_msg);
+	// RD8001:加速度演算暫定追加 ■暫定
+//	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
+//	ke_msg_send(ke_msg);
 	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
 		return;
@@ -225,10 +228,9 @@ void codeptr app_evt_usr_2(void)
 		ke_msg_send(ke_msg);
 	}
 	
-
-	// RD8001:加速度演算暫定削除
-//	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
-//	ke_msg_send(ke_msg);
+	// 加速度演算
+	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
+	ke_msg_send(ke_msg);
 #endif
 }
 
@@ -277,6 +279,8 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 	int dbg_len = sizeof(dummydata);
 	com_srv_send(dummydata, dbg_len);
 #else
+	sw_proc();				// SW検知処理
+	
 	cpu_com_proc();			// CPU間通信サービス
 	
 	main_vuart_proc();		// VUART通信サービス
@@ -411,7 +415,7 @@ void user_main_timer_cyc( void )
 /* 関数名   : 演算データセット処理(呼吸・いびき)						*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴	: 2019.07.19 Axia Soft Design 和田	初版作成				*/
+/* 変更履歴	: 2019.07.19 Axia Soft Design 和田 耕太	初版作成			*/
 /************************************************************************/
 /* 機能 : 演算データセット処理(呼吸・いびき)							*/
 /************************************************************************/
@@ -451,7 +455,7 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 /* 関数名   : 演算データセット処理(加速)								*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
-/* 変更履歴	: 2019.07.19 Axia Soft Design 和田	初版作成				*/
+/* 変更履歴	: 2019.07.19 Axia Soft Design 和田 耕太	初版作成			*/
 /************************************************************************/
 /* 機能 : 演算データセット処理(加速)									*/
 /************************************************************************/
@@ -686,8 +690,10 @@ void user_main_init( void )
 //	wait_ms(5);
 //	s_unit.last_time_sts_req = time_get_elapsed_time();
 
-	
-	
+	// ■暫定 待機モードへ遷移させるために仮に充電ポート
+	if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	}
 
 #if FUNC_DEBUG_PORT == ON
 	//空きポートによる計測用設定(スリープなど)
@@ -721,6 +727,48 @@ void user_main_init( void )
 #endif
 
 }
+
+
+/************************************************************************/
+/* 関数     : sw_proc													*/
+/* 関数名   : SW周期処理												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.26 Axia Soft Design 和田 耕太	初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* SW周期処理(20ms周期)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+STATIC void sw_proc(void)
+{
+	UB pow_sw;
+	
+	pow_sw = drv_i_port_read_pow_sw();
+	
+	if( ON == pow_sw ){		// ON処理
+		// なにもしない(電源SW押下タイマー継続)
+		s_unit.sw_time_cnt++;
+	}else{					// OFF処理
+		if( ON == s_unit.pow_sw_last ){
+			// ON→OFFエッジ
+			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+				// 規定時間以上連続押下と判断
+				evt_act( EVENT_POW_SW_LONG );
+			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
+				evt_act( EVENT_POW_SW_SHORT );
+			}else{
+				// 何もしない
+			}
+		}
+		// 電源SW押下タイマー再スタート 
+		s_unit.sw_time_cnt = 0;
+	}
+	s_unit.pow_sw_last = pow_sw;
+}
+
 
 /************************************************************************/
 /* 関数     : user_main_calc_result										*/
@@ -1161,9 +1209,22 @@ STATIC void user_main_mode_get(void)
 		// 日時読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
 		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_CACL_DATA_SIZE );
+		// いびき検知数読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
+		eep_read( rd_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE );
+		// 無呼吸検知数読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
+		eep_read( rd_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE );
+		// いびき時間読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
+		eep_read( rd_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE );
 		// 無呼吸時間読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_TIME;
-		eep_read( rd_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MUKOKYU_TIME_SIZE );
+		eep_read( rd_adrs, (UB*)&s_unit.mukokyu_time, EEP_MUKOKYU_TIME_SIZE );
+		// 最高無呼吸時間読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MAX_MUKOKYU_TIME;
+		eep_read( rd_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MAX_MUKOKYU_TIME_SIZE );
+		
 		s_unit.get_mode_seq = 2;
 	}else if( 2 == s_unit.get_mode_seq ){
 		tx[0] = VUART_CMD_DATA_FRAME;		//枠情報(日時他)
@@ -1174,10 +1235,18 @@ STATIC void user_main_mode_get(void)
 		tx[5] = s_unit.date.hour;	
 		tx[6] = s_unit.date.min;	
 		tx[7] = s_unit.date.sec;
-		tx[8] =  ( s_unit.max_mukokyu_sec & 0x00ff );
-		tx[9] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
+		tx[8] =  ( s_unit.ibiki_detect_cnt & 0x00ff );
+		tx[9] = (( s_unit.ibiki_detect_cnt & 0xff00 ) >> 8 );
+		tx[10] =  ( s_unit.mukokyu_detect_cnt & 0x00ff );
+		tx[11] = (( s_unit.mukokyu_detect_cnt & 0xff00 ) >> 8 );
+		tx[12] =  ( s_unit.ibiki_time & 0x00ff );
+		tx[13] = (( s_unit.ibiki_time & 0xff00 ) >> 8 );
+		tx[14] =  ( s_unit.mukokyu_time & 0x00ff );
+		tx[15] = (( s_unit.mukokyu_time & 0xff00 ) >> 8 );
+		tx[16] =  ( s_unit.max_mukokyu_sec & 0x00ff );
+		tx[17] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
 		
-		main_vuart_send( &tx[0], 10 );
+		main_vuart_send( &tx[0], 18 );
 		s_unit.get_mode_seq = 3;
 	}else if( 3 == s_unit.get_mode_seq ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){
@@ -1193,13 +1262,15 @@ STATIC void user_main_mode_get(void)
 			// VUART(BLE)送信
 			// スマホのIFに合わせる
 			tx[0] = VUART_CMD_DATA_CALC;	// 演算データ
-			tx[1] = calc_eep.info.dat.state;
-			tx[2] =  ( calc_eep.info.dat.ibiki_val & 0x00ff );
-			tx[3] = (( calc_eep.info.dat.ibiki_val & 0xff00 ) >> 8 );
-			tx[4] = calc_eep.info.dat.myaku_val;
-			tx[5] = calc_eep.info.dat.spo2_val;
-			tx[6] = calc_eep.info.dat.body_direct;
-			main_vuart_send( &tx[0], 7 );
+			tx[1] = calc_eep.info.dat.ibiki_val[0];
+			tx[2] = calc_eep.info.dat.ibiki_val[1];
+			tx[3] = calc_eep.info.dat.ibiki_val[2];
+			tx[4] = calc_eep.info.dat.state;
+			tx[5] = calc_eep.info.dat.body_direct;
+			tx[6] = calc_eep.info.dat.photoref[0];
+			tx[7] = calc_eep.info.dat.photoref[1];
+			tx[8] = calc_eep.info.dat.photoref[2];
+			main_vuart_send( &tx[0], 9 );
 			s_unit.get_mode_calc_cnt++;
 		}
 	}else if( 4 == s_unit.get_mode_seq ){
@@ -1232,7 +1303,7 @@ STATIC void user_main_mode_get(void)
 }
 
 /************************************************************************/
-/* 関数     : user_main_mode_get										*/
+/* 関数     : user_main_mode_prg_h1d									*/
 /* 関数名   : H1Dプログラム更新状態処理									*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2142,6 +2213,81 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 	
 }
 
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_mode_chg									*/
+/* 関数名   : CPU間通信受信(モード変更)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(モード変更)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_mode_chg( void )
+{
+	if( SYSTEM_MODE_MOVE != s_unit.system_mode){
+		return;
+	}
+	
+	s_unit.system_mode = s_unit.next_system_mode;		// モード変更
+	
+	if( SYSTEM_MODE_SENSING == s_unit.system_mode ){
+		user_main_mode_sensing_before();
+	}
+	
+	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
+		if( ON == s_unit.sensing_flg ){
+			s_unit.sensing_flg = OFF;
+			user_main_mode_sensing_after();
+		}
+	}
+	
+	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
+		user_main_mode_prg_hd_before();
+	}
+	
+	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
+		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
+		FW_Update_Receiver_Start();
+	}
+
+	
+	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
+		if( ON == s_unit.self_check.com_flg ){
+			{
+				UB tx[VUART_DATA_SIZE_MAX] = {0};
+				
+				// OK応答
+				tx[0] = VUART_CMD_MODE_CHG;
+				tx[1] = 0x00;
+				
+				s_ds.vuart.input.send_status = OFF;
+				main_vuart_send( &tx[0], 2 );
+				
+			}
+		}
+	}
+
+	if( SYSTEM_MODE_GET == s_unit.system_mode ){
+		{
+			UB tx[VUART_DATA_SIZE_MAX] = {0};
+			
+			// OK応答
+			tx[0] = VUART_CMD_MODE_CHG;
+			tx[1] = 0x00;
+			
+			s_ds.vuart.input.send_status = OFF;
+			main_vuart_send( &tx[0], 2 );
+			
+			s_unit.get_mode_seq = 0;
+		}
+	}
+	
+	
+}
+
 /************************************************************************/
 /* 関数     : main_cpu_com_rcv_disp_order								*/
 /* 関数名   : CPU間通信受信(表示指示)									*/
@@ -2215,6 +2361,9 @@ STATIC void main_chg_system_mode( SYSTEM_MODE next_mode )
 {
 	s_unit.next_system_mode = next_mode;
 	s_unit.system_mode = SYSTEM_MODE_MOVE;
+	
+	// ■暫定 CPU間通信のモード変更はないので、直接遷移処理する
+	main_mode_chg();
 }
 
 /************************************************************************/
@@ -2369,6 +2518,11 @@ STATIC void main_vuart_rcv_mode_chg( void )
 		tx[0] = VUART_CMD_MODE_CHG;
 		tx[1] = VUART_DATA_RESULT_NG;
 		main_vuart_send( &tx[0], 2 );
+	}else{
+		// OK応答
+		tx[0] = VUART_CMD_MODE_CHG;
+		tx[1] = VUART_DATA_RESULT_OK;
+		main_vuart_send( &tx[0], 2 );
 	}
 }
 
@@ -2416,32 +2570,23 @@ STATIC void main_vuart_rcv_version( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+//	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+//	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
 		
 		// OK応答
 		tx[0] = VUART_CMD_VERSION;
-		// H1Dバージョン
-		tx[1] = VUART_DATA_RESULT_NG;
-		tx[2] = 0;
-		tx[3] = 0;
-		tx[4] = 0;
-		tx[5] = 0;
-		tx[6] = 0;
-		tx[7] = 0;
-		tx[8] = 0;
-		tx[9] = 0;
 		// G1Dバージョン
-		tx[10]  = version_product_tbl[0];
-		tx[11] = version_product_tbl[1];
-		tx[12] = version_product_tbl[2];
-		tx[13] = version_product_tbl[3];
+		tx[1] = VUART_DATA_RESULT_OK;
+		tx[2] = version_product_tbl[0];
+		tx[3] = version_product_tbl[1];
+		tx[4] = version_product_tbl[2];
+		tx[5] = version_product_tbl[3];
 		main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
-	}else{
+//	}else{
 		// バージョンをブリッジで送信
-		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_VERSION;
-		s_ds.cpu_com.order.data_size = 0;
-	}
+//		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_VERSION;
+//		s_ds.cpu_com.order.data_size = 0;
+//	}
 }
 
 
@@ -2534,20 +2679,39 @@ void main_vuart_rcv_data_frame( void )
 	s_unit.date.min = s_ds.vuart.input.rcv_data[6];
 	s_unit.date.sec = s_ds.vuart.input.rcv_data[7];
 	
-	s_unit.max_mukokyu_sec  = s_ds.vuart.input.rcv_data[9] << 8;
-	s_unit.max_mukokyu_sec  |= s_ds.vuart.input.rcv_data[8];
+	s_unit.ibiki_detect_cnt  = s_ds.vuart.input.rcv_data[9] << 8;
+	s_unit.ibiki_detect_cnt  |= s_ds.vuart.input.rcv_data[8];
+	s_unit.mukokyu_detect_cnt  = s_ds.vuart.input.rcv_data[11] << 8;
+	s_unit.mukokyu_detect_cnt  |= s_ds.vuart.input.rcv_data[10];
+	s_unit.ibiki_time  = s_ds.vuart.input.rcv_data[13] << 8;
+	s_unit.ibiki_time  |= s_ds.vuart.input.rcv_data[12];
+	s_unit.mukokyu_time  = s_ds.vuart.input.rcv_data[15] << 8;
+	s_unit.mukokyu_time  |= s_ds.vuart.input.rcv_data[14];
+	s_unit.max_mukokyu_sec  = s_ds.vuart.input.rcv_data[17] << 8;
+	s_unit.max_mukokyu_sec  |= s_ds.vuart.input.rcv_data[16];
 	
 	// 日時情報書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
-	
+	// いびき検知数書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
+	// 無呼吸検知数書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+	// いびき時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE, ON );
 	// 無呼吸時間書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_TIME;
-	eep_write( wr_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MUKOKYU_TIME_SIZE, ON );
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_time, EEP_MUKOKYU_TIME_SIZE, ON );
+	// 最高無呼吸時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MAX_MUKOKYU_TIME;
+	eep_write( wr_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MAX_MUKOKYU_TIME_SIZE, ON );
 	
 }
 /************************************************************************/
-/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数     : main_vuart_rcv_data_calc									*/
 /* 関数名   : VUART受信(演算)											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2560,14 +2724,14 @@ void main_vuart_rcv_data_frame( void )
 /************************************************************************/
 void main_vuart_rcv_data_calc( void )
 {
-
-	s_unit.calc.info.dat.state = s_ds.vuart.input.rcv_data[1];
-	s_unit.calc.info.dat.ibiki_val = s_ds.vuart.input.rcv_data[3];
-	s_unit.calc.info.dat.ibiki_val <<= 8;
-	s_unit.calc.info.dat.ibiki_val += s_ds.vuart.input.rcv_data[2];
-	s_unit.calc.info.dat.myaku_val = s_ds.vuart.input.rcv_data[4];
-	s_unit.calc.info.dat.spo2_val = s_ds.vuart.input.rcv_data[5];
-	s_unit.calc.info.dat.body_direct = s_ds.vuart.input.rcv_data[6];
+	s_unit.calc.info.dat.ibiki_val[0] = s_ds.vuart.input.rcv_data[1];
+	s_unit.calc.info.dat.ibiki_val[1] = s_ds.vuart.input.rcv_data[2];
+	s_unit.calc.info.dat.ibiki_val[2] = s_ds.vuart.input.rcv_data[3];
+	s_unit.calc.info.dat.state = s_ds.vuart.input.rcv_data[4];
+	s_unit.calc.info.dat.body_direct = s_ds.vuart.input.rcv_data[5];
+	s_unit.calc.info.dat.photoref[0] = s_ds.vuart.input.rcv_data[6];
+	s_unit.calc.info.dat.photoref[1] = s_ds.vuart.input.rcv_data[7];
+	s_unit.calc.info.dat.photoref[2] = s_ds.vuart.input.rcv_data[8];
 	
 //	memcpy(&s_unit.calc.info.byte[0], &s_ds.vuart.input.rcv_data[1], ( VUART_CMD_LEN_DATA_CALC - VUART_CMD_ONLY_SIZE ));
 	user_main_calc_result();
@@ -2575,7 +2739,7 @@ void main_vuart_rcv_data_calc( void )
 
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数     : main_vuart_rcv_data_end									*/
 /* 関数名   : VUART受信(END)											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2592,7 +2756,7 @@ void main_vuart_rcv_data_end( void )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_data_frame									*/
+/* 関数     : main_vuart_rcv_data_fin									*/
 /* 関数名   : VUART受信(完了)											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2624,25 +2788,60 @@ void main_vuart_rcv_date( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+//	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+//	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
 		tx[0] = VUART_CMD_DATE_SET;
-		tx[1] = VUART_DATA_RESULT_NG;
+		tx[1] = VUART_DATA_RESULT_OK;
 		main_vuart_send( &tx[0], 2 );
-	}else{
-		// CPU間通信でブリッジ送信
-		s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
-		s_ds.cpu_com.order.snd_data[0] = s_ds.vuart.input.rcv_data[1];
-		s_ds.cpu_com.order.snd_data[1] = s_ds.vuart.input.rcv_data[2];
-		s_ds.cpu_com.order.snd_data[2] = s_ds.vuart.input.rcv_data[3];
-		s_ds.cpu_com.order.snd_data[3] = s_ds.vuart.input.rcv_data[4];
-		s_ds.cpu_com.order.snd_data[4] = s_ds.vuart.input.rcv_data[5];
-		s_ds.cpu_com.order.snd_data[5] = s_ds.vuart.input.rcv_data[6];
-		s_ds.cpu_com.order.snd_data[6] = s_ds.vuart.input.rcv_data[7];
-		s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
-	}
+//	}else{
+//		// CPU間通信でブリッジ送信
+//		s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
+//		s_ds.cpu_com.order.snd_data[0] = s_ds.vuart.input.rcv_data[1];
+//		s_ds.cpu_com.order.snd_data[1] = s_ds.vuart.input.rcv_data[2];
+//		s_ds.cpu_com.order.snd_data[2] = s_ds.vuart.input.rcv_data[3];
+//		s_ds.cpu_com.order.snd_data[3] = s_ds.vuart.input.rcv_data[4];
+//		s_ds.cpu_com.order.snd_data[4] = s_ds.vuart.input.rcv_data[5];
+//		s_ds.cpu_com.order.snd_data[5] = s_ds.vuart.input.rcv_data[6];
+//		s_ds.cpu_com.order.snd_data[6] = s_ds.vuart.input.rcv_data[7];
+//		s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
+//	}
 }
 
+/************************************************************************/
+/* 関数     : main_vuart_rcv_device_set									*/
+/* 関数名   : VUART受信(デバイス設定)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.26  Axia Soft Design 和田 耕太	初版作成		*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(デバイス設定)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_rcv_device_set( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
+	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+		result = VUART_DATA_RESULT_NG;
+	}else{
+		s_unit.alarm.info.dat.act_mode = s_ds.vuart.input.rcv_data[1];
+		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[2];
+		s_unit.alarm.info.dat.yokusei_str = s_ds.vuart.input.rcv_data[3];
+		s_unit.alarm.info.dat.yokusei_max_time = s_ds.vuart.input.rcv_data[4];
+		
+		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
+	}
+	
+	tx[0] = VUART_CMD_DEVICE_SET;
+	tx[1] = result;
+	main_vuart_send( &tx[0], 2 );
+}
+
+#if 0
 /************************************************************************/
 /* 関数     : main_vuart_rcv_alarm_set									*/
 /* 関数名   : VUART受信(アラーム設定)									*/
@@ -2701,7 +2900,7 @@ void main_vuart_snd_alarm_info( UB type, UB data )
 	tx[2] = data;
 	main_vuart_send( &tx[0], 3 );
 }
-
+#endif
 
 /************************************************************************/
 /* 関数     : ds_get_cpu_com_order										*/
@@ -2827,12 +3026,25 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
 	UB state;
+	UB	clear_mask = 0x03;
+	UB	bit_shift = 0;
+	
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	s_unit.kokyu_cnt = 0;
 	newstate = get_state();
-	AlarmApnea(s_unit.calc.info.dat.state, newstate);
-	state = (s_unit.calc.info.dat.state & 0x3F);
-	s_unit.calc.info.dat.state = (newstate | state);
+//	AlarmApnea(s_unit.calc.info.dat.state, newstate);
+//	state = (s_unit.calc.info.dat.state & 0x3F);
+//	s_unit.calc.info.dat.state = (newstate | state);
+	
+	bit_shift = s_unit.phase_kokyu * 2;
+	s_unit.calc.info.dat.state &= ~(clear_mask << bit_shift);
+	s_unit.calc.info.dat.state |= (newstate << bit_shift);
+	
+	s_unit.phase_kokyu++;
+	if(s_unit.phase_kokyu >= SEC_PHASE_NUM){
+		s_unit.phase_kokyu = SEC_PHASE_0_10;
+	}
+	
 #endif
 	
 	return (KE_MSG_CONSUMED);
@@ -2878,15 +3090,19 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 			max = s_unit.ibiki_val[ii];
 		}
 	}
-	s_unit.calc.info.dat.ibiki_val = max;
+	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = max;
+	s_unit.phase_ibiki++;
+	if(s_unit.phase_ibiki >= SEC_PHASE_NUM){
+		s_unit.phase_ibiki = SEC_PHASE_0_10;
+	}
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	//calc_snore_proc(&testdata[0]);
-	newstate = calc_snore_get();
-	AlarmSnore(s_unit.calc.info.dat.state, newstate);
-	state = (s_unit.calc.info.dat.state & 0xFE);
-	s_unit.calc.info.dat.state = (newstate | state);
+//	newstate = calc_snore_get();
+//	AlarmSnore(s_unit.calc.info.dat.state, newstate);
+//	state = (s_unit.calc.info.dat.state & 0xFE);
+//	s_unit.calc.info.dat.state = (newstate | state);
 	// 移動累計とるので前のデータを残す
 	for(ii=0;ii<size;++ii){
 		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE_APNEA-size+ii];
@@ -2911,6 +3127,10 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 //	B	acc_y;		//現状未使用
 	B	acc_z;
 	
+	UB	body_direct = BODY_DIRECTION_LEFT;
+	UB	clear_mask = BODY_DIRECTION_MASK;
+	UB	bit_shift = 0;
+	
 	// 最新のデータを使う
 	acc_x = s_unit.acl_x[s_unit.acl_cnt];
 //	acc_y = s_unit.acl_y[s_unit.acl_cnt];		//現状未使用
@@ -2923,22 +3143,37 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	{// 上 or 左
 		if( 0 <= acc_z )
 		{// 左
-			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_LEFT;
+			body_direct = BODY_DIRECTION_LEFT;
 		} else {
 		 // 上
-			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_UP;
+			body_direct = BODY_DIRECTION_UP;
 		}
 	} else {
 	// 下 or 右
 		if( 0 <= acc_z )
 		{// 下
-			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_DOWN;
+			body_direct = BODY_DIRECTION_DOWN;
 		} else {
 		 // 右
-			s_unit.calc.info.dat.body_direct = BODY_DIRECTION_RIGHT;
+			body_direct = BODY_DIRECTION_RIGHT;
 		}
 	}
 	
+	// 10秒ごとの判定値をbitで設定する
+	bit_shift = s_unit.phase_body_direct * BODY_DIRECTION_BIT;
+	s_unit.calc.info.dat.body_direct &= ~(clear_mask << bit_shift);
+	s_unit.calc.info.dat.body_direct |= (body_direct << bit_shift);
+	// ■暫定 本関数は10秒に1回呼び出されることを前提とし、10秒ごとに秒間フェイズを進める
+	s_unit.sec10_cnt++;
+	if(s_unit.sec10_cnt >= 10){
+		s_unit.sec10_cnt == 0;
+		
+		s_unit.phase_body_direct++;
+		if(s_unit.phase_body_direct >= SEC_PHASE_NUM){
+			s_unit.phase_body_direct = SEC_PHASE_0_10;
+		}
+	}
+
 	return (KE_MSG_CONSUMED);
 }
 
@@ -3169,6 +3404,7 @@ STATIC void main_vuart_rcv_prg_hd_result(void)
 	}
 	
 	if( OK == ret ){
+		// ■暫定 7/30 ブリッジは消さないといけないと思われる
 		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_READY;
 		s_ds.cpu_com.order.data_size = 0;
 	}
@@ -3385,7 +3621,7 @@ STATIC void main_prg_hd_read_eep_record( void )
 
 
 
-
+#if 0
 STATIC void AlarmSnore(UB oldstate, UB newstate)
 {
 	// debug向け
@@ -3421,6 +3657,7 @@ STATIC void AlarmApnea(UB oldstate, UB newstate)
 		}
 	}
 }
+#endif
 
 //================================
 //ACL関連

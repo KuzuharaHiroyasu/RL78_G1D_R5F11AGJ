@@ -367,8 +367,10 @@ void arch_main_ent(void)
         // ユーザータイマー処理
         user_main_timer_cyc();
 
+#if FUNC_DEBUG_LOG != ON
         // schedule the BLE stack
         rwble_schedule();
+#endif
 
         // Checks for sleep have to be done with interrupt disabled
         GLOBAL_INT_DISABLE();

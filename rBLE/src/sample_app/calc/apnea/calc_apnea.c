@@ -268,10 +268,14 @@ void heartBeat_Remov(double* dc_, const UH *data_apnea, double* movave_, const U
 /************************************************************************/
 UB get_state(void)
 {
+#if 1
+	return apnea_;
+#else
 	UB ret = 0;
 	ret |= ((apnea_ << 6) & 0xC0);
 	
 	return ret;
+#endif
 }
 
 /*==============================================================================*/

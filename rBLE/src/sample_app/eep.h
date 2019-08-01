@@ -25,26 +25,33 @@
 
 
 // データ数
-#define EEP_CACL_DATA_NUM			1440
-#define EEP_FRAME_MAX				10
+#define EEP_CACL_DATA_NUM			1440	// 12時間分(1データ/30秒)
+#define EEP_FRAME_MAX				7		// 1週間分
 
 // EEPデータサイズ
-#define EEP_CACL_DATA_SIZE			8		//ダミー含む
-#define EEP_FRAM_ADD_SIZE			256		// フレーム用付加情報(時間,最高無呼吸,演算回数)
+#define EEP_CACL_DATA_SIZE			12		//ダミー含む
+#define EEP_FRAM_ADD_SIZE			128		// フレーム用付加情報(時間,いびき検知数～最高無呼吸,演算回数)
 #define EEP_FRAME_SIZE				(UW)(( EEP_CACL_DATA_SIZE * 1440 ) + EEP_FRAM_ADD_SIZE )
 #define EEP_SETTING_SIZE			3		
-#define EEP_ALARM_SIZE				8
+#define EEP_ALARM_SIZE				4
 #define EEP_DATE_SIZE				7
+#define EEP_IBIKI_DETECT_CNT_SIZE	2
+#define EEP_MUKOKYU_DETECT_CNT_SIZE	2
+#define EEP_IBIKI_TIME_SIZE			2
 #define EEP_MUKOKYU_TIME_SIZE		2
+#define EEP_MAX_MUKOKYU_TIME_SIZE	2
 
 
 
 // 先頭アドレス
 #define EEP_ADRS_TOP_FRAME				0													// フレームの先頭
-#define EEP_ADRS_TOP_FRAME_CALC_CNT		(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 10 )
+#define EEP_ADRS_TOP_FRAME_CALC_CNT		(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 18 )
 #define EEP_ADRS_TOP_FRAME_DATE			(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 0 )
-#define EEP_ADRS_TOP_FRAME_MUKOKYU_TIME	(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 8 )
-
+#define EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT		(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 8 )
+#define EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT	(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 10 )
+#define EEP_ADRS_TOP_FRAME_IBIKI_TIME			(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 12 )
+#define EEP_ADRS_TOP_FRAME_MUKOKYU_TIME			(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 14 )
+#define EEP_ADRS_TOP_FRAME_MAX_MUKOKYU_TIME		(UW)( ( EEP_CACL_DATA_SIZE * 1440 ) + 16 )
 
 #define EEP_ADRS_TOP_SETTING			(UW)( EEP_FRAME_SIZE * EEP_FRAME_MAX )				// 設定
 #define EEP_ADRS_TOP_ALARM				(UW)( EEP_ADRS_TOP_SETTING + EEP_SETTING_SIZE )		// 警告機能

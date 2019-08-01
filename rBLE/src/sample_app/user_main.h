@@ -144,6 +144,9 @@ typedef enum{
 #define BODY_DIRECTION_RIGHT				2	// 右向き
 #define BODY_DIRECTION_DOWN					3	// 下向き
 
+#define BODY_DIRECTION_MASK					3	// bitマスク用
+#define BODY_DIRECTION_BIT					2	// 使用bit数
+
 // プログラムシーケンス
 typedef enum{
 	PRG_SEQ_IDLE = 0,					// アイドル
@@ -172,6 +175,7 @@ typedef enum{
 
 
 #define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
+//#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
 
 // 測定個数
 #define		MEAS_SEKIGAI_CNT_MAX		140
@@ -196,7 +200,13 @@ typedef enum{
 #define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 18000 )		
 #define		TIME_OUT_SYSTEM_MODE_H1D_PRG		( 60000 )		
 
-
+// データ秒間フェイズ(いびき,呼吸,体の向き,フォトセンサ共通)
+typedef enum{
+	SEC_PHASE_0_10 = 0,					// 0～10秒まで
+	SEC_PHASE_10_20,					// 10～20秒まで
+	SEC_PHASE_20_30,					// 20～30秒まで
+	SEC_PHASE_NUM,
+}SEC_PHASE;
 
 
 
@@ -223,6 +233,9 @@ typedef enum{
 #define PERIOD_50MSEC   5U		//RD8001対応：定義追加
 #define PERIOD_100MSEC   10U
 
+///20ms timer
+#define	TIME_20MS_CNT_POW_SW_LONG			150				/* 電源SW_長(3秒) */
+#define	TIME_20MS_CNT_POW_SW_SHORT			50				/* 電源SW_短(1秒) */
 
 
 typedef enum program_ver{
@@ -258,13 +271,11 @@ typedef struct{
 	union{
 		UB	byte[EEP_CACL_DATA_SIZE];
 		struct{
-			UH	ibiki_val;
-			UB	state;			/* 状態 */
-			UB	myaku_val;
-			UB	spo2_val;
-			UB	body_direct;		// 体の向き
-			UB	dummy_1;			/* 境界値調整用 */
-			UB	dummy_2;			/* 境界値調整用 */
+			UB	ibiki_val[SEC_PHASE_NUM];	// いびきの大きさ
+			UB	state;						// 状態
+			UB	body_direct;				// 体の向き
+			UB	photoref[SEC_PHASE_NUM];	// フォトセンサー
+			UB	dummy[4];					// 境界値調整用
 		}dat;
 	}info;
 }CALC;
@@ -285,14 +296,10 @@ typedef struct{
 	union{
 		UB	byte[EEP_ALARM_SIZE];
 		struct{
-			UB	valid;			// アラーム機能有効/無効
-			UB	ibiki;			// いびきアラーム
-			UB	ibiki_sens;		// いびきアラーム感度
-			UB	low_kokyu;		// 低呼吸アラーム
-			UB	delay;			// アラーム遅延
-			UB	stop;			// 体動停止
-			UB	time;			// 鳴動時間
-			UB	dummy;			// 境界値調整用
+			UB	act_mode;		// 動作モード
+			UB	ibiki_sens;		// いびき感度
+			UB	yokusei_str;	// 抑制強度
+			UB	yokusei_max_time;	// 抑制動作最大継続時間
 		}dat;
 	}info;
 }ALARM;
@@ -372,8 +379,17 @@ typedef struct{
 	
 	// 演算関連
 	CALC calc;				// 演算後データ
-	UH calc_cnt;			// 演算カウント
+	UH calc_cnt;			// 演算カウント(保存データ数)
+	UH ibiki_detect_cnt;	// いびき検知数
+	UH mukokyu_detect_cnt;	// 無呼吸検知数
+	UH ibiki_time;			// いびき時間
+	UH mukokyu_time;		// 無呼吸時間
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
+	
+	UB phase_ibiki;			// 秒間フェイズ(いびき)
+	UB phase_kokyu;			// 秒間フェイズ(呼吸)
+	UB phase_body_direct;	// 秒間フェイズ(体の向き)
+	UB phase_photoref;		// 秒間フェイズ(フォトセンサ)
 	
 	// フレーム(枠)番号
 	FRAME_NUM_INFO frame_num;			// フレーム(枠)番号[EEPコピーエリア] ※EEPとは一致させておく
@@ -408,7 +424,8 @@ typedef struct{
 	UH tick_vib_10ms_sec;
 	
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
-	
+	UW sw_time_cnt;							// 電源SW押下時間カウンタ
+	UB pow_sw_last;							// 電源ボタン状態(前回)
 	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
@@ -502,8 +519,9 @@ typedef enum{
 	VUART_CMD_TYPE_PRG_H1D_DATA,					// プログラム転送(データ)
 	VUART_CMD_TYPE_PRG_H1D_RESULT,					// プログラム転送結果
 	VUART_CMD_TYPE_PRG_H1D_CHECK,					// プログラム更新完了確認
-	VUART_CMD_TYPE_ALARM_SET,						// 設定変更
-	VUART_CMD_TYPE_ALARM_INFO,						// アラーム通知
+	VUART_CMD_TYPE_DEVICE_SET,						// デバイス設定変更
+//	VUART_CMD_TYPE_ALARM_SET,						// 設定変更
+//	VUART_CMD_TYPE_ALARM_INFO,						// アラーム通知
 	VUART_CMD_TYPE_MAX								// 最大値					
 }VUART_CMD_TYPE;
 
@@ -529,13 +547,13 @@ typedef struct{
 #define	VUART_CMD_PRG_G1D_START	0xF0
 #define	VUART_CMD_PRG_G1D_VER	0xF9
 
-#define	VUART_CMD_ALARM_SET		0xC0
-#define	VUART_CMD_ALARM_INFO	0xC4
+//#define	VUART_CMD_ALARM_SET		0xC0
 
 #define	VUART_CMD_INFO			0xC2
 #define	VUART_CMD_VERSION		0xC3
 #define	VUART_CMD_DEVICE_INFO	0xC5
-#define	VUART_CMD_ALARM_INFO	0xC4
+//#define	VUART_CMD_ALARM_INFO	0xC4
+#define	VUART_CMD_DEVICE_SET	0xC6
 #define	VUART_CMD_INVALID		0xFF	// コマンド無し特殊処理
 
 
@@ -558,13 +576,14 @@ typedef struct{
 #define	VUART_CMD_LEN_VERSION		1
 #define	VUART_CMD_LEN_DEVICE_INFO	1
 
-#define	VUART_CMD_LEN_ALARM_SET		8
+//#define	VUART_CMD_LEN_ALARM_SET		8
+#define	VUART_CMD_LEN_DEVICE_SET	4
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
 // 送信データ長 ※コマンド部含む
 #define	VUART_SND_LEN_INFO			3
-#define	VUART_SND_LEN_VERSION		14 
+#define	VUART_SND_LEN_VERSION		6
 #define	VUART_SND_LEN_DEVICE_INFO	16
 
 
