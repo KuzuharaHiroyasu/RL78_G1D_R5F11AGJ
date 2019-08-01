@@ -26,7 +26,9 @@
 
 // プロトタイプ宣言
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+#if FUNC_DEBUG_LOG == ON
 STATIC void make_send_data(char* pBuff);
+#endif
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_calc_data_set_acl( void );
@@ -50,7 +52,7 @@ STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
 STATIC void user_main_mode( void );
 STATIC void user_main_mode_common( void );
 //STATIC void main_cpu_com_snd_pc_log( UB* data, UB size );
-STATIC void main_cpu_com_snd_sensing_order( UB sekigai );
+//STATIC void main_cpu_com_snd_sensing_order( UB sekigai );
 STATIC void main_vuart_proc(void);
 STATIC void main_vuart_rcv_mode_chg( void );
 STATIC void main_vuart_rcv_date( void );
@@ -106,8 +108,8 @@ void main_vuart_rcv_device_set( void );
 //void main_vuart_rcv_alarm_set( void );
 //void main_vuart_snd_alarm_info( UB type, UB data );
 
-STATIC void AlarmSnore(UB oldstate, UB newstate);
-STATIC void AlarmApnea(UB oldstate, UB newstate);
+//STATIC void AlarmSnore(UB oldstate, UB newstate);
+//STATIC void AlarmApnea(UB oldstate, UB newstate);
 
 // ACL関連
 STATIC void main_acl_init(void);
@@ -463,7 +465,7 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 /************************************************************************/
 STATIC void user_main_calc_data_set_acl( void )
 {
-	uint8_t *ke_msg;
+//	uint8_t *ke_msg;
 	
 	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
 		s_unit.acl_x[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_x;
@@ -479,6 +481,7 @@ STATIC void user_main_calc_data_set_acl( void )
 	
 }
 
+#if FUNC_DEBUG_LOG == ON
 /************************************************************************/
 /* 関数     : make_send_data											*/
 /* 関数名   : 送信データ作成処理										*/
@@ -613,6 +616,7 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
 }
+#endif
 
 /************************************************************************/
 /* 関数     : time_get_elapsed_time										*/
@@ -1924,6 +1928,7 @@ void main_cpu_com_snd_pc_log( UB* data, UB size )
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
+/*
 STATIC void main_cpu_com_snd_sensing_order( UB sekigai )
 {
 	if( CPU_COM_SND_STATUS_IDLE == s_ds.cpu_com.input.cpu_com_send_status ){
@@ -1932,6 +1937,7 @@ STATIC void main_cpu_com_snd_sensing_order( UB sekigai )
 		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_SENSING_ORDER;
 	}
 }
+*/
 
 /************************************************************************/
 /* 関数     : main_cpu_com_proc											*/
@@ -3025,7 +3031,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 {
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
-	UB state;
+//	UB state;
 	UB	clear_mask = 0x03;
 	UB	bit_shift = 0;
 	
@@ -3058,8 +3064,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	int ii;
 	int max = s_unit.ibiki_val[0];
 	static const int size = 9;
-	UB newstate;
-	UB state;
+//	UB newstate;
+//	UB state;
 #if 0 // テスト用データ
 	static const UH testdata[200] = {
 		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
@@ -3166,7 +3172,7 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	// ■暫定 本関数は10秒に1回呼び出されることを前提とし、10秒ごとに秒間フェイズを進める
 	s_unit.sec10_cnt++;
 	if(s_unit.sec10_cnt >= 10){
-		s_unit.sec10_cnt == 0;
+		s_unit.sec10_cnt = 0;
 		
 		s_unit.phase_body_direct++;
 		if(s_unit.phase_body_direct >= SEC_PHASE_NUM){

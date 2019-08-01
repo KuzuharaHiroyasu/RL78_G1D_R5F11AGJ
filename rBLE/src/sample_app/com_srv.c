@@ -17,7 +17,7 @@
 void com_srv_init( void );
 void com_srv_log_title( void );
 void com_srv_cyc( void );
-STATIC void com_srv_command( UB data );
+//STATIC void com_srv_command( UB data );
 void com_srv_send( UB* tx_data, UB len );
 
 /********************/
@@ -28,7 +28,7 @@ void com_srv_send( UB* tx_data, UB len );
 /********************/
 /*     内部変数     */
 /********************/
-STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
+//STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
 																/* DRV_CPU_COM_STATUS_CAN_SEND		送信可能状態 */
 																/* DRV_CPU_COM_STATUS_SENDING		送信中 */
 
