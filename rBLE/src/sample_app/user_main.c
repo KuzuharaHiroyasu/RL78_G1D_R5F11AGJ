@@ -113,6 +113,7 @@ void main_vuart_rcv_device_set( void );
 
 static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 // ACL関連
 STATIC void main_acl_init(void);
@@ -249,6 +250,11 @@ void codeptr app_evt_usr_2(void)
 	// 加速度演算
 	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
 	ke_msg_send(ke_msg);
+	
+	// フォトセンサ値
+	ke_msg = ke_msg_alloc( USER_MAIN_CYC_PHOTOREF, USER_MAIN_ID, USER_MAIN_ID, 0 );
+	ke_msg_send(ke_msg);
+	
 #endif
 }
 
@@ -486,6 +492,28 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 {
 	// 電池残量取得(10分周期)
 	main_set_battery();
+	
+	return (KE_MSG_CONSUMED);
+}
+
+/************************************************************************/
+/* 関数     : main_calc_photoref										*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = s_unit.meas.info.dat.photoref_val;
+	s_unit.phase_photoref++;
+	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
+		s_unit.phase_photoref = SEC_PHASE_0_10;
+	}
 	
 	return (KE_MSG_CONSUMED);
 }
