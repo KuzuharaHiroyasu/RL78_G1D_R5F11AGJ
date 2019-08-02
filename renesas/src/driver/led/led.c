@@ -10,7 +10,7 @@
 #include	"led.h"
 
 // グローバル変数
-LED_PATT pattern = LED_PATT_MAX;
+LED_PATT pattern = LED_PATT_INITIAL;
 UH		 led_orbit_timer = 0;
 
 // プロトタイプ宣言
@@ -18,12 +18,12 @@ STATIC void led_on(void);
 STATIC void led_off(void);
 STATIC void led_green_on(void);
 STATIC void led_green_off(void);
-STATIC void led_green_lighting(UH led_timer);
-STATIC void led_green_blink(UH led_timer);
+STATIC void led_green_lighting(UW led_timer);
+STATIC void led_green_blink(UW led_timer);
 STATIC void led_yellow_on(void);
 STATIC void led_yellow_off(void);
-STATIC void led_yellow_lighting(UH led_timer);
-STATIC void led_yellow_blink(UH led_timer);
+STATIC void led_yellow_lighting(UW led_timer);
+STATIC void led_yellow_blink(UW led_timer);
 
 /************************************************************************/
 /* 関数     : led_start													*/
@@ -36,7 +36,7 @@ STATIC void led_yellow_blink(UH led_timer);
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-void led_start(UH led_timer)
+void led_start(UW led_timer)
 {
 	switch(pattern)
 	{
@@ -73,6 +73,12 @@ void led_start(UH led_timer)
 		default:
 			break;
 	}
+	
+	if(LED_TIMER_10SEC < led_timer && pattern != LED_PATT_INITIAL)
+	{// 10秒超えたらパターンを初期値に戻してLEDをOFFにしておく
+		pattern = LED_PATT_INITIAL;
+		led_off();
+	}
 }
 
 /************************************************************************/
@@ -89,7 +95,9 @@ void led_start(UH led_timer)
 void set_led(LED_PATT patt)
 {
 	// タイマーリセット
+	reset_led_timer();
 	
+	// パターンセット
 	pattern = patt;
 }
 
@@ -170,9 +178,9 @@ STATIC void led_green_off(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_green_lighting(UH led_timer)
+STATIC void led_green_lighting(UW led_timer)
 {
-	if(led_timer < PERIOD_10SEC)
+	if(led_timer < LED_TIMER_10SEC)
 	{
 		if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_ON)
 		{
@@ -197,11 +205,11 @@ STATIC void led_green_lighting(UH led_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_green_blink(UH led_timer)
+STATIC void led_green_blink(UW led_timer)
 {
-	if(led_timer < PERIOD_10SEC)
+	if(led_timer < LED_TIMER_10SEC)
 	{
-		if( PERIOD_1SEC <= (led_timer - led_orbit_timer) )
+		if( LED_TIMER_1SEC <= (led_timer - led_orbit_timer) )
 		{
 			if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_OFF)
 			{
@@ -263,9 +271,9 @@ STATIC void led_yellow_off(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_yellow_lighting(UH led_timer)
+STATIC void led_yellow_lighting(UW led_timer)
 {
-	if(led_timer < PERIOD_10SEC)
+	if(led_timer < LED_TIMER_10SEC)
 	{
 		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_ON)
 		{
@@ -290,11 +298,11 @@ STATIC void led_yellow_lighting(UH led_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_yellow_blink(UH led_timer)
+STATIC void led_yellow_blink(UW led_timer)
 {
-	if(led_timer < PERIOD_10SEC)
+	if(led_timer < LED_TIMER_10SEC)
 	{
-		if( PERIOD_1SEC <= (led_timer - led_orbit_timer) )
+		if( LED_TIMER_1SEC <= (led_timer - led_orbit_timer) )
 		{
 			if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_OFF)
 			{

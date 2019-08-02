@@ -365,8 +365,6 @@ void arch_main_ent(void)
     // And loop forever
     for (;;)
     {
-        //LED activity
-//        led_blink();
         // ユーザータイマー処理
         user_main_timer_cyc();
 

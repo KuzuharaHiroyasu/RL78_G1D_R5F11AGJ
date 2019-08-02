@@ -111,6 +111,7 @@ void main_vuart_rcv_device_set( void );
 //STATIC void AlarmSnore(UB oldstate, UB newstate);
 //STATIC void AlarmApnea(UB oldstate, UB newstate);
 
+static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 // ACL関連
@@ -214,6 +215,9 @@ void codeptr app_evt_usr_2(void)
 		}
 	}
 #endif
+	
+	s_unit.sec10_led_cnt++;
+	led_start(s_unit.sec10_led_cnt);
 	
 	// RD8001:加速度演算暫定追加 ■暫定
 //	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
@@ -429,6 +433,28 @@ void user_main_timer_cyc( void )
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
 		ke_evt_set(KE_EVT_USR_2_BIT);
 	}
+}
+
+/************************************************************************/
+/* 関数     : led_cyc													*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	// LED(10ms周期)
+	if(s_unit.tick_led_10ms_sec >= (uint16_t)PERIOD_10MSEC)
+	{
+   		led_start(s_unit.tick_led_10ms_sec);
+	}
+	
+	return (KE_MSG_CONSUMED);
 }
 
 /************************************************************************/
@@ -2283,6 +2309,13 @@ STATIC void main_mode_chg( void )
 	
 	if( SYSTEM_MODE_SENSING == s_unit.system_mode ){
 		user_main_mode_sensing_before();
+		// センシング移行時にLEDとバイブ動作
+		if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+		{
+			set_led( LED_PATT_GREEN_LIGHTING );
+		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
+			set_led( LED_PATT_GREEN_BLINK );
+		}
 	}
 	
 	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
@@ -3880,6 +3913,22 @@ STATIC UH main_photo_read(void)
 void reset_vib_timer(void)
 {
 	s_unit.tick_vib_10ms_sec = 0;
+}
+
+/************************************************************************/
+/* 関数     : reset_led_timer											*/
+/* 関数名   : LEDタイマー初期化											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void reset_led_timer(void)
+{
+	s_unit.sec10_led_cnt = 0;
 }
 
 /************************************************************************/

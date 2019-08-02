@@ -31,6 +31,7 @@
 #include "r_cg_it.h"
 #include "r_cg_adc.h"
 #include "vibration.h"
+#include "led.h"
 
 /* ƒ~ƒhƒ‹ */
 #include "i2c.h"

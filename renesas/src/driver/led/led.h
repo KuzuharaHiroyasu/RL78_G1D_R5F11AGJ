@@ -24,18 +24,9 @@
 #define LED_ON           1
 #define LED_OFF          0
 
-///10ms timer
-#define PERIOD_10SEC     1000U
-#define PERIOD_1SEC      100U
-#define PERIOD_100MSEC   10U
-
-struct led_env_tag
-{
-    ///Timer elapsed flag
-    uint8_t  timer_flag;
-    ///LEd blink interval
-    uint16_t tick_10ms;
-};
+// timer
+#define LED_TIMER_10SEC		10
+#define LED_TIMER_1SEC		 1
 
 typedef enum{
 	LED_PATT_ON,				// LED緑、黄点灯
@@ -48,11 +39,11 @@ typedef enum{
 	LED_PATT_YELLOW_OFF,		// LED黄消灯
 	LED_PATT_YELLOW_LIGHTING,	// LED黄点灯(タイマー)
 	LED_PATT_YELLOW_BLINK,		// LED黄点滅(タイマー)
-	LED_PATT_MAX
+	LED_PATT_INITIAL
 }LED_PATT;
 
 
-extern void led_start(UH led_timer);
+extern void led_start(UW led_timer);
 extern void set_led(LED_PATT patt);
 
 #endif // LED_H_
