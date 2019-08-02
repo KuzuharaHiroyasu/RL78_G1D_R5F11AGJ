@@ -351,53 +351,54 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
-	// 50ms周期
-	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
+	{
+		// 50ms周期
+		if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 #if FUNC_DEBUG_LOG == ON
-		char dbg_tx_data[50] = {0};
-		int dbg_len;
-		
-		// 呼吸音、いびき音取得
-		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-				
-		s_unit.acl_timing+=1;
-		if(s_unit.acl_timing >= ACL_TIMING_VAL){
-			s_unit.acl_timing = 0;
-			// 加速度取得
-			main_acl_read();
-			// フォトセンサー値取得
-			s_unit.meas.info.dat.photoref_val = main_photo_read();
-		}else{
-			s_unit.meas.info.dat.acl_x = 99;
-			s_unit.meas.info.dat.acl_y = 99;
-			s_unit.meas.info.dat.acl_z = 99;
-			s_unit.meas.info.dat.photoref_val = 0;
-		}
-		
-		make_send_data(dbg_tx_data);
-		dbg_len = strlen(dbg_tx_data);
-		com_srv_send(dbg_tx_data, dbg_len);
-#else
-//		ke_evt_set(KE_EVT_USR_1_BIT);
-		
-		// 呼吸音、いびき音取得
-		adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-		user_main_calc_data_set_kyokyu_ibiki();
-		
-		// 加速度取得
-		s_unit.acl_timing+=1;
-		if(s_unit.acl_timing >= ACL_TIMING_VAL){
-			s_unit.acl_timing = 0;
-			main_acl_read();
-			user_main_calc_data_set_acl();
+			char dbg_tx_data[50] = {0};
+			int dbg_len;
 			
-			// フォトセンサー値取得
-			s_unit.meas.info.dat.photoref_val = main_photo_read();
-		}
-
+			// 呼吸音、いびき音取得
+			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+					
+			s_unit.acl_timing+=1;
+			if(s_unit.acl_timing >= ACL_TIMING_VAL){
+				s_unit.acl_timing = 0;
+				// 加速度取得
+				main_acl_read();
+				// フォトセンサー値取得
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+			}else{
+				s_unit.meas.info.dat.acl_x = 99;
+				s_unit.meas.info.dat.acl_y = 99;
+				s_unit.meas.info.dat.acl_z = 99;
+				s_unit.meas.info.dat.photoref_val = 0;
+			}
+			
+			make_send_data(dbg_tx_data);
+			dbg_len = strlen(dbg_tx_data);
+			com_srv_send(dbg_tx_data, dbg_len);
+#else
+	//		ke_evt_set(KE_EVT_USR_1_BIT);
+			
+			// 呼吸音、いびき音取得
+			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+			user_main_calc_data_set_kyokyu_ibiki();
+			
+			// 加速度取得
+			s_unit.acl_timing+=1;
+			if(s_unit.acl_timing >= ACL_TIMING_VAL){
+				s_unit.acl_timing = 0;
+				main_acl_read();
+				user_main_calc_data_set_acl();
+				
+				// フォトセンサー値取得
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+			}
 #endif
-		
-		s_unit.tick_10ms_new = 0;
+			s_unit.tick_10ms_new = 0;
+		}
 	}
 	// 20ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
