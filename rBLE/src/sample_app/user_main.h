@@ -657,8 +657,9 @@ extern void main_set_bd_adrs( UB* bda);
 extern void user_main_timer_10ms_set( void );
 extern void user_main_timer_cyc( void );
 extern UW time_get_elapsed_time( void );
-extern void reset_vib_timer(void);
+extern void reset_vib_timer( void );
 extern void reset_led_timer( void );
+extern void vib_cyc( void );
 extern void main_set_battery( void );
 
 #endif // __MAIN_USR_INC__

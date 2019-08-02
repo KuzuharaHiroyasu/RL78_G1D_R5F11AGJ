@@ -367,12 +367,6 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
-	// バイブレーション(10ms周期)
-	if(s_unit.tick_vib_10ms_sec >= (uint16_t)PERIOD_10MSEC)
-	{
-   		vib_start(s_unit.tick_vib_10ms_sec);
-	}
-	
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
 		// 50ms周期
@@ -455,6 +449,26 @@ static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t co
 	}
 	
 	return (KE_MSG_CONSUMED);
+}
+
+/************************************************************************/
+/* 関数     : vib_cyc													*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+void vib_cyc( void )
+{
+	// バイブレーション(10ms周期)
+	if(s_unit.tick_vib_10ms_sec >= (uint16_t)PERIOD_10MSEC)
+	{
+   		vib_start(s_unit.tick_vib_10ms_sec);
+	}
 }
 
 /************************************************************************/
@@ -1639,8 +1653,6 @@ STATIC SYSTEM_MODE evt_idle_com( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
-	set_vib(VIB_MODE_STANDBY);
-	
 	return system_mode;
 }
 
@@ -1679,8 +1691,6 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 STATIC SYSTEM_MODE evt_sensing( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
-	
-	set_vib(VIB_MODE_SENSING);
 	
 	return system_mode;
 }
@@ -2316,12 +2326,15 @@ STATIC void main_mode_chg( void )
 		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
 			set_led( LED_PATT_GREEN_BLINK );
 		}
+		
+		set_vib(VIB_MODE_SENSING);
 	}
 	
 	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
 		if( ON == s_unit.sensing_flg ){
 			s_unit.sensing_flg = OFF;
 			user_main_mode_sensing_after();
+			set_vib(VIB_MODE_STANDBY);
 		}
 	}
 	
