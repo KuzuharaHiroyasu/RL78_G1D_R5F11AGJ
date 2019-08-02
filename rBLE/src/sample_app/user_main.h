@@ -149,6 +149,10 @@ typedef enum{
 #define BODY_DIRECTION_MASK					3	// bitマスク用
 #define BODY_DIRECTION_BIT					2	// 使用bit数
 
+// 動作モード
+#define ACT_MODE_NORMAL						0	// 通常動作モード
+#define ACT_MODE_MONITOR					1	// モニタリングモード
+
 // プログラムシーケンス
 typedef enum{
 	PRG_SEQ_IDLE = 0,					// アイドル
