@@ -358,7 +358,10 @@ void arch_main_ent(void)
 	//RD8001対応：ユーザーアプリ初期化
 	user_main_init();
 	main_set_bd_adrs( (UB*)&public_addr.addr[0] );
-
+	
+	//起動時電池残量取得
+	main_set_battery();
+	
     // And loop forever
     for (;;)
     {

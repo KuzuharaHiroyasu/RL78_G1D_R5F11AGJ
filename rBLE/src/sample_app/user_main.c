@@ -111,6 +111,8 @@ void main_vuart_rcv_device_set( void );
 //STATIC void AlarmSnore(UB oldstate, UB newstate);
 //STATIC void AlarmApnea(UB oldstate, UB newstate);
 
+static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+
 // ACL関連
 STATIC void main_acl_init(void);
 STATIC void main_acl_stop(void);
@@ -216,6 +218,16 @@ void codeptr app_evt_usr_2(void)
 	// RD8001:加速度演算暫定追加 ■暫定
 //	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
 //	ke_msg_send(ke_msg);
+	
+	// 電池残量取得(10分周期)
+	s_unit.sec600_cnt++;
+	if(s_unit.sec600_cnt >= BAT_LEVEL_GET_CYC)
+	{
+		s_unit.sec600_cnt = 0;
+		ke_msg = ke_msg_alloc( USER_MAIN_CYC_BATTERY, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+	
 	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
 		return;
@@ -417,6 +429,25 @@ void user_main_timer_cyc( void )
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
 		ke_evt_set(KE_EVT_USR_2_BIT);
 	}
+}
+
+/************************************************************************/
+/* 関数     : battery_level_cyc											*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	// 電池残量取得(10分周期)
+	main_set_battery();
+	
+	return (KE_MSG_CONSUMED);
 }
 
 /************************************************************************/

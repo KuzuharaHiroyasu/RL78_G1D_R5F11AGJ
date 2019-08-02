@@ -33,6 +33,7 @@
 #define USER_MAIN_CALC_IBIKI			KE_FIRST_MSG(USER_MAIN_ID) + 5
 #define USER_MAIN_CALC_ACL				KE_FIRST_MSG(USER_MAIN_ID) + 6
 #define USER_MAIN_CYC_CALC_RESULT		KE_FIRST_MSG(USER_MAIN_ID) + 7
+#define USER_MAIN_CYC_BATTERY			KE_FIRST_MSG(USER_MAIN_ID) + 8
 
 
 
@@ -170,7 +171,7 @@ typedef enum{
 
 #define		TIME_CNT_BAT_LEVEL_MIN_INTERVAL		(100)		/* 電池残量低下通知インターバル(1秒) */
 
-
+#define		BAT_LEVEL_GET_CYC						600		// 600秒(10分)
 
 
 
@@ -431,6 +432,7 @@ typedef struct{
 	UW sec30_cnt;			//30秒カウント
 	UW sec10_cnt;			//10秒カウント
 	UW sec7_cnt;			//7秒カウント
+	UW sec600_cnt;			//10分カウント
 	
 	UB get_mode_seq;				// GETモードシーケンス
 	UH get_mode_calc_cnt;
@@ -653,5 +655,6 @@ extern void user_main_timer_10ms_set( void );
 extern void user_main_timer_cyc( void );
 extern UW time_get_elapsed_time( void );
 extern void reset_vib_timer(void);
+extern void main_set_battery( void );
 
 #endif // __MAIN_USR_INC__

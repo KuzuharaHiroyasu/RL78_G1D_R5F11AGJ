@@ -20,6 +20,7 @@ static const struct ke_msg_handler cpu_com_handler[] =
 	{ USER_MAIN_CALC_IBIKI		, (ke_msg_func_t)main_calc_ibiki },
 	{ USER_MAIN_CALC_ACL		, (ke_msg_func_t)main_calc_acl },
 	{ USER_MAIN_CYC_CALC_RESULT	, (ke_msg_func_t)user_main_calc_result_cyc },
+	{ USER_MAIN_CYC_BATTERY		, (ke_msg_func_t)battery_level_cyc },
 };
 
 /* Status Handler */
