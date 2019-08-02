@@ -577,7 +577,7 @@ typedef struct{
 #define	VUART_CMD_LEN_DEVICE_INFO	1
 
 //#define	VUART_CMD_LEN_ALARM_SET		8
-#define	VUART_CMD_LEN_DEVICE_SET	4
+#define	VUART_CMD_LEN_DEVICE_SET	5
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
