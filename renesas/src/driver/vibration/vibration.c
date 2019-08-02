@@ -11,7 +11,7 @@
 
 // グローバル変数
 B			vib_orbit = 0;
-VIB_MODE	vib_mode = VIB_MODE_MAX;
+VIB_MODE	vib_mode = VIB_MODE_INITIAL;
 
 // プロトタイプ宣言
 STATIC void vib_on(void);
@@ -63,6 +63,9 @@ void vib_start(UH vib_timer)
 			default:
 				break;
 		}
+	}else if(vib_mode != VIB_MODE_INITIAL)
+	{
+		vib_mode = VIB_MODE_INITIAL;
 	}
 }
 
@@ -88,6 +91,38 @@ void set_vib(VIB_MODE mode)
 	
 	// パターン
 	vib_mode = mode;
+}
+
+/************************************************************************/
+/* 関数     : set_vib_mode												*/
+/* 関数名   : バイブレーション設定変換									*/
+/* 引数     : yokusei_str:抑制強度										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.08.01 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+VIB_MODE set_vib_mode(UB yokusei_str)
+{
+	VIB_MODE mode = VIB_MODE_DURING;
+	
+	switch(yokusei_str)
+	{
+		case 0: //弱
+			mode = VIB_MODE_WEAK;
+			break;
+		case 1: //中
+			mode = VIB_MODE_DURING;
+			break;
+		case 2: //強
+			mode = VIB_MODE_STRENGTH;
+			break;
+		default:
+			break;
+	}
+	return mode;
 }
 
 /************************************************************************/

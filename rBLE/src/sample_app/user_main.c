@@ -351,6 +351,12 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	// バイブレーション(10ms周期)
+	if(s_unit.tick_vib_10ms_sec >= (uint16_t)PERIOD_10MSEC)
+	{
+   		vib_start(s_unit.tick_vib_10ms_sec);
+	}
+	
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
 		// 50ms周期
@@ -1576,6 +1582,8 @@ STATIC SYSTEM_MODE evt_idle_com( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
+	set_vib(VIB_MODE_STANDBY);
+	
 	return system_mode;
 }
 
@@ -1614,6 +1622,8 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 STATIC SYSTEM_MODE evt_sensing( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
+	
+	set_vib(VIB_MODE_SENSING);
 	
 	return system_mode;
 }

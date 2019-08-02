@@ -16,6 +16,10 @@
 #define VIB_ENA		P0_bit.no0
 #define VIB_ORBIT	3	// バイブ周回
 
+#define VIB_SET_MODE_WEAK		0
+#define VIB_SET_MODE_DURING		1
+#define VIB_SET_MODE_STRENGTH	2
+
 
 typedef enum{
 	VIB_MODE_ON,		// ON(単純動作)
@@ -25,7 +29,7 @@ typedef enum{
 	VIB_MODE_STRENGTH,	// 強
 	VIB_MODE_STANDBY,	// 待機モード移行時
 	VIB_MODE_SENSING,	// センシングモード移行時
-	VIB_MODE_MAX
+	VIB_MODE_INITIAL
 }VIB_MODE;
 
 /******************/
@@ -33,5 +37,6 @@ typedef enum{
 /******************/
 extern void vib_start(UH vib_timer);
 extern void set_vib(VIB_MODE mode);
+extern VIB_MODE set_vib_mode(UB yokusei_str);
 
 #endif // __VIBRATION_INC__
