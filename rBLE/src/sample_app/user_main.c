@@ -867,7 +867,7 @@ STATIC void sw_proc(void)
 		s_unit.sw_time_cnt++;
 		
 #if FUNC_SW_LONGPUSH_RELEASE == OFF
-		if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+		if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
 			// 規定時間以上連続押下と判断
 			evt_act( EVENT_POW_SW_LONG );
 		}
@@ -881,7 +881,7 @@ STATIC void sw_proc(void)
 				// 規定時間以上連続押下と判断
 				evt_act( EVENT_POW_SW_LONG );
 #else
-			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+			if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
 				// ON確定時にイベント発生済みなのでここでは何もしない
 #endif
 			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
@@ -2378,19 +2378,21 @@ STATIC void main_mode_chg( void )
 	s_unit.system_mode = s_unit.next_system_mode;		// モード変更
 	
 	if( SYSTEM_MODE_SENSING == s_unit.system_mode ){
-		user_main_mode_sensing_before();
-		// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
-//		set_led(LED_PATT_YELLOW_OFF);
-		
-		// センシング移行時にLEDとバイブ動作
-		if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+		if( s_unit.sensing_flg != ON )
 		{
-			set_led( LED_PATT_GREEN_LIGHTING );
-		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
-			set_led( LED_PATT_GREEN_BLINK );
+			// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
+	//		set_led(LED_PATT_YELLOW_OFF);
+			
+			// センシング移行時にLEDとバイブ動作
+			if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+			{
+				set_led( LED_PATT_GREEN_LIGHTING );
+			} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
+				set_led( LED_PATT_GREEN_BLINK );
+			}
+			set_vib(VIB_MODE_SENSING);
 		}
-		
-		set_vib(VIB_MODE_SENSING);
+		user_main_mode_sensing_before();
 	}
 	
 	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
