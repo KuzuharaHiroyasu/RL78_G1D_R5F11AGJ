@@ -3204,7 +3204,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 {
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
-	UB state;
+//	UB state;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
@@ -3247,7 +3247,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	int max = s_unit.ibiki_val[0];
 	static const int size = 9;
 	UB newstate;
-	UB state;
+//	UB state;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
