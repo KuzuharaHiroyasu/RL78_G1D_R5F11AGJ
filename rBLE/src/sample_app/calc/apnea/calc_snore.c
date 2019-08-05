@@ -31,6 +31,7 @@ static UB	SnoreFlg_; // ONカウント中 or OFFカウント中
 static UB	SnoreCnt_; // ON連続回数, OFF連続回数 兼用
 static B	SnoreTime_[RIREKI];
 static UB	SnoreState_;		// いびき
+static UH	snore_sens = SNORE_PARAM_THRE_DURING;	// いびき感度
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -82,7 +83,7 @@ void calc_snore_proc(const UH *pData)
 		temp_int_buf0[ii] = 0;
 		size = ii+SNORE_PARAM_SIZE;
 		for(jj=ii;jj<size;++jj){
-			if(pData[jj] >= SNORE_PARAM_THRE){
+			if(pData[jj] >= snore_sens){
 				temp_int_buf0[ii] += 1;
 			}
 		}
@@ -254,6 +255,37 @@ static void Reset(void)
 UB calc_snore_get(void)
 {
 	return SnoreState_;
+}
+
+/************************************************************************/
+/* 関数     : set_snore_thre											*/
+/* 関数名   : いびき閾値設定											*/
+/* 引数     : UB sens													*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.08.05 oneA 葛原 弘安			初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+void set_snore_sens( UB sens )
+{
+	switch ( sens )
+	{
+	case SNORE_SENS_WEAK:		// 弱
+		snore_sens = SNORE_PARAM_THRE_WERK;
+		break;
+	case SNORE_SENS_DURING:		// 中
+		snore_sens = SNORE_PARAM_THRE_DURING;
+		break;
+	case SNORE_SENS_STRENGTH:	// 強
+		snore_sens = SNORE_PARAM_THRE_STRENGTH;
+		break;
+	default:
+		snore_sens = SNORE_PARAM_THRE_DURING;
+		break;
+	}
 }
 
 /*==============================================================================*/

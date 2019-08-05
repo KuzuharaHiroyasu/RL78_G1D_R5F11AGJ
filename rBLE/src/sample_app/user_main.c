@@ -3018,6 +3018,12 @@ void main_vuart_rcv_device_set( void )
 	tx[0] = VUART_CMD_DEVICE_SET;
 	tx[1] = result;
 	main_vuart_send( &tx[0], 2 );
+	
+	if(result == VUART_DATA_RESULT_OK)
+	{
+		// Ç¢Ç—Ç´ä¥ìxê›íË
+		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
+	}
 }
 
 #if 0

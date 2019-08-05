@@ -17,7 +17,12 @@
 /************************************************************/
 /* 						å^íËã`								*/
 /************************************************************/
-
+typedef enum{
+	SNORE_SENS_WEAK = 0,		// é„
+	SNORE_SENS_DURING,			// íÜ
+	SNORE_SENS_STRENGTH,		// ã≠
+	SNORE_SENS_MAX
+}SNORE_SENS;
 
 /************************************************************/
 /*					äOïîéQè∆êÈåæ							*/
@@ -25,6 +30,7 @@
 extern void	calc_snore_init(void);
 extern void	calc_snore_proc(const UH *pData);
 extern UB	calc_snore_get(void);
+extern void set_snore_sens( UB sens );
 
 #endif	/*_CALC_SNORE_H_*/
 /************************************************************/
