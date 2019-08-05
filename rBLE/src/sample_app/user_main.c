@@ -2379,6 +2379,9 @@ STATIC void main_mode_chg( void )
 	
 	if( SYSTEM_MODE_SENSING == s_unit.system_mode ){
 		user_main_mode_sensing_before();
+		// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
+//		set_led(LED_PATT_YELLOW_OFF);
+		
 		// センシング移行時にLEDとバイブ動作
 		if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
 		{

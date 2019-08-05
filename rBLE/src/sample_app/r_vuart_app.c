@@ -1117,6 +1117,8 @@ static void app_gap_connect_comp(RBLE_GAP_EVENT *event)
 
         case APP_CONNECT_SLAVE:
             CHECK_OK(RBLE_VUART_Server_Enable(app.conhdl, app_vuart_server_callback));
+			// BLEê⁄ë±éûí ÇÈ
+			set_led(LED_PATT_YELLOW_ON);
             break;
 
         default:
@@ -1166,11 +1168,13 @@ static void app_gap_disconnect_comp(RBLE_GAP_EVENT *event)
         break;
 
     case APP_CONNECT_SLAVE:
+    	// BLEêÿíféûí ÇÈ
         at_print_event("DISCONNECT");
         app_change_state(APP_ADVERTISER);
         app_gap_broadcast_enable(APP_ADV_NORMAL_CYCLE);
         CHECK_OK(RBLE_VUART_Server_Disable());
         app.key_state = APP_KEY_NONE;
+		set_led(LED_PATT_YELLOW_OFF);
         break;
 
     default:
