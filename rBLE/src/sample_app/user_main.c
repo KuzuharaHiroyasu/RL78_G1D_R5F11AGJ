@@ -148,6 +148,7 @@ STATIC T_UNIT s_unit;
 STATIC DS s_ds;
 
 static UB act_mode = ACT_MODE_NORMAL;
+static UB vib_str = VIB_MODE_DURING;
 
 /********************/
 /*     定数定義     */
@@ -3027,6 +3028,8 @@ void main_vuart_rcv_device_set( void )
 		act_mode = s_unit.alarm.info.dat.act_mode;
 		// いびき感度設定
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
+		//抑制強度設定
+		vib_str = s_unit.alarm.info.dat.yokusei_str;
 	}
 }
 
@@ -3231,7 +3234,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
-			set_vib(set_vib_mode(s_unit.alarm.info.dat.yokusei_str));
+			set_vib(set_vib_mode(vib_str));
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
@@ -3311,7 +3314,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
-			set_vib(set_vib_mode(s_unit.alarm.info.dat.yokusei_str));
+			set_vib(set_vib_mode(vib_str));
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
