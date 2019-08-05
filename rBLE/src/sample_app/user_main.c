@@ -147,6 +147,8 @@ ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
 STATIC T_UNIT s_unit;
 STATIC DS s_ds;
 
+static UB act_mode = ACT_MODE_NORMAL;
+
 /********************/
 /*     定数定義     */
 /********************/
@@ -3021,6 +3023,8 @@ void main_vuart_rcv_device_set( void )
 	
 	if(result == VUART_DATA_RESULT_OK)
 	{
+		// 動作モード設定
+		act_mode = s_unit.alarm.info.dat.act_mode;
 		// いびき感度設定
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 	}
@@ -3225,7 +3229,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	bit_shift = s_unit.phase_kokyu * 2;
 	if(newstate == APNEA_ERROR){
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
-		if(s_unit.alarm.info.dat.act_mode != ACT_MODE_MONITOR)
+		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
 			set_vib(set_vib_mode(s_unit.alarm.info.dat.yokusei_str));
 		}
@@ -3305,7 +3309,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	bit_shift = s_unit.phase_ibiki * 2;
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		if(s_unit.alarm.info.dat.act_mode != ACT_MODE_MONITOR)
+		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
 			set_vib(set_vib_mode(s_unit.alarm.info.dat.yokusei_str));
 		}
