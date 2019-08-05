@@ -264,6 +264,8 @@ INT read_ring_buf( RING_BUF* p_ring, UB* p_data );
 INT write_ring_buf( RING_BUF* p_ring ,UB data );
 void dummy( void );
 UH crc16( UB* p_in, int len );
+UB bin2bcd( UB bin );
+INT bcd2bin( UB *bin, const UB *src_bcd );
 void wait_ms( int ms );
 
 
