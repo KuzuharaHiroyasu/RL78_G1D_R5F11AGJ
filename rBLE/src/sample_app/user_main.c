@@ -860,14 +860,27 @@ STATIC void sw_proc(void)
 	pow_sw = drv_i_port_read_pow_sw();
 	
 	if( ON == pow_sw ){		// ON処理
-		// なにもしない(電源SW押下タイマー継続)
+		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
+		
+#if FUNC_SW_LONGPUSH_RELEASE == OFF
+		if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+			// 規定時間以上連続押下と判断
+			evt_act( EVENT_POW_SW_LONG );
+		}
+#endif
+
 	}else{					// OFF処理
 		if( ON == s_unit.pow_sw_last ){
 			// ON→OFFエッジ
+#if FUNC_SW_LONGPUSH_RELEASE == ON
 			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
 				// 規定時間以上連続押下と判断
 				evt_act( EVENT_POW_SW_LONG );
+#else
+			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+				// ON確定時にイベント発生済みなのでここでは何もしない
+#endif
 			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
 				evt_act( EVENT_POW_SW_SHORT );
 			}else{
@@ -3191,8 +3204,9 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 {
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
-//	UB state;
-	UB	clear_mask = 0x03;
+	UB state;
+	UB	set_ibiki_mask = 0x01;
+	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
 	
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
@@ -3203,8 +3217,16 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 //	s_unit.calc.info.dat.state = (newstate | state);
 	
 	bit_shift = s_unit.phase_kokyu * 2;
-	s_unit.calc.info.dat.state &= ~(clear_mask << bit_shift);
-	s_unit.calc.info.dat.state |= (newstate << bit_shift);
+	if(newstate == APNEA_ERROR){
+		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
+	}else{
+		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
+	}
+	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
+	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
+		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
+		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
+	}
 	
 	s_unit.phase_kokyu++;
 	if(s_unit.phase_kokyu >= SEC_PHASE_NUM){
@@ -3224,8 +3246,12 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	int ii;
 	int max = s_unit.ibiki_val[0];
 	static const int size = 9;
-//	UB newstate;
-//	UB state;
+	UB newstate;
+	UB state;
+	UB	set_ibiki_mask = 0x01;
+	UB	set_kokyu_mask = 0x02;
+	UB	bit_shift = 0;
+
 #if 0 // テスト用データ
 	static const UH testdata[200] = {
 		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
@@ -3257,18 +3283,33 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		}
 	}
 	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = max;
-	s_unit.phase_ibiki++;
-	if(s_unit.phase_ibiki >= SEC_PHASE_NUM){
-		s_unit.phase_ibiki = SEC_PHASE_0_10;
-	}
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	//calc_snore_proc(&testdata[0]);
-//	newstate = calc_snore_get();
+	newstate = calc_snore_get();
 //	AlarmSnore(s_unit.calc.info.dat.state, newstate);
 //	state = (s_unit.calc.info.dat.state & 0xFE);
 //	s_unit.calc.info.dat.state = (newstate | state);
+	
+	bit_shift = s_unit.phase_ibiki * 2;
+	if(newstate == SNORE_ON){
+		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
+	}else{
+		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
+	}
+	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
+	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
+		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
+		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
+	}
+	
+	s_unit.phase_ibiki++;
+	if(s_unit.phase_ibiki >= SEC_PHASE_NUM){
+		s_unit.phase_ibiki = SEC_PHASE_0_10;
+	}	
+	
+	
 	// 移動累計とるので前のデータを残す
 	for(ii=0;ii<size;++ii){
 		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE_APNEA-size+ii];

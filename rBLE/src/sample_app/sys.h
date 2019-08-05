@@ -197,6 +197,7 @@
 #define		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 #endif
 	
+#define		FUNC_SW_LONGPUSH_RELEASE				OFF					/* ON:電源SW長押しは離したときにイベント発生、OFF:電源SW長押しは長押し確定時間経過時にイベント発生 */
 
 
 
