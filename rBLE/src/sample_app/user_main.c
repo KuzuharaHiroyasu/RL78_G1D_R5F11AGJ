@@ -757,6 +757,7 @@ void user_system_init( void )
 {
 	R_INTC_Create();
 	R_IT_Create();
+	R_RTC_Create();
 }
 
 /************************************************************************/
@@ -990,7 +991,22 @@ STATIC void user_main_mode_common( void )
 STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
-
+	rtc_counter_value_t rtc_val;
+	
+	// 日時情報取得
+	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
+		err_info( ERR_ID_MAIN );
+	}
+	
+	// BCD→バイナリ変換
+	bcd2bin(&s_unit.date.year, &rtc_val.year);
+	bcd2bin(&s_unit.date.month, &rtc_val.month);
+	bcd2bin(&s_unit.date.week, &rtc_val.week);
+	bcd2bin(&s_unit.date.day, &rtc_val.day);
+	bcd2bin(&s_unit.date.hour, &rtc_val.hour);
+	bcd2bin(&s_unit.date.min, &rtc_val.min);
+	bcd2bin(&s_unit.date.sec, &rtc_val.sec);
+	
 	// 日時情報書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
@@ -2751,11 +2767,26 @@ STATIC void main_vuart_rcv_device_info( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
+	rtc_counter_value_t rtc_val;
+	rtc_counter_value_t rtc_val_bin;
 	
 	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
 	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
 		result = VUART_DATA_RESULT_NG;
 	}
+	
+	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
+		err_info( ERR_ID_MAIN );
+	}
+	
+	// BCD→バイナリ変換
+	bcd2bin(&rtc_val_bin.year, &rtc_val.year);
+	bcd2bin(&rtc_val_bin.month, &rtc_val.month);
+	bcd2bin(&rtc_val_bin.week, &rtc_val.week);
+	bcd2bin(&rtc_val_bin.day, &rtc_val.day);
+	bcd2bin(&rtc_val_bin.hour, &rtc_val.hour);
+	bcd2bin(&rtc_val_bin.min, &rtc_val.min);
+	bcd2bin(&rtc_val_bin.sec, &rtc_val.sec);
 	
 	tx[0] = VUART_CMD_DEVICE_INFO;
 	tx[1] = result;							// 結果
@@ -2766,13 +2797,13 @@ STATIC void main_vuart_rcv_device_info( void )
 	tx[6] = s_unit.bd_device_adrs[4];
 	tx[7] = s_unit.bd_device_adrs[5];
 	tx[8] = s_unit.frame_num.cnt;
-	tx[9]  = s_unit.date.year;
-	tx[10]  = s_unit.date.month;
-	tx[11] = s_unit.date.week;
-	tx[12] = s_unit.date.day;
-	tx[13] = s_unit.date.hour;
-	tx[14] = s_unit.date.min;
-	tx[15] = s_unit.date.sec;
+	tx[9]  = rtc_val_bin.year;
+	tx[10]  = rtc_val_bin.month;
+	tx[11] = rtc_val_bin.week;
+	tx[12] = rtc_val_bin.day;
+	tx[13] = rtc_val_bin.hour;
+	tx[14] = rtc_val_bin.min;
+	tx[15] = rtc_val_bin.sec;
 	
 	main_vuart_send( &tx[0], VUART_SND_LEN_DEVICE_INFO );
 }
@@ -2910,22 +2941,35 @@ void main_vuart_rcv_date( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	
+	rtc_counter_value_t rtc_val;
+	
+	rtc_val.year = s_ds.vuart.input.rcv_data[1];
+	rtc_val.month = s_ds.vuart.input.rcv_data[2];
+	rtc_val.week = s_ds.vuart.input.rcv_data[3];
+	rtc_val.day = s_ds.vuart.input.rcv_data[4];
+	rtc_val.hour = s_ds.vuart.input.rcv_data[5];
+	rtc_val.min = s_ds.vuart.input.rcv_data[6];
+	rtc_val.sec = s_ds.vuart.input.rcv_data[7];
+	
+	// バイナリ→BCD変換
+	rtc_val.year  = bin2bcd(rtc_val.year);
+	rtc_val.month = bin2bcd(rtc_val.month);
+	rtc_val.week  = bin2bcd(rtc_val.week);
+	rtc_val.day   = bin2bcd(rtc_val.day);
+	rtc_val.hour  = bin2bcd(rtc_val.hour);
+	rtc_val.min   = bin2bcd(rtc_val.min);
+	rtc_val.sec   = bin2bcd(rtc_val.sec);
+	
+	
+	if( MD_OK != R_RTC_Set_CounterValue( rtc_val ) ){
+		err_info( ERR_ID_MAIN );
+	}
+	
 //	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
 //	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
 		tx[0] = VUART_CMD_DATE_SET;
 		tx[1] = VUART_DATA_RESULT_OK;
 		main_vuart_send( &tx[0], 2 );
-//	}else{
-//		// CPU間通信でブリッジ送信
-//		s_ds.cpu_com.order.snd_cmd_id  = CPU_COM_CMD_DATE_SET;
-//		s_ds.cpu_com.order.snd_data[0] = s_ds.vuart.input.rcv_data[1];
-//		s_ds.cpu_com.order.snd_data[1] = s_ds.vuart.input.rcv_data[2];
-//		s_ds.cpu_com.order.snd_data[2] = s_ds.vuart.input.rcv_data[3];
-//		s_ds.cpu_com.order.snd_data[3] = s_ds.vuart.input.rcv_data[4];
-//		s_ds.cpu_com.order.snd_data[4] = s_ds.vuart.input.rcv_data[5];
-//		s_ds.cpu_com.order.snd_data[5] = s_ds.vuart.input.rcv_data[6];
-//		s_ds.cpu_com.order.snd_data[6] = s_ds.vuart.input.rcv_data[7];
-//		s_ds.cpu_com.order.data_size   = CPU_COM_SND_DATA_SIZE_DATE_SET;
 //	}
 }
 
