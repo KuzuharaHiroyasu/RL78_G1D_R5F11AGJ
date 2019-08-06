@@ -881,7 +881,7 @@ STATIC void sw_proc(void)
 				// 規定時間以上連続押下と判断
 				evt_act( EVENT_POW_SW_LONG );
 #else
-			if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
+			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
 				// ON確定時にイベント発生済みなのでここでは何もしない
 #endif
 			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
