@@ -1021,14 +1021,15 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
-
+	UB bat = drv_i_port_bat_chg_detect();
+	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
 	set_led(LED_PATT_YELLOW_OFF);
 	
 	// 電池残量確認
 	main_set_battery();
-	if( s_unit.battery_sts != BAT_LEVEL_STS_MIN )
-	{//電池残量なしならセンシングモード移行処理をしない
+	if( s_unit.battery_sts != BAT_LEVEL_STS_MIN || bat != ON)
+	{//電池残量なし、充電中ならセンシングモード移行処理をしない
 		// 日時情報取得
 		if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
 			err_info( ERR_ID_MAIN );
