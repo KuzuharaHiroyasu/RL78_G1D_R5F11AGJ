@@ -423,14 +423,14 @@ void user_main_timer_cyc( void )
 				// フォトセンサー値取得
 				s_unit.meas.info.dat.photoref_val = main_photo_read();
 			}
-#endif
-			s_unit.tick_10ms_new = 0;
 			
 			s_unit.sensing_cnt_50ms++;
-			// 12時間判定
-			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS ){
+			// 12時間を超えた or 充電残量なしなら待機モードへ
+			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS || s_unit.battery_sts == BAT_LEVEL_STS_MIN){
 				evt_act( EVENT_POW_SW_LONG );
 			}
+#endif
+			s_unit.tick_10ms_new = 0;
 		}
 	}
 	// 20ms周期
