@@ -44,11 +44,11 @@
 // OFF判定回数
 #define SNORE_PARAM_OFF_CNT				(0)
 // いびき閾値[感度：小]
-#define SNORE_PARAM_THRE_WERK			(311)
+#define SNORE_PARAM_THRE_WERK			(300)
 // いびき閾値[感度：中]
-#define SNORE_PARAM_THRE_DURING			(256)
+#define SNORE_PARAM_THRE_DURING			(245)
 // いびき閾値[感度：大]
-#define SNORE_PARAM_THRE_STRENGTH		(201)
+#define SNORE_PARAM_THRE_STRENGTH		(200)
 // いびきあり -> なしへの判定回数
 #define SNORE_PARAM_NORMAL_CNT			(290)
 // 許容誤差 0.4s
