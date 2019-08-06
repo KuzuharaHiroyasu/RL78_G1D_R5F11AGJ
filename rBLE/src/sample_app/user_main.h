@@ -153,6 +153,11 @@ typedef enum{
 #define ACT_MODE_NORMAL						0	// 通常動作モード
 #define ACT_MODE_MONITOR					1	// モニタリングモード
 
+// 抑制動作最大継続時間
+#define SET_MAX_YOKUSEI_CONT_5_MIN			0	// 5分
+#define SET_MAX_YOKUSEI_CONT_10_MIN			1	// 10分
+#define SET_MAX_YOKUSEI_CONT_NON			2	// 設定しない
+
 // プログラムシーケンス
 typedef enum{
 	PRG_SEQ_IDLE = 0,					// アイドル
@@ -182,6 +187,10 @@ typedef enum{
 
 #define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
 //#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
+
+#define		MAX_YOKUSEI_CONT_TIME_5_MIN_CNT		30		// 10秒毎 1分(6) * 5 = 30回 = 5分
+#define		MAX_YOKUSEI_CONT_TIME_10_MIN_CNT	60		// 10秒毎 1分(6) * 10 = 60回 = 10分
+#define		MAX_YOKUSEI_CONT_TIME_NON_CNT		4320	// 10秒毎 1分(6) * 60 * 12 = 4320回 = 720分 = 12時間
 
 // 測定個数
 #define		MEAS_SEKIGAI_CNT_MAX		140
@@ -434,6 +443,7 @@ typedef struct{
 	UH tick_vib_10ms_sec;
 	UH tick_led_10ms_sec;
 	UW sensing_cnt_50ms;		// センシング終了[50ms]
+	UW cnt_time_50ms;		//抑制継続時間用カウント
 	
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ

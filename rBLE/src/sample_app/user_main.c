@@ -114,6 +114,7 @@ void main_vuart_rcv_device_set( void );
 static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static void set_yokusei_cnt_time(UB yokusei_max_time);
 
 // ACL関連
 STATIC void main_acl_init(void);
@@ -149,6 +150,7 @@ STATIC DS s_ds;
 
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
+static UB yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 
 /********************/
 /*     定数定義     */
@@ -1047,7 +1049,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.acl_cnt = 0;
 	
 	s_unit.sensing_cnt_50ms = 0;
-	
+	s_unit.cnt_time_50ms = 0;
 	s_unit.sensing_flg = ON;
 }
 
@@ -3054,6 +3056,8 @@ void main_vuart_rcv_device_set( void )
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 		//抑制強度設定
 		vib_str = s_unit.alarm.info.dat.yokusei_str;
+		//抑制動作最大継続時間
+		set_yokusei_cnt_time(s_unit.alarm.info.dat.yokusei_max_time);
 	}
 }
 
@@ -3336,12 +3340,14 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	bit_shift = s_unit.phase_ibiki * 2;
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		if(act_mode != ACT_MODE_MONITOR)
-		{//モニタリングモードでないならバイブレーション動作
+		s_unit.cnt_time_50ms++;
+		if(act_mode != ACT_MODE_MONITOR && s_unit.cnt_time_50ms <= yokusei_max_cnt)
+		{//モニタリングモードでないかつ、抑制動作最大時間以下
 			set_vib(set_vib_mode(vib_str));
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
+		s_unit.cnt_time_50ms = 0;	// 初期化
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
@@ -4127,5 +4133,35 @@ void main_set_battery(void)
 		s_unit.battery_sts = BAT_LEVEL_STS_LOW;
 	}else{
 		s_unit.battery_sts = BAT_LEVEL_STS_MIN;
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_set_battery											*/
+/* 関数名   : 電池残量設定												*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.26 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+static void set_yokusei_cnt_time(UB yokusei_max_time)
+{
+	switch(yokusei_max_time)
+	{
+	case SET_MAX_YOKUSEI_CONT_5_MIN:
+		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_5_MIN_CNT;
+		break;
+	case SET_MAX_YOKUSEI_CONT_10_MIN:
+		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+		break;
+	case SET_MAX_YOKUSEI_CONT_NON:
+		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_NON_CNT;
+		break;
+	default:
+		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+		break;
 	}
 }
