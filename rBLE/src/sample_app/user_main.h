@@ -178,7 +178,7 @@ typedef enum{
 
 #define		BAT_LEVEL_GET_CYC						600		// 600秒(10分)
 
-
+#define		HOUR12_CNT_50MS		(UW)( 12L * 60L * 60L * (1000L / 50L))	//12時間のカウント値[50ms]
 
 #define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
 //#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
@@ -433,6 +433,7 @@ typedef struct{
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	UH tick_led_10ms_sec;
+	UW sensing_cnt_50ms;		// センシング終了[50ms]
 	
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ

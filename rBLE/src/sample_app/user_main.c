@@ -423,6 +423,12 @@ void user_main_timer_cyc( void )
 			}
 #endif
 			s_unit.tick_10ms_new = 0;
+			
+			s_unit.sensing_cnt_50ms++;
+			// 12ŽžŠÔ”»’è
+			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS ){
+				evt_act( EVENT_POW_SW_LONG );
+			}
 		}
 	}
 	// 20msŽüŠú
@@ -1028,6 +1034,8 @@ STATIC void user_main_mode_sensing_before( void )
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
 
 	s_unit.calc_cnt = 0;
+	
+	s_unit.sensing_cnt_50ms = 0;
 	
 	s_unit.sensing_flg = ON;
 }
