@@ -378,6 +378,11 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+#if FUNC_DEBUG_LOG == ON
+	//デバッグ時は常時強制的にセンシング
+	s_unit.system_mode = SYSTEM_MODE_SENSING;
+#endif
+	
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
 		// 50ms周期
