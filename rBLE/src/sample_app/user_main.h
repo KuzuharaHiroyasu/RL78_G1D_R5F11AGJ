@@ -188,7 +188,11 @@ typedef enum{
 #define		MEAS_SEKISHOKU_CNT_MAX		140
 #define		MEAS_KOKYU_CNT_MAX			200
 #define		MEAS_IBIKI_CNT_MAX			200
+#if FUNC_DEBUG_LOG == ON
 #define		MEAS_ACL_CNT_MAX			20
+#else
+#define		MEAS_ACL_CNT_MAX			2
+#endif
 
 // 演算結果書き込みタイミング
 #define		CALC_RESULT_WR_CYC			30			// 30秒
