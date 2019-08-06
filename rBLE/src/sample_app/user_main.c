@@ -1024,7 +1024,7 @@ STATIC void user_main_mode_sensing_before( void )
 	UB bat = drv_i_port_bat_chg_detect();
 	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
-	set_led(LED_PATT_YELLOW_OFF);
+	led_yellow_off();
 	
 	// 電池残量確認
 	main_set_battery();

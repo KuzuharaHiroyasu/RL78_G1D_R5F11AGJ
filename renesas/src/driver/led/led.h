@@ -45,5 +45,10 @@ typedef enum{
 
 extern void led_start(UW led_timer);
 extern void set_led(LED_PATT patt);
-
+extern void led_on(void);
+extern void led_off(void);
+extern void led_green_on(void);
+extern void led_green_off(void);
+extern void led_yellow_on(void);
+extern void led_yellow_off(void);
 #endif // LED_H_

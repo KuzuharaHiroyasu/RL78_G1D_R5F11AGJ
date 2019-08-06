@@ -14,14 +14,8 @@ LED_PATT pattern = LED_PATT_INITIAL;
 UH		 led_orbit_timer = 0;
 
 // プロトタイプ宣言
-STATIC void led_on(void);
-STATIC void led_off(void);
-STATIC void led_green_on(void);
-STATIC void led_green_off(void);
 STATIC void led_green_lighting(UW led_timer);
 STATIC void led_green_blink(UW led_timer);
-STATIC void led_yellow_on(void);
-STATIC void led_yellow_off(void);
 STATIC void led_yellow_lighting(UW led_timer);
 STATIC void led_yellow_blink(UW led_timer);
 
@@ -112,7 +106,7 @@ void set_led(LED_PATT patt)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_on(void)
+void led_on(void)
 {
 	LED_GREEN = LED_ON;
 	LED_YELLOW = LED_ON;
@@ -129,7 +123,7 @@ STATIC void led_on(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_off(void)
+void led_off(void)
 {
 	LED_GREEN = LED_OFF;
 	LED_YELLOW = LED_OFF;
@@ -146,7 +140,7 @@ STATIC void led_off(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_green_on(void)
+void led_green_on(void)
 {
 	LED_GREEN = LED_ON;
 }
@@ -162,7 +156,7 @@ STATIC void led_green_on(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_green_off(void)
+void led_green_off(void)
 {
 	LED_GREEN = LED_OFF;
 }
@@ -239,7 +233,7 @@ STATIC void led_green_blink(UW led_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_yellow_on(void)
+void led_yellow_on(void)
 {
 	LED_YELLOW = LED_ON;
 }
@@ -255,7 +249,7 @@ STATIC void led_yellow_on(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void led_yellow_off(void)
+void led_yellow_off(void)
 {
 	LED_YELLOW = LED_OFF;
 }
