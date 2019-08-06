@@ -150,7 +150,7 @@ STATIC DS s_ds;
 
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
-static UB yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 
 /********************/
 /*     íËêîíËã`     */
