@@ -1035,6 +1035,17 @@ STATIC void user_main_mode_sensing_before( void )
 
 	s_unit.calc_cnt = 0;
 	
+	// センサー取得データをクリア
+	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
+	memset(s_unit.ibiki_val, 0, MEAS_KOKYU_CNT_MAX);
+	memset(s_unit.acl_x, 0, MEAS_ACL_CNT_MAX);
+	memset(s_unit.acl_y, 0, MEAS_ACL_CNT_MAX);
+	memset(s_unit.acl_z, 0, MEAS_ACL_CNT_MAX);
+	
+	s_unit.kokyu_cnt = 0;
+	s_unit.ibiki_cnt = 0;
+	s_unit.acl_cnt = 0;
+	
 	s_unit.sensing_cnt_50ms = 0;
 	
 	s_unit.sensing_flg = ON;
