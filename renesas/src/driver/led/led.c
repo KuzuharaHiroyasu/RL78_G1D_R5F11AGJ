@@ -74,7 +74,7 @@ void led_start(UW led_timer)
 			break;
 	}
 	
-	if(LED_TIMER_10SEC < led_timer && pattern != LED_PATT_INITIAL)
+	if(LED_TIMER_10SEC < led_timer && pattern != LED_PATT_INITIAL && pattern != LED_PATT_YELLOW_ON)
 	{// 10秒超えたらパターンを初期値に戻してLEDをOFFにしておく
 		pattern = LED_PATT_INITIAL;
 		led_off();

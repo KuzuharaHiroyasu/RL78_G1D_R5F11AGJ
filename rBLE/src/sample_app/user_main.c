@@ -2381,7 +2381,7 @@ STATIC void main_mode_chg( void )
 		if( s_unit.sensing_flg != ON )
 		{
 			// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
-	//		set_led(LED_PATT_YELLOW_OFF);
+			set_led(LED_PATT_YELLOW_OFF);
 			
 			// センシング移行時にLEDとバイブ動作
 			if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
