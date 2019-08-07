@@ -285,10 +285,8 @@ _PLF_CODE static void plf_port_init(void)
     write1_sfr(P1, 0, 0);	// 予備（バイブレータEN）  未使用なのでLOWのOUTPUTにしておく
 	write1_sfr(P1, 1, 0);	// 予備RXD（パソコン通信） 未使用なのでLOWのOUTPUTにしておく
 	write1_sfr(P1, 2, 0);	// 予備TXD（パソコン通信） 未使用なのでLOWのOUTPUTにしておく
-	write1_sfr(P1, 4, 1);	// 電源
     write1_sfr(P1, 5, 0);	// LED(黄)
     write1_sfr(P1, 6, 0);	// LED(緑)
-	write1_sfr(P2, 0, 1);	// フォトセンサー
 
 	write1_sfr(POM0, 3, 1);
     write1_sfr(PMC0, 3, 0);
@@ -335,6 +333,9 @@ _PLF_CODE static void plf_port_init(void)
     write_sfr(PM14, 0x81);
     write_sfr(PM15, 0x80);
 #endif
+	// HIGH出力設定
+	write1_sfr(P1, 4, 1);	// 電源
+	write1_sfr(P2, 0, 1);	// フォトセンサー
 }
 
 _PLF_CODE void plf_init(const uint8_t plf_flg)
