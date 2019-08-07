@@ -1843,7 +1843,7 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 /************************************************************************/
 STATIC SYSTEM_MODE evt_initial( int evt)
 {
-	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
 	return system_mode;
 }
@@ -1861,7 +1861,7 @@ STATIC SYSTEM_MODE evt_initial( int evt)
 /************************************************************************/
 STATIC SYSTEM_MODE evt_initial_chg( int evt)
 {
-	SYSTEM_MODE system_mode = SYSTEM_MODE_INITIAL;
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
 	if( ON == s_unit.h1d.info.bit_f.bat_chg ){
 		system_mode = SYSTEM_MODE_NON;
