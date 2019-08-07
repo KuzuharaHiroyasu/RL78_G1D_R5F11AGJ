@@ -28,9 +28,11 @@ void com_srv_send( UB* tx_data, UB len );
 /********************/
 /*     内部変数     */
 /********************/
-//STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
+#if FUNC_DEBUG_LOG == ON
+STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
 																/* DRV_CPU_COM_STATUS_CAN_SEND		送信可能状態 */
 																/* DRV_CPU_COM_STATUS_SENDING		送信中 */
+#endif
 
 /********************/
 /*     外部参照     */

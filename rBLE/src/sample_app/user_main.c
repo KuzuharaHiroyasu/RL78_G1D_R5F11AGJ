@@ -30,8 +30,10 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 STATIC void make_send_data(char* pBuff);
 #endif
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+#if FUNC_DEBUG_LOG != ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_calc_data_set_acl( void );
+#endif
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_rest(void);
 STATIC void user_main_mode_idle_com(void);
@@ -43,23 +45,27 @@ STATIC void user_main_mode_prg_g1d(void);
 STATIC void user_main_req_cyc( void );
 STATIC UB main_cpu_com_snd_sts_req( void );
 STATIC void main_cpu_com_snd_mode_chg( void );
+#if FUNC_DEBUG_LOG != ON
+STATIC void user_main_mode( void );
 STATIC void main_cpu_com_proc(void);
+STATIC void user_main_mode_common( void );
+STATIC void main_vuart_proc(void);
+#endif
 STATIC void main_cpu_com_rcv_sts_res( void );
 STATIC void main_cpu_com_rcv_sensor_res( void );
 STATIC void main_cpu_com_rcv_mode_chg( void );
 STATIC void main_mode_chg( void );				// ■暫定
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
-STATIC void user_main_mode( void );
-STATIC void user_main_mode_common( void );
 //STATIC void main_cpu_com_snd_pc_log( UB* data, UB size );
 //STATIC void main_cpu_com_snd_sensing_order( UB sekigai );
-STATIC void main_vuart_proc(void);
 STATIC void main_vuart_rcv_mode_chg( void );
 STATIC void main_vuart_rcv_date( void );
 STATIC void main_vuart_rcv_info( void );
 STATIC void main_vuart_rcv_version( void );
 STATIC void main_vuart_rcv_device_info( void );
+#if FUNC_DEBUG_LOG != ON
 STATIC void sw_proc(void);
+#endif
 STATIC void user_main_calc_result( void );
 STATIC void user_main_mode_sensing_before( void );
 STATIC void user_main_mode_sensing_after( void );
@@ -195,9 +201,10 @@ void codeptr app_evt_usr_1(void)
 /* 注意事項 :なし														*/
 /************************************************************************/
 void codeptr app_evt_usr_2(void) 
-{ 
+{
+#if FUNC_DEBUG_LOG != ON
 	uint8_t *ke_msg;
-	
+#endif	
 	ke_evt_clear(KE_EVT_USR_2_BIT);
 	
 #if FUNC_DEBUG_LOG != ON
@@ -303,7 +310,7 @@ void codeptr app_evt_usr_3(void)
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_LOG == ON
-	char dbg_tx_data[50] = {0};
+//	char dbg_tx_data[50] = {0};
 	char dummydata[] = "abcdefghijk\r\n";
 	int dbg_len = sizeof(dummydata);
 	com_srv_send(dummydata, dbg_len);
@@ -533,7 +540,7 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 	
 	return (KE_MSG_CONSUMED);
 }
-
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_calc_data_set_kokyu_ibiki						*/
 /* 関数名   : 演算データセット処理(呼吸・いびき)						*/
@@ -602,6 +609,7 @@ STATIC void user_main_calc_data_set_acl( void )
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 }
+#endif
 
 #if FUNC_DEBUG_LOG == ON
 /************************************************************************/
@@ -855,7 +863,7 @@ void user_main_init( void )
 
 }
 
-
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : sw_proc													*/
 /* 関数名   : SW周期処理												*/
@@ -908,7 +916,7 @@ STATIC void sw_proc(void)
 	}
 	s_unit.pow_sw_last = pow_sw;
 }
-
+#endif
 
 /************************************************************************/
 /* 関数     : user_main_calc_result										*/
@@ -944,7 +952,7 @@ STATIC void user_main_calc_result( void )
 	
 }
 
-
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_mode											*/
 /* 関数名   : メインモード処理											*/
@@ -1005,6 +1013,7 @@ STATIC void user_main_mode_common( void )
 	
 	s_unit.last_system_mode = s_unit.system_mode;
 }
+#endif
 
 /************************************************************************/
 /* 関数     : user_main_mode_sensing_before								*/
@@ -2121,6 +2130,7 @@ STATIC void main_cpu_com_snd_sensing_order( UB sekigai )
 }
 */
 
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : main_cpu_com_proc											*/
 /* 関数名   : CPU間通信周期処理											*/
@@ -2155,6 +2165,7 @@ STATIC void main_cpu_com_proc(void)
 		s_ds.cpu_com.input.rcv_cmd = 0x00;
 	}
 }
+#endif
 
 /************************************************************************/
 /* 関数     : main_cpu_com_rcv_date_set									*/
@@ -2555,6 +2566,7 @@ STATIC void main_chg_system_mode( SYSTEM_MODE next_mode )
 	main_mode_chg();
 }
 
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : main_vuart_proc											*/
 /* 関数名   : VUART周期処理												*/
@@ -2613,6 +2625,7 @@ STATIC void main_vuart_proc(void)
 	// 受信長クリア
 	s_ds.vuart.input.rcv_len = 0;
 }
+#endif
 
 /************************************************************************/
 /* 関数     : ds_set_vuart_data											*/
