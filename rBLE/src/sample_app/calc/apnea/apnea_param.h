@@ -27,13 +27,13 @@
 // 移動平均50%閾値
 #define APNEA_PARAM_AVE_THRE			0.015f
 // 2値化50%閾値
-#define APNEA_PARAM_BIN_THRE			0.004f
+#define APNEA_PARAM_BIN_THRE			0.002f
 
 // いびき閾値
 #define APNEA_PARAM_SNORE				0.0125f
 
 // 完全無呼吸判定閾値
-#define APNEA_PARAM_APNEA_THRE			(0 / APNEA_PARAM_RAW)
+#define APNEA_PARAM_APNEA_THRE			(35 / APNEA_PARAM_RAW)
 
 
 // 新いびき演算向け ---------------------------------------
@@ -50,7 +50,7 @@
 // いびき閾値[感度：大]
 #define SNORE_PARAM_THRE_STRENGTH		(200)
 // いびきあり -> なしへの判定回数
-#define SNORE_PARAM_NORMAL_CNT			(290)
+#define SNORE_PARAM_NORMAL_CNT			(80)
 // 許容誤差 0.4s
 #define SNORE_PARAM_GOSA				(8)
 
