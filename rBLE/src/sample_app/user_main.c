@@ -80,6 +80,7 @@ STATIC SYSTEM_MODE evt_sensing( int evt);
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
 STATIC SYSTEM_MODE evt_initial( int evt);
 STATIC SYSTEM_MODE evt_initial_chg( int evt);
+STATIC SYSTEM_MODE evt_bat_check( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
 STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
@@ -1731,7 +1732,10 @@ STATIC UB evt_act( EVENT_NUM evt )
 		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 	}
 	
-	main_chg_system_mode( system_mode );
+	if(EVENT_POW_SW_SHORT != evt)
+	{
+		main_chg_system_mode( system_mode );
+	}
 	
 	return TRUE;
 }
@@ -1891,6 +1895,30 @@ STATIC SYSTEM_MODE evt_initial_chg( int evt)
 	}
 	
 	return system_mode;
+}
+
+/************************************************************************/
+/* �֐�     : evt_bat_check												*/
+/* �֐���   : �C�x���g(�d�r�c�ʊm�F)									*/
+/* ����     : evt	�C�x���g�ԍ�										*/
+/* �߂�l   : �V�X�e�����[�h											*/
+/* �ύX���� : 2018.08.08  oneA ���� �O�� ���ō쐬						*/
+/************************************************************************/
+/* �@�\ : 																*/
+/************************************************************************/
+/* ���ӎ��� :�Ȃ�														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_bat_check( int evt)
+{
+	main_set_battery();
+	// LED�\��
+	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+	{
+		set_led( LED_PATT_GREEN_LIGHTING );
+	} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
+		set_led( LED_PATT_GREEN_BLINK );
+	}
+	return s_unit.system_mode;
 }
 
 /************************************************************************/
