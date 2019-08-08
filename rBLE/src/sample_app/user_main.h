@@ -253,8 +253,8 @@ typedef enum{
 #define PERIOD_100MSEC   10U
 
 ///20ms timer
-#define	TIME_20MS_CNT_POW_SW_LONG			150				/* ìdåπSW_í∑(3ïb) */
-#define	TIME_20MS_CNT_POW_SW_SHORT			50				/* ìdåπSW_íZ(1ïb) */
+#define	TIME_20MS_CNT_POW_SW_LONG			100				/* ìdåπSW_í∑(2ïb) */
+#define	TIME_20MS_CNT_POW_SW_SHORT			5				/* ìdåπSW_íZ(0.1ïb) */
 
 
 typedef enum program_ver{
