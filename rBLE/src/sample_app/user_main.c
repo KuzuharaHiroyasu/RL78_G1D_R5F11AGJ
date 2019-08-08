@@ -1126,6 +1126,8 @@ STATIC void user_main_mode_sensing_after( void )
 	UW wr_adrs = 0;
 	UB wr_data[2] = {0};
 	
+	set_led(LED_PATT_OFF);
+	
 	if( 0 == s_unit.calc_cnt ){
 		err_info(ERR_ID_MAIN);
 		return;
