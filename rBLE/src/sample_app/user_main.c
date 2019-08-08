@@ -3420,22 +3420,22 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	
 	// 体の向き判定
 	if( 0 <= acc_x )
-	{// 上 or 左
+	{// 上 or 右
+		if( 0 <= acc_z )
+		{// 上
+			body_direct = BODY_DIRECTION_UP;
+		} else {
+		 // 右
+			body_direct = BODY_DIRECTION_RIGHT;
+		}
+	} else {
+	// 下 or 左
 		if( 0 <= acc_z )
 		{// 左
 			body_direct = BODY_DIRECTION_LEFT;
 		} else {
-		 // 上
-			body_direct = BODY_DIRECTION_UP;
-		}
-	} else {
-	// 下 or 右
-		if( 0 <= acc_z )
-		{// 下
+		 // 下
 			body_direct = BODY_DIRECTION_DOWN;
-		} else {
-		 // 右
-			body_direct = BODY_DIRECTION_RIGHT;
 		}
 	}
 	
