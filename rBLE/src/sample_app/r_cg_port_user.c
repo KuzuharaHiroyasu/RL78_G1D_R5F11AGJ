@@ -82,7 +82,7 @@ UB drv_i_port_bat_chg_detect( void )
 {
 	UB ret = OFF;
 	
-	if( LOW == DRV_I_PORT_BAT_CHG_DETECT ){
+	if( HIGH == DRV_I_PORT_BAT_CHG_DETECT ){
 		ret = ON;
 	}
 	
