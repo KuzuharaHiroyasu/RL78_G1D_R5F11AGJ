@@ -386,6 +386,7 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	UB bat;
 #if FUNC_DEBUG_LOG == ON
 	//デバッグ時は常時強制的にセンシング
 	s_unit.system_mode = SYSTEM_MODE_SENSING;
@@ -436,10 +437,10 @@ void user_main_timer_cyc( void )
 				// フォトセンサー値取得
 				s_unit.meas.info.dat.photoref_val = main_photo_read();
 			}
-			
+			bat = drv_i_port_bat_chg_detect();
 			s_unit.sensing_cnt_50ms++;
-			// 12時間を超えた or 充電残量なしなら待機モードへ
-			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS || s_unit.battery_sts == BAT_LEVEL_STS_MIN){
+			// 12時間を超えた or 充電残量なし or 充電中なら待機モードへ
+			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS || s_unit.battery_sts == BAT_LEVEL_STS_MIN || bat != OFF ){
 				evt_act( EVENT_POW_SW_LONG );
 			}
 #endif
@@ -1057,7 +1058,7 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	// 電池残量確認
 	main_set_battery();
-	if( s_unit.battery_sts != BAT_LEVEL_STS_MIN || bat != ON)
+	if( s_unit.battery_sts != BAT_LEVEL_STS_MIN && bat != ON)
 	{//電池残量なし、充電中ならセンシングモード移行処理をしない
 		// 日時情報取得
 		if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
@@ -1102,6 +1103,8 @@ STATIC void user_main_mode_sensing_before( void )
 			set_led( LED_PATT_GREEN_BLINK );
 		}
 		set_vib(VIB_MODE_SENSING);
+	}else{
+		s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
 	}
 }
 
