@@ -157,6 +157,7 @@ STATIC DS s_ds;
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
 static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+bool vib_flg = false;
 
 /********************/
 /*     定数定義     */
@@ -493,11 +494,30 @@ static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t co
 /************************************************************************/
 void vib_cyc( void )
 {
-	// バイブレーション(10ms周期)
-	if(s_unit.tick_vib_10ms_sec >= (uint16_t)PERIOD_10MSEC)
+	if(vib_flg == true)
 	{
-   		vib_start(s_unit.tick_vib_10ms_sec);
+		// バイブレーション(10ms周期)
+		if(s_unit.tick_vib_10ms_sec >= (uint16_t)PERIOD_10MSEC)
+		{
+	   		vib_start(s_unit.tick_vib_10ms_sec);
+		}
 	}
+}
+
+/************************************************************************/
+/* 関数     : set_vib_flg												*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+void set_vib_flg( bool flg )
+{
+	vib_flg = flg;
 }
 
 /************************************************************************/

@@ -66,6 +66,7 @@ void vib_start(UH vib_timer)
 	}else if(vib_mode != VIB_MODE_INITIAL)
 	{
 		vib_mode = VIB_MODE_INITIAL;
+		set_vib_flg( false );
 	}
 }
 
@@ -91,6 +92,8 @@ void set_vib(VIB_MODE mode)
 	
 	// ÉpÉ^Å[Éì
 	vib_mode = mode;
+	
+	set_vib_flg( true );
 }
 
 /************************************************************************/
