@@ -1928,6 +1928,7 @@ STATIC SYSTEM_MODE evt_send_clear( int evt)
 {
 	s_ds.vuart.input.send_status = OFF;
 	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	set_led( LED_PATT_YELLOW_BLINK );
 	return s_unit.system_mode;
 }
 	
