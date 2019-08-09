@@ -3345,7 +3345,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
-			set_vib(set_vib_mode(vib_str));
+//			set_vib(set_vib_mode(vib_str));
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
