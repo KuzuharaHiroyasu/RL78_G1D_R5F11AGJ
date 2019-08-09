@@ -81,6 +81,7 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt);
 STATIC SYSTEM_MODE evt_initial( int evt);
 STATIC SYSTEM_MODE evt_initial_chg( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
+STATIC SYSTEM_MODE evt_send_clear( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
 STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
@@ -1900,20 +1901,20 @@ STATIC SYSTEM_MODE evt_initial_chg( int evt)
 }
 
 /************************************************************************/
-/* ï¿½Öï¿½     : evt_bat_check												*/
-/* ï¿½Öï¿½ï¿½ï¿½   : ï¿½Cï¿½xï¿½ï¿½ï¿½g(ï¿½dï¿½rï¿½cï¿½ÊŠmï¿½F)									*/
-/* ï¿½ï¿½ï¿½ï¿½     : evt	ï¿½Cï¿½xï¿½ï¿½ï¿½gï¿½Ôï¿½										*/
-/* ï¿½ß‚ï¿½l   : ï¿½Vï¿½Xï¿½eï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½h											*/
-/* ï¿½ÏXï¿½ï¿½ï¿½ï¿½ : 2018.08.08  oneA ï¿½ï¿½ï¿½ï¿½ ï¿½Oï¿½ï¿½ ï¿½ï¿½ï¿½Åì¬						*/
+/* ŠÖ”     : evt_bat_check												*/
+/* ŠÖ”–¼   : ƒCƒxƒ“ƒg(“d’rc—ÊŠm”F)									*/
+/* ˆø”     : evt	ƒCƒxƒ“ƒg”Ô†										*/
+/* –ß‚è’l   : ƒVƒXƒeƒ€ƒ‚[ƒh											*/
+/* •ÏX—š—ğ : 2019.08.08  oneA Š‹Œ´ OˆÀ ‰”Åì¬						*/
 /************************************************************************/
-/* ï¿½@ï¿½\ : 																*/
+/* ‹@”\ : ƒCƒxƒ“ƒg(“d’rc—ÊŠm”F)										*/
 /************************************************************************/
-/* ï¿½ï¿½ï¿½Óï¿½ï¿½ï¿½ :ï¿½È‚ï¿½														*/
+/* ’ˆÓ–€ :‚È‚µ														*/
 /************************************************************************/
 STATIC SYSTEM_MODE evt_bat_check( int evt)
 {
 	main_set_battery();
-	// LEDï¿½\ï¿½ï¿½
+	// LED§Œä
 	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
 	{
 		set_led( LED_PATT_GREEN_LIGHTING );
@@ -1923,6 +1924,13 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 	return s_unit.system_mode;
 }
 
+STATIC SYSTEM_MODE evt_send_clear( int evt)
+{
+	s_ds.vuart.input.send_status = OFF;
+	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	return s_unit.system_mode;
+}
+	
 /************************************************************************/
 /* ŠÖ”     : evt_get													*/
 /* ŠÖ”–¼   : ƒCƒxƒ“ƒg(GETƒ‚[ƒh)										*/
