@@ -39,6 +39,7 @@ typedef enum{
 	LED_PATT_YELLOW_OFF,		// LED黄消灯
 	LED_PATT_YELLOW_LIGHTING,	// LED黄点灯(タイマー)
 	LED_PATT_YELLOW_BLINK,		// LED黄点滅(タイマー)
+	LED_PATT_LIGHT_UP,			// LED点灯中
 	LED_PATT_INITIAL
 }LED_PATT;
 

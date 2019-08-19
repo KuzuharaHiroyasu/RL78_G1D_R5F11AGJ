@@ -32,44 +32,45 @@ STATIC void led_yellow_blink(UW led_timer);
 /************************************************************************/
 void led_start(UW led_timer)
 {
-	switch(pattern)
+	if( led_timer < LED_TIMER_10SEC )
 	{
-		case LED_PATT_ON:
-			led_on();
-			break;
-		case LED_PATT_OFF:
-			led_off();
-			break;
-		case LED_PATT_GREEN_ON:
-			led_green_on();
-			break;
-		case LED_PATT_GREEN_OFF:
-			led_green_off();
-			break;
-		case LED_PATT_GREEN_LIGHTING:
-			led_green_lighting(led_timer);
-			break;
-		case LED_PATT_GREEN_BLINK:
-			led_green_blink(led_timer);
-			break;
-		case LED_PATT_YELLOW_ON:
-			led_yellow_on();
-			break;
-		case LED_PATT_YELLOW_OFF:
-			led_yellow_off();
-			break;
-		case LED_PATT_YELLOW_LIGHTING:
-			led_yellow_lighting(led_timer);
-			break;
-		case LED_PATT_YELLOW_BLINK:
-			led_yellow_blink(led_timer);
-			break;
-		default:
-			break;
-	}
-	
-	if(LED_TIMER_10SEC < led_timer && pattern != LED_PATT_INITIAL && pattern != LED_PATT_YELLOW_ON)
-	{// 10秒超えたらパターンを初期値に戻してLEDをOFFにしておく
+		switch(pattern)
+		{
+			case LED_PATT_ON:
+				led_on();
+				break;
+			case LED_PATT_OFF:
+				led_off();
+				break;
+			case LED_PATT_GREEN_ON:
+				led_green_on();
+				break;
+			case LED_PATT_GREEN_OFF:
+				led_green_off();
+				break;
+			case LED_PATT_GREEN_LIGHTING:
+				led_green_lighting(led_timer);
+				break;
+			case LED_PATT_GREEN_BLINK:
+				led_green_blink(led_timer);
+				break;
+			case LED_PATT_YELLOW_ON:
+				led_yellow_on();
+				break;
+			case LED_PATT_YELLOW_OFF:
+				led_yellow_off();
+				break;
+			case LED_PATT_YELLOW_LIGHTING:
+				led_yellow_lighting(led_timer);
+				break;
+			case LED_PATT_YELLOW_BLINK:
+				led_yellow_blink(led_timer);
+				break;
+			default:
+				break;
+		}
+	} else if(pattern != LED_PATT_INITIAL && pattern != LED_PATT_YELLOW_ON)
+	{// 10秒超えている かつ 黄色点灯以外が設定されていたら初期値に戻してLEDをOFFにしておく
 		pattern = LED_PATT_INITIAL;
 		led_off();
 	}
@@ -174,17 +175,10 @@ void led_green_off(void)
 /************************************************************************/
 STATIC void led_green_lighting(UW led_timer)
 {
-	if(led_timer < LED_TIMER_10SEC)
+	if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
 	{
-		if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_ON)
-		{
-			LED_GREEN = LED_ON;
-		}
-	}else {
-		if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_OFF)
-		{
-			LED_GREEN = LED_OFF;
-		}
+		LED_GREEN = LED_ON;
+		pattern = LED_PATT_LIGHT_UP;
 	}
 }
 
@@ -201,24 +195,12 @@ STATIC void led_green_lighting(UW led_timer)
 /************************************************************************/
 STATIC void led_green_blink(UW led_timer)
 {
-	if(led_timer < LED_TIMER_10SEC)
+	if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
 	{
-		if( LED_TIMER_1SEC <= (led_timer - led_orbit_timer) )
-		{
-			if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_OFF)
-			{
-				LED_GREEN = LED_OFF;
-			} else
-			{
-				LED_GREEN = LED_ON;
-			}
-			led_orbit_timer = led_timer;
-		}
-	}else{
-		if(read1_sfr( LED_PORT, LED_GREEN_BIT) != LED_OFF)
-		{
-			LED_GREEN = LED_OFF;
-		}		
+		LED_GREEN = LED_ON;
+	} else
+	{
+		LED_GREEN = LED_OFF;
 	}
 }
 
@@ -267,17 +249,10 @@ void led_yellow_off(void)
 /************************************************************************/
 STATIC void led_yellow_lighting(UW led_timer)
 {
-	if(led_timer < LED_TIMER_10SEC)
+	if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
 	{
-		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_ON)
-		{
-			LED_YELLOW = LED_ON;
-		}
-	}else {
-		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_OFF)
-		{
-			LED_YELLOW = LED_OFF;
-		}
+		LED_YELLOW = LED_ON;
+		pattern = LED_PATT_LIGHT_UP;
 	}
 }
 
@@ -294,23 +269,11 @@ STATIC void led_yellow_lighting(UW led_timer)
 /************************************************************************/
 STATIC void led_yellow_blink(UW led_timer)
 {
-	if(led_timer < LED_TIMER_10SEC)
+	if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
 	{
-		if( LED_TIMER_1SEC <= (led_timer - led_orbit_timer) )
-		{
-			if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_OFF)
-			{
-				LED_YELLOW = LED_OFF;
-			} else
-			{
-				LED_YELLOW = LED_ON;
-			}
-			led_orbit_timer = led_timer;
-		}
-	}else{
-		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) != LED_OFF)
-		{
-			LED_YELLOW = LED_OFF;
-		}		
-	} 
+		LED_YELLOW = LED_ON;
+	} else
+	{
+		LED_YELLOW = LED_OFF;
+	}
 }
