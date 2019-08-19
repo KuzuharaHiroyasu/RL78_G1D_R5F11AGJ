@@ -197,7 +197,7 @@ typedef enum{
 #if FUNC_DEBUG_LOG == ON
 #define		MEAS_ACL_CNT_MAX			20
 #else
-#define		MEAS_ACL_CNT_MAX			2
+#define		MEAS_ACL_CNT_MAX			3
 #endif
 
 // 演算結果書き込みタイミング
