@@ -35,12 +35,10 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_calc_data_set_acl( void );
 #endif
 STATIC void user_main_mode_inital(void);
-STATIC void user_main_mode_idle_rest(void);
 STATIC void user_main_mode_idle_com(void);
 STATIC void user_main_mode_sensing(void);
 STATIC void user_main_mode_move(void);
 STATIC void user_main_mode_get(void);
-STATIC void user_main_mode_prg_h1d(void);
 STATIC void user_main_mode_prg_g1d(void);
 STATIC void user_main_req_cyc( void );
 STATIC UB main_cpu_com_snd_sts_req( void );
@@ -73,7 +71,6 @@ STATIC UB user_main_mode_get_frame_before( void );
 STATIC void user_main_mode_self_check( void );
 STATIC UB evt_act( EVENT_NUM evt );
 STATIC SYSTEM_MODE evt_non( int evt);
-STATIC SYSTEM_MODE evt_idle_rest( int evt);
 STATIC SYSTEM_MODE evt_idle_com( int evt);
 STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
 STATIC SYSTEM_MODE evt_sensing( int evt);
@@ -83,26 +80,13 @@ STATIC SYSTEM_MODE evt_initial_chg( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
 STATIC SYSTEM_MODE evt_send_clear( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
-STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
-STATIC SYSTEM_MODE evt_prg_h1d_fin( int evt);
-STATIC SYSTEM_MODE evt_prg_h1d_time_out( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 //STATIC void eep_all_erase( void );		//未使用関数
 STATIC void eep_part_erase( void );
 STATIC void main_vuart_send( UB *p_data, UB len );
-STATIC void main_vuart_rcv_prg_hd_record( void );
-STATIC void main_vuart_rcv_prg_hd_result(void);
-STATIC void main_vuart_rcv_prg_hd_update(void);
-STATIC void main_cpu_com_rcv_prg_hd_ready(void);
-STATIC void main_cpu_com_rcv_prg_hd_start(void);
-STATIC void main_cpu_com_rcv_prg_hd_erase(void);
-STATIC void main_cpu_com_rcv_prg_hd_data(void);
-STATIC void main_cpu_com_rcv_prg_hd_reslut(void);
-STATIC void main_cpu_com_rcv_prg_hd_check(void);
-STATIC void main_prg_hd_read_eep_record( void );
 STATIC void main_cpu_com_rcv_date_set( void );
 STATIC void main_cpu_com_rcv_disp_order( void );
 STATIC void main_cpu_com_rcv_version( void );
@@ -1018,18 +1002,8 @@ STATIC void user_main_mode_common( void )
 		s_unit.system_mode_time_out_cnt = now_time;
 	}
 	
-	if( SYSTEM_MODE_IDLE_REST == s_unit.system_mode ){
-		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_IDLE_REST ){
-			evt_act( EVENT_TIME_OUT );
-		}
-	}
 	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
 		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_IDLE_COM ){
-			evt_act( EVENT_TIME_OUT );
-		}
-	}
-	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
-		if(( now_time - s_unit.system_mode_time_out_cnt ) >= TIME_OUT_SYSTEM_MODE_H1D_PRG ){
 			evt_act( EVENT_TIME_OUT );
 		}
 	}
@@ -1171,41 +1145,6 @@ STATIC void user_main_mode_sensing_after( void )
 	}
 }
 
-/************************************************************************/
-/* 関数     : user_main_mode_prg_hd_before								*/
-/* 関数名   : プログラム更新(H1D)前処理									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
-/************************************************************************/
-/* 機能 : プログラム更新(H1D)前処理										*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC void user_main_mode_prg_hd_before( void )
-{
-	UB eep_data = EEP_DATA_TYPE_PRG_H1D;
-	
-	// データ初期化
-	s_unit.prg_hd_eep_record_cnt_wr = 0;
-	s_unit.prg_hd_eep_record_cnt_rd = 0;
-	s_unit.prg_hd_eep_code_record_sum = 0;
-	s_unit.prg_hd_update_state = 0;
-	s_unit.prg_hd_seq = 0;
-	
-	// EEPプログラムモード
-	eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
-	
-	// BLE返信
-	{
-		UB tx[VUART_DATA_SIZE_MAX] = {0};
-		tx[0] = VUART_CMD_MODE_CHG;
-		tx[1] = 0x00;
-	
-		main_vuart_send( &tx[0], 2 );
-	}
-}
-
 
 /************************************************************************/
 /* 関数     : user_main_mode_get_frame_before							*/
@@ -1319,23 +1258,6 @@ STATIC void user_main_mode_get_after( void )
 /* 注意事項 :なし														*/
 /************************************************************************/
 STATIC void user_main_mode_inital(void)
-{
-	//ステータス要求通知
-	user_main_req_cyc();
-}
-
-/************************************************************************/
-/* 関数     : user_main_mode_idle_rest									*/
-/* 関数名   : アイドル_残量表示状態処理									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
-/************************************************************************/
-/* 機能 : アイドル_残量表示状態処理										*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC void user_main_mode_idle_rest(void)
 {
 	//ステータス要求通知
 	user_main_req_cyc();
@@ -1521,54 +1443,6 @@ STATIC void user_main_mode_get(void)
 		// RD8001暫定：影舞19:完了通知待ち　※タイムアウト必要？
 	}else{
 		user_main_mode_get_after();
-	}
-}
-
-/************************************************************************/
-/* 関数     : user_main_mode_prg_h1d									*/
-/* 関数名   : H1Dプログラム更新状態処理									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2018.09.10 Axia Soft Design 西島 稔	初版作成			*/
-/************************************************************************/
-/* 機能 : H1Dプログラム更新状態処理										*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC void user_main_mode_prg_h1d(void)
-{
-	if( PRG_SEQ_READY_WAIT == s_unit.prg_hd_seq ){
-		if( 0 == s_unit.timer_sec ){
-			//消去コマンド送信
-			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_ERASE;
-			s_ds.cpu_com.order.data_size = 0;
-			s_unit.prg_hd_seq = PRG_SEQ_IDLE;
-		}
-	}
-
-	
-	
-	if( PRG_SEQ_ERASE_WAIT == s_unit.prg_hd_seq ){
-		if( 0 == s_unit.timer_sec ){
-			// データ送信
-			main_prg_hd_read_eep_record();
-			s_unit.prg_hd_seq = PRG_SEQ_IDLE;
-		}
-	}
-	
-	if( PRG_SEQ_START_WAIT == s_unit.prg_hd_seq ){
-		if( 0 == s_unit.timer_sec ){
-			//確認コマンド送信
-			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_CHECK;
-			s_ds.cpu_com.order.data_size = 0;
-			s_unit.prg_hd_seq = PRG_SEQ_IDLE;
-		}
-	}
-	
-	if( PRG_SEQ_COMPLETE_WAIT == s_unit.prg_hd_seq ){
-		if( OFF == s_ds.vuart.input.send_status ){
-			evt_act( EVENT_COMPLETE );
-		}
 	}
 }
 
@@ -1760,28 +1634,6 @@ STATIC SYSTEM_MODE evt_non( int evt)
 };
 
 /************************************************************************/
-/* 関数     : evt_idle_rest												*/
-/* 関数名   : イベント(アイドル_残量表示)								*/
-/* 引数     : evt	イベント番号										*/
-/* 戻り値   : システムモード											*/
-/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
-/************************************************************************/
-/* 機能 : イベント(アイドル_残量表示)									*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC SYSTEM_MODE evt_idle_rest( int evt)
-{
-	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_REST;
-	
-	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
-			system_mode = SYSTEM_MODE_NON;
-	}
-
-	return system_mode;
-}
-
-/************************************************************************/
 /* 関数     : evt_idle_com												*/
 /* 関数名   : イベント(アイドル_通信待機)								*/
 /* 引数     : evt	イベント番号										*/
@@ -1951,28 +1803,6 @@ STATIC SYSTEM_MODE evt_get( int evt)
 }
 
 /************************************************************************/
-/* 関数     : evt_h1d_prg_denchi										*/
-/* 関数名   : イベント(H1Dプログラム更新_電池チェックあり)				*/
-/* 引数     : evt	イベント番号										*/
-/* 戻り値   : システムモード											*/
-/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
-/************************************************************************/
-/* 機能 : イベント(H1Dプログラム更新_電池チェックあり)					*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC SYSTEM_MODE evt_h1d_prg_denchi( int evt)
-{
-	SYSTEM_MODE system_mode = SYSTEM_MODE_PRG_H1D;
-	
-	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN ){
-			system_mode = SYSTEM_MODE_NON;
-	}
-
-	return system_mode;
-}
-
-/************************************************************************/
 /* 関数     : evt_g1d_prg_denchi										*/
 /* 関数名   : イベント(G1Dプログラム更新_電池チェックあり)				*/
 /* 引数     : evt	イベント番号										*/
@@ -2010,57 +1840,6 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
 	
 	s_unit.self_check.seq = 0;
-	
-	return system_mode;
-}
-
-
-/************************************************************************/
-/* 関数     : evt_prg_h1d_fin											*/
-/* 関数名   : イベント(H1Dプログラム書き換え完了)						*/
-/* 引数     : evt	イベント番号										*/
-/* 戻り値   : システムモード											*/
-/* 変更履歴 : 2018.09.13  Axia Soft Design 西島 初版作成				*/
-/************************************************************************/
-/* 機能 : イベント(H1Dプログラム書き換え完了)							*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC SYSTEM_MODE evt_prg_h1d_fin( int evt)
-{
-	SYSTEM_MODE system_mode;;
-	
-	// EEPを消去し通常モードで使えるようにしておく ※リセットを経由しないケースがある為
-	eep_part_erase();
-	
-	// 移行の処理は同じなので下記関数で実行
-	system_mode = evt_idle_com( evt );
-	
-	
-	return system_mode;
-}
-
-
-/************************************************************************/
-/* 関数     : evt_prg_h1d_time_out										*/
-/* 関数名   : イベント(H1Dプログラム書き換えタイムアウト)				*/
-/* 引数     : evt	イベント番号										*/
-/* 戻り値   : システムモード											*/
-/* 変更履歴 : 2018.09.13  Axia Soft Design 西島 初版作成				*/
-/************************************************************************/
-/* 機能 : イベント(H1Dプログラム書き換えタイムアウト)					*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC SYSTEM_MODE evt_prg_h1d_time_out( int evt)
-{
-	SYSTEM_MODE system_mode;;
-
-	// 上位への結果にNGを格納
-	s_unit.prg_hd_update_state = PRG_HD_UPDATE_STATE_NG;
-	
-	// 移行の処理は同じなので下記関数で実行
-	system_mode = evt_idle_com( evt );
 	
 	return system_mode;
 }
@@ -2430,10 +2209,6 @@ STATIC void main_cpu_com_rcv_mode_chg( void )
 		}
 	}
 	
-	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
-		user_main_mode_prg_hd_before();
-	}
-	
 	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
 		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
 		FW_Update_Receiver_Start();
@@ -2504,10 +2279,6 @@ STATIC void main_mode_chg( void )
 			user_main_mode_sensing_after();
 			set_vib(VIB_MODE_STANDBY);
 		}
-	}
-	
-	if( SYSTEM_MODE_PRG_H1D == s_unit.system_mode ){
-		user_main_mode_prg_hd_before();
 	}
 	
 	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
@@ -2760,9 +2531,7 @@ STATIC void main_vuart_rcv_mode_chg( void )
 	UB ret = TRUE;
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	
-	if( 2 == s_ds.vuart.input.rcv_data[1] ){
-		ret = evt_act( EVENT_H1D_PRG );
-	}else if( 3 == s_ds.vuart.input.rcv_data[1] ){
+	if( 3 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_GET_DATA );
 	}else if( 4 == s_ds.vuart.input.rcv_data[1] ){
 		main_vuart_set_mode();		// RD8001暫定：デバッグ用データ設定(SETコマンド_最終必要？)
@@ -2807,8 +2576,7 @@ STATIC void main_vuart_rcv_info( void )
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
 	
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		result = VUART_DATA_RESULT_NG;
 	}
 	
@@ -2834,8 +2602,7 @@ STATIC void main_vuart_rcv_version( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 
-//	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-//	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+//	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		
 		// OK応答
 		tx[0] = VUART_CMD_VERSION;
@@ -2896,8 +2663,7 @@ STATIC void main_vuart_rcv_device_info( void )
 	rtc_counter_value_t rtc_val;
 	rtc_counter_value_t rtc_val_bin;
 	
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		result = VUART_DATA_RESULT_NG;
 	}
 	
@@ -3091,8 +2857,7 @@ void main_vuart_rcv_date( void )
 		err_info( ERR_ID_MAIN );
 	}
 	
-//	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-//	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+//	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		tx[0] = VUART_CMD_DATE_SET;
 		tx[1] = VUART_DATA_RESULT_OK;
 		main_vuart_send( &tx[0], 2 );
@@ -3116,8 +2881,7 @@ void main_vuart_rcv_device_set( void )
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
 	
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
+	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		result = VUART_DATA_RESULT_NG;
 	}else{
 		s_unit.alarm.info.dat.act_mode = s_ds.vuart.input.rcv_data[1];
@@ -3145,66 +2909,6 @@ void main_vuart_rcv_device_set( void )
 	}
 }
 
-#if 0
-/************************************************************************/
-/* 関数     : main_vuart_rcv_alarm_set									*/
-/* 関数名   : VUART受信(アラーム設定)									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* VUART受信(アラーム設定)												*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-void main_vuart_rcv_alarm_set( void )
-{
-	UB tx[VUART_DATA_SIZE_MAX] = {0};
-	UB result = VUART_DATA_RESULT_OK;
-	
-	if(( s_unit.system_mode != SYSTEM_MODE_IDLE_REST ) &&
-	   ( s_unit.system_mode != SYSTEM_MODE_IDLE_COM )){
-		result = VUART_DATA_RESULT_NG;
-	}else{
-		s_unit.alarm.info.dat.valid = s_ds.vuart.input.rcv_data[1];
-		s_unit.alarm.info.dat.ibiki = s_ds.vuart.input.rcv_data[2];
-		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[3];
-		s_unit.alarm.info.dat.low_kokyu = s_ds.vuart.input.rcv_data[4];
-		s_unit.alarm.info.dat.delay = s_ds.vuart.input.rcv_data[5];
-		s_unit.alarm.info.dat.stop = s_ds.vuart.input.rcv_data[6];
-		s_unit.alarm.info.dat.time = s_ds.vuart.input.rcv_data[7];
-		
-		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
-	}
-	
-	tx[0] = VUART_CMD_ALARM_SET;
-	tx[1] = result;
-	main_vuart_send( &tx[0], 2 );
-}
-
-/************************************************************************/
-/* 関数     : main_vuart_snd_alarm_info									*/
-/* 関数名   : VUART送信(アラーム通知)									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* VUART送信(アラーム通知)												*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-void main_vuart_snd_alarm_info( UB type, UB data )
-{
-	UB tx[VUART_DATA_SIZE_MAX] = {0};
-	
-	tx[0] = VUART_CMD_ALARM_INFO;
-	tx[1] = type;
-	tx[2] = data;
-	main_vuart_send( &tx[0], 3 );
-}
-#endif
 
 /************************************************************************/
 /* 関数     : ds_get_cpu_com_order										*/
@@ -3657,307 +3361,6 @@ STATIC void eep_part_erase( void )
 	
 	// 消去済みとして通常種別を書き込む
 	eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
-}
-
-
-// =====================================
-// H1Dプログラム転送コード
-// =====================================
-
-/************************************************************************/
-/* 関数     : main_vuart_rcv_prg_hd_record								*/
-/* 関数名   : H1Dプログラム書き換え(レコード書き込み)					*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(レコード書き込み)								*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_vuart_rcv_prg_hd_record( void )
-{
-	UW adr;
-	
-	if( s_unit.prg_hd_eep_record_cnt_wr >= EEP_PRG_H1D_RECODE_CNT_MAX ){
-		return;
-	}
-	
-	adr = ( s_unit.prg_hd_eep_record_cnt_wr * ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET) );
-	eep_write( adr, &s_ds.vuart.input.rcv_data[0], EEP_PRG_H1D_RECODE_UNIT, ON );
-#if 0	//ベリファイ
-	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT );
-	if (memcmp( &s_ds.vuart.input.rcv_data[0], &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT) != 0){
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}
-#endif
-	// サム値計算 ※データ
-	calc_sum_uw_cont( &s_unit.prg_hd_eep_code_record_sum, &s_ds.vuart.input.rcv_data[4], EEP_PRG_H1D_RECODE_UNIT -4 );
-	s_unit.prg_hd_eep_record_cnt_wr++;
-}
-
-/************************************************************************/
-/* 関数     : main_vuart_rcv_prg_hd_result								*/
-/* 関数名   : H1Dプログラム書き換え(転送結果)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(転送結果)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_vuart_rcv_prg_hd_result(void)
-{
-	//サム値組立
-	UB ret;
-	UW recv_sum = 0;
-	
-	recv_sum   = (UW)(s_ds.vuart.input.rcv_data[4]);
-	recv_sum <<= (UW)8;
-	recv_sum += (UW)(s_ds.vuart.input.rcv_data[3]);
-	recv_sum <<= (UW)8;
-	recv_sum += (UW)(s_ds.vuart.input.rcv_data[2]);
-	recv_sum <<= (UW)8;
-	recv_sum += (UW)(s_ds.vuart.input.rcv_data[1]);
-	
-	
-//	for(i=1; i<5; i++){
-//		recv_sum <<= 8;
-//		recv_sum += s_ds.vuart.input.rcv_data[i];
-//	}
-	
-	//サム値比較 RD8001暫定：EEPチェックの方が良いか？ EEP異常時の動作未定義
-	if( s_unit.prg_hd_eep_code_record_sum != recv_sum ){
-		ret = NG;
-	}else{
-		ret = OK;
-	}
-	
-	//---応答---
-	{
-		UB tx[VUART_DATA_SIZE_MAX] = {0};
-		tx[0] = VUART_CMD_PRG_RESULT;
-		tx[1] = ret;
-	
-		main_vuart_send( &tx[0], 2 );
-	}
-	
-	if( OK == ret ){
-		// ■暫定 7/30 ブリッジは消さないといけないと思われる
-		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_READY;
-		s_ds.cpu_com.order.data_size = 0;
-	}
-
-}
-
-/************************************************************************/
-/* 関数     : main_vuart_rcv_prg_hd_update								*/
-/* 関数名   : H1Dプログラム書き換え(完了確認)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(完了確認)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_vuart_rcv_prg_hd_update(void)
-{
-#if FUNC_DEBUG_PRG_H1D_U == ON
-	// デバッグ用処理
-	{
-		static UB dbg_prg_hd_update_flg = 0;
-		
-		if( 0 == dbg_prg_hd_update_flg){
-			
-			dbg_prg_hd_update_flg = 1;
-			
-		}else{
-			//2回に1回OK返す
-			s_unit.prg_hd_update_state = OK_UPDATE_FIX;
-			dbg_prg_hd_update_flg = 0;
-		}
-	}
-#endif
-	
-	//---応答---
-	{
-		UB tx[VUART_DATA_SIZE_MAX] = {0};
-		tx[0] = VUART_CMD_PRG_CHECK;
-		tx[1] = s_unit.prg_hd_update_state;
-		tx[2] = 0x00;		// 予備領域
-		tx[3] = 0x00;		// 予備領域
-		tx[4] = 0x00;		// 予備領域
-		tx[5] = 0x00;		// 予備領域
-	
-		main_vuart_send( &tx[0], 6 );
-		if( OK_NOW_UPDATING != s_unit.prg_hd_update_state ){
-			s_unit.prg_hd_seq = PRG_SEQ_COMPLETE_WAIT;
-		}
-	}
-}
-
-
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_ready								*/
-/* 関数名   : H1Dプログラム書き換え(転送準備)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(転送準備)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_ready(void)
-{
-	s_unit.timer_sec = TIMER_SEC_PRG_READY_WAIT;
-	s_unit.prg_hd_seq = PRG_SEQ_READY_WAIT;
-	
-}
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_start								*/
-/* 関数名   : H1Dプログラム書き換え(転送開始)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(転送開始)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_start(void)
-{
-	s_unit.timer_sec = TIMER_SEC_PRG_START_WAIT;
-	s_unit.prg_hd_seq = PRG_SEQ_START_WAIT;
-}
-
-
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
-/* 関数名   : H1Dプログラム書き換え(消去)								*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(消去)											*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_erase(void)
-{
-	s_unit.timer_sec = TIMER_SEC_PRG_ERASE_WAIT;
-	s_unit.prg_hd_seq = PRG_SEQ_ERASE_WAIT;
-}
-	
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
-/* 関数名   : H1Dプログラム書き換え(データ)								*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(データ)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_data(void)
-{
-	if( s_unit.prg_hd_eep_record_cnt_rd < s_unit.prg_hd_eep_record_cnt_wr ){
-		// 継続
-		main_prg_hd_read_eep_record();
-	}else{
-		// 終了
-		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_RESLUT;
-		s_ds.cpu_com.order.snd_data[0] = (UB)(  s_unit.prg_hd_eep_code_record_sum & (UW)0x000000FF );
-		s_ds.cpu_com.order.snd_data[1] = (UB)(( s_unit.prg_hd_eep_code_record_sum & (UW)0x0000FF00 ) >> (UW)8 );
-		s_ds.cpu_com.order.snd_data[2] = (UB)(( s_unit.prg_hd_eep_code_record_sum & (UW)0x00FF0000 ) >> (UW)16 );
-		s_ds.cpu_com.order.snd_data[3] = (UB)(( s_unit.prg_hd_eep_code_record_sum & (UW)0xFF000000 ) >> (UW)24 );
-		s_ds.cpu_com.order.data_size = 4;
-	}
-}
-
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
-/* 関数名   : H1Dプログラム書き換え(転送結果)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(転送結果)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_reslut(void)
-{
-	if( 0 == s_ds.cpu_com.input.rcv_data[0] ){
-		// 正常
-		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_START;
-		s_ds.cpu_com.order.data_size = 0;
-	}else{
-		// 異常
-		s_unit.prg_hd_update_state = PRG_HD_UPDATE_STATE_NG;
-	}
-}
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
-/* 関数名   : H1Dプログラム書き換え(転送確認)							*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(転送確認)										*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_cpu_com_rcv_prg_hd_check(void)
-{
-	// バージョン格納
-	s_unit.prg_hd_version[0] = s_ds.vuart.input.rcv_data[0];
-	s_unit.prg_hd_version[1] = s_ds.vuart.input.rcv_data[1];
-	s_unit.prg_hd_version[2] = s_ds.vuart.input.rcv_data[2];
-	s_unit.prg_hd_version[3] = s_ds.vuart.input.rcv_data[3];
-	
-	// 正常終了
-	s_unit.prg_hd_update_state = PRG_HD_UPDATE_STATE_OK;
-}
-
-/************************************************************************/
-/* 関数     : main_cpu_com_rcv_prg_hd_erase								*/
-/* 関数名   : H1Dプログラム書き換え(1レコード分を準備)					*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
-/************************************************************************/
-/* 機能 :																*/
-/* H1Dプログラム書き換え(1レコード分を準備)								*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-STATIC void main_prg_hd_read_eep_record( void )
-{
-	UW adr;
-	
-	adr = ( s_unit.prg_hd_eep_record_cnt_rd * ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET ) );
-	eep_read( adr, &s_ds.cpu_com.order.snd_data[0], EEP_PRG_H1D_RECODE_UNIT );
-	s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_PRG_DOWNLORD_DATA;
-	s_ds.cpu_com.order.data_size = EEP_PRG_H1D_RECODE_UNIT;
-	s_unit.prg_hd_eep_record_cnt_rd++;
 }
 
 

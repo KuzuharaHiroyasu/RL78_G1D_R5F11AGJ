@@ -74,11 +74,9 @@ extern ke_state_t user_main_state[ USER_MAIN_IDX_MAX ];
 typedef enum{
 	// 仕様上の状態下限
 	SYSTEM_MODE_INITIAL = 0,				// イニシャル
-	SYSTEM_MODE_IDLE_REST,					// アイドル_残量表示
 	SYSTEM_MODE_IDLE_COM,					// アイドル_通信待機
 	SYSTEM_MODE_SENSING,					// センシング
 	SYSTEM_MODE_GET,						// データ取得
-	SYSTEM_MODE_PRG_H1D,					// H1Dプログラム更新
 	SYSTEM_MODE_PRG_G1D,					// G1Dプログラム更新
 	SYSTEM_MODE_SELF_CHECK,					// 自己診断
 	// 仕様上の状態上限
@@ -98,7 +96,6 @@ typedef enum{
 	EVENT_DENCH_LOW,			// 電池残量低下
 	EVENT_CHG_FIN,				// 充電完了
 	EVENT_GET_DATA,				// データ取得
-	EVENT_H1D_PRG,				// プログラム書き換え(H1D)
 	EVENT_G1D_PRG,				// プログラム書き換え(G1D)
 	EVENT_SELF_CHECK_COM,		// 自己診断(通信)
 	EVENT_COMPLETE,				// 完了
@@ -215,9 +212,7 @@ typedef enum{
 #define		TIMER_SEC_PRG_ERASE_WAIT	( 27 + 1 )
 
 // システムモードタイマアウト[10ms]
-#define		TIME_OUT_SYSTEM_MODE_IDLE_REST		( 600 )
-#define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 18000 )		
-#define		TIME_OUT_SYSTEM_MODE_H1D_PRG		( 60000 )		
+#define		TIME_OUT_SYSTEM_MODE_IDLE_COM		( 18000 )
 
 // データ秒間フェイズ(いびき,呼吸,体の向き,フォトセンサ共通)
 typedef enum{
@@ -540,9 +535,9 @@ typedef enum{
 	VUART_CMD_TYPE_DATA_FRAME,						// 枠情報(日時等)
 	VUART_CMD_TYPE_DATA_CALC,						// 機器データ
 	VUART_CMD_TYPE_DATA_FIN,						// データ取得完了通知
-	VUART_CMD_TYPE_PRG_H1D_DATA,					// プログラム転送(データ)
-	VUART_CMD_TYPE_PRG_H1D_RESULT,					// プログラム転送結果
-	VUART_CMD_TYPE_PRG_H1D_CHECK,					// プログラム更新完了確認
+//	VUART_CMD_TYPE_PRG_H1D_DATA,					// プログラム転送(データ)
+//	VUART_CMD_TYPE_PRG_H1D_RESULT,					// プログラム転送結果
+//	VUART_CMD_TYPE_PRG_H1D_CHECK,					// プログラム更新完了確認
 	VUART_CMD_TYPE_DEVICE_SET,						// デバイス設定変更
 //	VUART_CMD_TYPE_ALARM_SET,						// 設定変更
 //	VUART_CMD_TYPE_ALARM_INFO,						// アラーム通知
