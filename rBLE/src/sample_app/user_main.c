@@ -1027,61 +1027,53 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
-	UB bat = drv_i_port_bat_chg_detect();
 	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
 	led_yellow_off();
 	
-	// 電池残量確認
-	main_set_battery();
-	if( s_unit.battery_sts != BAT_LEVEL_STS_MIN && bat != ON)
-	{//電池残量なし、充電中ならセンシングモード移行処理をしない
-		// 日時情報取得
-		if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
-			err_info( ERR_ID_MAIN );
-		}
-		
-		// BCD→バイナリ変換
-		bcd2bin(&s_unit.date.year, &rtc_val.year);
-		bcd2bin(&s_unit.date.month, &rtc_val.month);
-		bcd2bin(&s_unit.date.week, &rtc_val.week);
-		bcd2bin(&s_unit.date.day, &rtc_val.day);
-		bcd2bin(&s_unit.date.hour, &rtc_val.hour);
-		bcd2bin(&s_unit.date.min, &rtc_val.min);
-		bcd2bin(&s_unit.date.sec, &rtc_val.sec);
-		
-		// 日時情報書き込み
-		wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
-		eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
-
-		s_unit.calc_cnt = 0;
-		
-		// センサー取得データをクリア
-		memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
-		memset(s_unit.ibiki_val, 0, MEAS_KOKYU_CNT_MAX);
-		memset(s_unit.acl_x, 0, MEAS_ACL_CNT_MAX);
-		memset(s_unit.acl_y, 0, MEAS_ACL_CNT_MAX);
-		memset(s_unit.acl_z, 0, MEAS_ACL_CNT_MAX);
-		
-		s_unit.kokyu_cnt = 0;
-		s_unit.ibiki_cnt = 0;
-		s_unit.acl_cnt = 0;
-		
-		s_unit.sensing_cnt_50ms = 0;
-		s_unit.cnt_time_50ms = 0;
-		s_unit.sensing_flg = ON;
-		
-		// センシング移行時にLEDとバイブ動作
-		if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
-		{
-			set_led( LED_PATT_GREEN_LIGHTING );
-		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
-			set_led( LED_PATT_GREEN_BLINK );
-		}
-		set_vib(VIB_MODE_SENSING);
-	}else{
-		s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	// 日時情報取得
+	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
+		err_info( ERR_ID_MAIN );
 	}
+	
+	// BCD→バイナリ変換
+	bcd2bin(&s_unit.date.year, &rtc_val.year);
+	bcd2bin(&s_unit.date.month, &rtc_val.month);
+	bcd2bin(&s_unit.date.week, &rtc_val.week);
+	bcd2bin(&s_unit.date.day, &rtc_val.day);
+	bcd2bin(&s_unit.date.hour, &rtc_val.hour);
+	bcd2bin(&s_unit.date.min, &rtc_val.min);
+	bcd2bin(&s_unit.date.sec, &rtc_val.sec);
+	
+	// 日時情報書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
+	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
+
+	s_unit.calc_cnt = 0;
+	
+	// センサー取得データをクリア
+	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
+	memset(s_unit.ibiki_val, 0, MEAS_KOKYU_CNT_MAX);
+	memset(s_unit.acl_x, 0, MEAS_ACL_CNT_MAX);
+	memset(s_unit.acl_y, 0, MEAS_ACL_CNT_MAX);
+	memset(s_unit.acl_z, 0, MEAS_ACL_CNT_MAX);
+	
+	s_unit.kokyu_cnt = 0;
+	s_unit.ibiki_cnt = 0;
+	s_unit.acl_cnt = 0;
+	
+	s_unit.sensing_cnt_50ms = 0;
+	s_unit.cnt_time_50ms = 0;
+	s_unit.sensing_flg = ON;
+	
+	// センシング移行時にLEDとバイブ動作
+	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+	{
+		set_led( LED_PATT_GREEN_LIGHTING );
+	} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
+		set_led( LED_PATT_GREEN_BLINK );
+	}
+	set_vib(VIB_MODE_SENSING);
 }
 
 /************************************************************************/
@@ -1704,9 +1696,14 @@ STATIC SYSTEM_MODE evt_sensing( int evt)
 STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
+	UB bat = drv_i_port_bat_chg_detect();
 	
-	if( ON == s_unit.h1d.info.bit_f.bat_chg ){
-		system_mode = SYSTEM_MODE_NON;
+	//電池残量確認
+	main_set_battery();
+	
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN || bat == ON ){
+		// 電池残量なし or 充電中ならセンシングに移行しない
+		system_mode = SYSTEM_MODE_IDLE_COM;
 	}
 	
 	return system_mode;
