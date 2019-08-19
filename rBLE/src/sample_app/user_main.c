@@ -423,11 +423,29 @@ void user_main_timer_cyc( void )
 				// フォトセンサー値取得
 				s_unit.meas.info.dat.photoref_val = main_photo_read();
 			}
-			bat = drv_i_port_bat_chg_detect();
+			
 			s_unit.sensing_cnt_50ms++;
-			// 12時間を超えた or 充電残量なし or 充電中なら待機モードへ
-			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS || s_unit.battery_sts == BAT_LEVEL_STS_MIN || bat != OFF ){
-				evt_act( EVENT_POW_SW_LONG );
+			
+			//充電検知
+			bat = drv_i_port_bat_chg_detect();
+			if(bat == ON)
+			{
+				//充電中なら待機モードへ
+				evt_act( EVENT_CHG_PORT_ON );
+			}
+			
+			// 電池残量検知
+			if(s_unit.battery_sts == BAT_LEVEL_STS_MIN)
+			{
+				// 電池残量なしなら待機モードへ
+				evt_act( EVENT_DENCH_LOW );
+			}
+			
+			// センシング時間上限検知
+			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS )
+			{
+				// 12時間を超えたなら待機モードへ
+				evt_act( EVENT_COMPLETE );
 			}
 #endif
 			s_unit.tick_10ms_new = 0;
