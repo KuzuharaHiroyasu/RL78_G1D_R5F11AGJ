@@ -12,6 +12,7 @@
 // グローバル変数
 LED_PATT pattern = LED_PATT_INITIAL;
 UH		 led_orbit_timer = 0;
+UH		 blink_timer = 0;
 
 // プロトタイプ宣言
 STATIC void led_green_lighting(UW led_timer);
@@ -94,6 +95,8 @@ void set_led(LED_PATT patt)
 	
 	// パターンセット
 	pattern = patt;
+	
+	blink_timer = 0;
 }
 
 /************************************************************************/
@@ -195,12 +198,23 @@ STATIC void led_green_lighting(UW led_timer)
 /************************************************************************/
 STATIC void led_green_blink(UW led_timer)
 {
-	if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
+	if( blink_timer <= LED_TIMER_1SEC )
 	{
-		LED_GREEN = LED_ON;
-	} else
+		if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
+		{
+			LED_GREEN = LED_ON;
+		}
+	} else if( blink_timer <= LED_TIMER_2SEC ){
+		if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_ON)
+		{
+			LED_GREEN = LED_OFF;
+		}
+	}
+	blink_timer++;
+	
+	if( LED_TIMER_2SEC < blink_timer )
 	{
-		LED_GREEN = LED_OFF;
+		blink_timer = 0;
 	}
 }
 
@@ -269,11 +283,22 @@ STATIC void led_yellow_lighting(UW led_timer)
 /************************************************************************/
 STATIC void led_yellow_blink(UW led_timer)
 {
-	if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
+	if( blink_timer <= LED_TIMER_1SEC )
 	{
-		LED_YELLOW = LED_ON;
-	} else
+		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
+		{
+			LED_YELLOW = LED_ON;
+		}
+	} else if( blink_timer <= LED_TIMER_2SEC ){
+		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_ON)
+		{
+			LED_YELLOW = LED_OFF;
+		}
+	}
+	blink_timer++;
+	
+	if( LED_TIMER_2SEC < blink_timer )
 	{
-		LED_YELLOW = LED_OFF;
+		blink_timer = 0;
 	}
 }

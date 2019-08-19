@@ -219,9 +219,6 @@ void codeptr app_evt_usr_2(void)
 	}
 #endif
 	
-	s_unit.sec10_led_cnt++;
-	led_start(s_unit.sec10_led_cnt);
-	
 	// RD8001:‰Á‘¬“x‰‰ŽZŽb’è’Ç‰Á ¡Žb’è
 //	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
 //	ke_msg_send(ke_msg);
@@ -278,9 +275,13 @@ void codeptr app_evt_usr_3(void)
 #if FUNC_DEBUG_LOG != ON
 	{
 		uint8_t *ke_msg;
-
+		
+		// ƒ†[ƒU[ƒAƒvƒŠŽüŠúˆ—
 		ke_msg = ke_msg_alloc( USER_MAIN_CYC_ACT, USER_MAIN_ID, USER_MAIN_ID, 0 );
-
+		ke_msg_send(ke_msg);
+		
+		// LED
+		ke_msg = ke_msg_alloc( USER_MAIN_CYC_LED, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
 #endif
@@ -494,11 +495,8 @@ void user_main_timer_cyc( void )
 /************************************************************************/
 static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-	// LED(10msŽüŠú)
-	if(s_unit.tick_led_10ms_sec >= (uint16_t)PERIOD_10MSEC)
-	{
-   		led_start(s_unit.tick_led_10ms_sec);
-	}
+	led_start(s_unit.tick_led_20ms_sec);
+	s_unit.tick_led_20ms_sec++;
 	
 	return (KE_MSG_CONSUMED);
 }
@@ -3629,7 +3627,7 @@ void reset_vib_timer(void)
 /************************************************************************/
 void reset_led_timer(void)
 {
-	s_unit.sec10_led_cnt = 0;
+	s_unit.tick_led_20ms_sec = 0;
 }
 
 /************************************************************************/
