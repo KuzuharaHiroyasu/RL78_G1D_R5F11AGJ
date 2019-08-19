@@ -17,6 +17,8 @@ UH		 blink_timer = 0;
 // プロトタイプ宣言
 STATIC void led_green_lighting(UW led_timer);
 STATIC void led_green_blink(UW led_timer);
+STATIC void led_green_blink_low_batt(UW led_timer);
+STATIC void led_green_blink_sensing(UW led_timer);
 STATIC void led_yellow_lighting(UW led_timer);
 STATIC void led_yellow_blink(UW led_timer);
 
@@ -55,6 +57,12 @@ void led_start(UW led_timer)
 			case LED_PATT_GREEN_BLINK:
 				led_green_blink(led_timer);
 				break;
+			case LED_PATT_GREEN_BLINK_LOW_BATT:
+				led_green_blink_low_batt(led_timer);
+				break;
+			case LED_PATT_GREEN_BLINK_SENSING:
+				led_green_blink_sensing(led_timer);
+				break;			
 			case LED_PATT_YELLOW_ON:
 				led_yellow_on();
 				break;
@@ -97,6 +105,7 @@ void set_led(LED_PATT patt)
 	pattern = patt;
 	
 	blink_timer = 0;
+	led_orbit_timer = 0;
 }
 
 /************************************************************************/
@@ -219,6 +228,72 @@ STATIC void led_green_blink(UW led_timer)
 }
 
 /************************************************************************/
+/* 関数     : led_green_blink_low_batt									*/
+/* 関数名   : LED1点滅（電池残量なし）									*/
+/* 引数     : led_timer:LEDタイマー										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void led_green_blink_low_batt(UW led_timer)
+{
+	if( led_orbit_timer < LED_ORBIT )
+	{
+		if( blink_timer <= LED_TIMER_100MSEC )
+		{
+			if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
+			{
+				LED_GREEN = LED_ON;
+			}
+		} else if( blink_timer <= LED_TIMER_200MSEC ){
+			if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_ON)
+			{
+				LED_GREEN = LED_OFF;
+			}
+		}
+		blink_timer++;
+		
+		if( LED_TIMER_200MSEC < blink_timer )
+		{
+			blink_timer = 0;
+			led_orbit_timer++;
+		}
+	}
+}
+
+/************************************************************************/
+/* 関数     : led_green_blink_sensing									*/
+/* 関数名   : LED1点滅（センシング中）									*/
+/* 引数     : led_timer:LEDタイマー										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void led_green_blink_sensing(UW led_timer)
+{
+	if( blink_timer <= (LED_TIMER_20MSEC * 3) )
+	{
+		if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
+		{
+			LED_GREEN = LED_ON;
+		}
+	} else {
+		if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_ON)
+		{
+			LED_GREEN = LED_OFF;
+			pattern = LED_PATT_LIGHT_UP;
+		}
+	}
+	blink_timer++;
+}
+
+/************************************************************************/
 /* 関数     : led_yellow_on												*/
 /* 関数名   : LED2点灯													*/
 /* 引数     : なし														*/
@@ -302,3 +377,9 @@ STATIC void led_yellow_blink(UW led_timer)
 		blink_timer = 0;
 	}
 }
+
+
+
+
+
+

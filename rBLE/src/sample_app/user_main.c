@@ -586,6 +586,7 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
+		set_led( LED_PATT_GREEN_BLINK_SENSING );
 	}
 
 	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
@@ -1734,8 +1735,14 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 	//電池残量確認
 	main_set_battery();
 	
-	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN || bat == ON ){
-		// 電池残量なし or 充電中ならセンシングに移行しない
+	if( s_unit.battery_sts == BAT_LEVEL_STS_MIN )
+	{
+		// 電池残量なしなら移行しない
+		system_mode = SYSTEM_MODE_IDLE_COM;
+		set_led( LED_PATT_GREEN_BLINK_LOW_BATT );	
+	}
+	else if( bat == ON ){
+		// 充電中ならセンシングに移行しない
 		system_mode = SYSTEM_MODE_IDLE_COM;
 	}
 	
@@ -3178,13 +3185,16 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.phase_ibiki = SEC_PHASE_0_10;
 	}	
 	
-	
+#if 0	
 	// 移動累計とるので前のデータを残す
 	for(ii=0;ii<size;++ii){
 		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE_APNEA-size+ii];
 	}
 	s_unit.ibiki_cnt = size;
-
+#else
+	s_unit.ibiki_cnt = 0;
+#endif
+	
 #else
 	//デバッグ用ダミー処理
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
