@@ -636,7 +636,9 @@ typedef struct{
 #define ACL_TIMING_VAL			10					// 加速度センサ・フォトセンサ処理タイミング
 #else
 #define ACL_TIMING_VAL			100					// 加速度センサ・フォトセンサ処理タイミング
+#define ACL_RESET_TIMING_VAL	200					// 加速度センサ・フォトセンサ処理リセットタイミング
 #endif
+
 #define I2C_LOCK_ERR_VAL		1000				// ロック異常判定閾値
 
 #define I2C_WAIT		255					// スタートコンディション待ち ※200us程度なので最大値を設定しておく

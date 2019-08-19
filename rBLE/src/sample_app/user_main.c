@@ -33,6 +33,7 @@ static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *para
 #if FUNC_DEBUG_LOG != ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_calc_data_set_acl( void );
+STATIC void user_main_calc_data_set_photoref( void );
 #endif
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_com(void);
@@ -105,7 +106,6 @@ void main_vuart_rcv_device_set( void );
 
 static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static void set_yokusei_cnt_time(UB yokusei_max_time);
 
 // ACL関連
@@ -120,6 +120,7 @@ STATIC void main_acl_read(void);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 // フォトセンサー
 STATIC UH main_photo_read(void);
@@ -144,7 +145,9 @@ static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
 static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 bool vib_flg = false;
-
+#if FUNC_DEBUG_LOG != ON
+static UB acl_photo_sens_read_flg = OFF;
+#endif
 /********************/
 /*     定数定義     */
 /********************/
@@ -413,15 +416,29 @@ void user_main_timer_cyc( void )
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
 			user_main_calc_data_set_kyokyu_ibiki();
 			
-			// 加速度取得
 			s_unit.acl_timing+=1;
+			
+			// 5秒後に取得
 			if(s_unit.acl_timing >= ACL_TIMING_VAL){
-				s_unit.acl_timing = 0;
-				main_acl_read();
-				user_main_calc_data_set_acl();
+				if( acl_photo_sens_read_flg == OFF)
+				{
+					// 加速度取得
+					main_acl_read();
+					user_main_calc_data_set_acl();
+					
+					// フォトセンサー値取得
+					s_unit.meas.info.dat.photoref_val = main_photo_read();
+					user_main_calc_data_set_photoref();
+					
+					acl_photo_sens_read_flg = ON;
+				}
 				
-				// フォトセンサー値取得
-				s_unit.meas.info.dat.photoref_val = main_photo_read();
+				// センサー値取得5秒後にリセット
+				if(s_unit.acl_timing >= ACL_RESET_TIMING_VAL)
+				{
+					s_unit.acl_timing = 0;
+					acl_photo_sens_read_flg = OFF;
+				}
 			}
 			
 			s_unit.sensing_cnt_50ms++;
@@ -544,27 +561,6 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 	return (KE_MSG_CONSUMED);
 }
 
-/************************************************************************/
-/* 関数     : main_calc_photoref										*/
-/* 関数名   : 						*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 							*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
-{
-	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = s_unit.meas.info.dat.photoref_val;
-	s_unit.phase_photoref++;
-	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
-		s_unit.phase_photoref = SEC_PHASE_0_10;
-	}
-	
-	return (KE_MSG_CONSUMED);
-}
 #if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_calc_data_set_kokyu_ibiki						*/
@@ -634,6 +630,27 @@ STATIC void user_main_calc_data_set_acl( void )
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 }
+
+/************************************************************************/
+/* 関数     : user_main_calc_data_set_photoref							*/
+/* 関数名   : 						*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void user_main_calc_data_set_photoref( void )
+{
+	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = s_unit.meas.info.dat.photoref_val;
+	s_unit.phase_photoref++;
+	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
+		s_unit.phase_photoref = SEC_PHASE_0_10;
+	}
+}
+
 #endif
 
 #if FUNC_DEBUG_LOG == ON
@@ -3238,6 +3255,11 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	return (KE_MSG_CONSUMED);
 }
 
+static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	
+	return (KE_MSG_CONSUMED);
+}
 
 /************************************************************************/
 /* 関数     : user_main_sleep											*/
