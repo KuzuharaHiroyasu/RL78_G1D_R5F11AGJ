@@ -1157,6 +1157,7 @@ STATIC void user_main_mode_sensing_after( void )
 	INC_MAX_INI(s_unit.frame_num.write, (EEP_FRAME_MAX - 1), 0);
 	INC_MAX(s_unit.frame_num.cnt, EEP_FRAME_MAX );
 	
+	eep_write( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num.cnt, 1, ON );
 	
 	wr_adrs = EEP_ADRS_TOP_SETTING;
 	if( OFF == oikosi_flg ){
