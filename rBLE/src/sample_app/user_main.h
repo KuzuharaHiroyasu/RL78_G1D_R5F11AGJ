@@ -188,6 +188,7 @@ typedef enum{
 #define		MAX_YOKUSEI_CONT_TIME_5_MIN_CNT		30		// 10秒毎 1分(6) * 5 = 30回 = 5分
 #define		MAX_YOKUSEI_CONT_TIME_10_MIN_CNT	60		// 10秒毎 1分(6) * 10 = 60回 = 10分
 #define		MAX_YOKUSEI_CONT_TIME_NON_CNT		4320	// 10秒毎 1分(6) * 60 * 12 = 4320回 = 720分 = 12時間
+#define		YOKUSEI_INTERVAL_CNT				180		// 10秒毎 1分(6) * 30 = 180回 = 30分
 
 // 測定個数
 #define		MEAS_SEKIGAI_CNT_MAX		140
@@ -438,7 +439,8 @@ typedef struct{
 	UH tick_vib_10ms_sec;
 	UW tick_led_20ms_sec;
 	UW sensing_cnt_50ms;		// センシング終了[50ms]
-	UW cnt_time_50ms;		//抑制継続時間用カウント
+	UW yokusei_cnt_time_10sec;	// 抑制継続時間用カウント
+	UW cnt_overtime_10sec;		// 抑制最大時間のインターバルカウント
 	
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ

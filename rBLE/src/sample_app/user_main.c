@@ -144,6 +144,7 @@ STATIC DS s_ds;
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
 static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+static UB yokusei_max_cnt_over_flg = OFF;
 bool vib_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB acl_photo_sens_read_flg = OFF;
@@ -1097,7 +1098,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.acl_cnt = 0;
 	
 	s_unit.sensing_cnt_50ms = 0;
-	s_unit.cnt_time_50ms = 0;
+	s_unit.yokusei_cnt_time_10sec = 0;
 	s_unit.sensing_flg = ON;
 	
 	// センシング移行時にLEDとバイブ動作
@@ -3163,17 +3164,38 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 //	state = (s_unit.calc.info.dat.state & 0xFE);
 //	s_unit.calc.info.dat.state = (newstate | state);
 	
+	
+	if(yokusei_max_cnt_over_flg == ON)
+	{// 抑制動作最大時間オーバー時
+		s_unit.cnt_overtime_10sec++;
+		if( YOKUSEI_INTERVAL_CNT <= s_unit.cnt_overtime_10sec )
+		{// 抑制動作最大時間オーバー時のインターバル満了
+			yokusei_max_cnt_over_flg = OFF;
+			s_unit.cnt_overtime_10sec = 0;
+			s_unit.yokusei_cnt_time_10sec = 0;
+		}
+	}
+	
 	bit_shift = s_unit.phase_ibiki * 2;
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		s_unit.cnt_time_50ms++;
-		if(act_mode != ACT_MODE_MONITOR && s_unit.cnt_time_50ms <= yokusei_max_cnt)
-		{//モニタリングモードでないかつ、抑制動作最大時間以下
-			set_vib(set_vib_mode(vib_str));
+		s_unit.yokusei_cnt_time_10sec++;
+		if(act_mode != ACT_MODE_MONITOR)
+		{//モニタリングモードでない
+			if(s_unit.yokusei_cnt_time_10sec <= yokusei_max_cnt)
+			{//抑制動作最大時間以下
+				if(yokusei_max_cnt_over_flg == OFF)
+				{//抑制動作最大時間オーバー時以外
+					set_vib(set_vib_mode(vib_str));
+				}
+			} else {
+				//抑制動作最大時間オーバー時にフラグON
+				yokusei_max_cnt_over_flg = ON;
+			}
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
-		s_unit.cnt_time_50ms = 0;	// 初期化
+		s_unit.yokusei_cnt_time_10sec = 0;	// 初期化
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
