@@ -28,10 +28,12 @@ void com_srv_send( UB* tx_data, UB len );
 /********************/
 /*     内部変数     */
 /********************/
+#if 0	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
 #if FUNC_DEBUG_LOG == ON
 STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
 																/* DRV_CPU_COM_STATUS_CAN_SEND		送信可能状態 */
 																/* DRV_CPU_COM_STATUS_SENDING		送信中 */
+#endif
 #endif
 
 /********************/
@@ -52,6 +54,7 @@ extern const B		version_product_tbl[];				/* ソフトウェアバージョン */
 /************************************************************************/
 void com_srv_init( void )
 {
+#if 0	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
 #if FUNC_DEBUG_LOG == ON
 	// プラットフォーム関連の設定
 	SERIAL_EVENT_PARAM call_back = {0};
@@ -64,6 +67,7 @@ void com_srv_init( void )
 	
 	// 変数の初期化
 	s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_CAN_SEND;
+#endif
 #endif
 }
 
@@ -97,8 +101,10 @@ void com_srv_read_comp( void )
 /************************************************************************/
 void com_srv_write_comp( void )
 {
+#if 0	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
 #if FUNC_DEBUG_LOG == ON
 	s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_CAN_SEND;
+#endif
 #endif
 }
 
@@ -160,11 +166,13 @@ void com_srv_log_title( void )
 /************************************************************************/
 void com_srv_send( UB* tx_data, UB len )
 {
+#if 0	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
 #if FUNC_DEBUG_LOG == ON
 	if(s_drv_cpu_com_snd_status == DRV_CPU_COM_STATUS_CAN_SEND){
 		s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_SENDING;
 		serial_write( tx_data, len );
 	}
+#endif
 #endif
 }
 

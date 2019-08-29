@@ -41,7 +41,6 @@
 
 
 //#define USER_MAIN_CYC_ACT			1								/* Task API ID */
-//#define CPU_COM_TIMER_API		2								/* Timer API ID */
 
 
 #if 0
@@ -70,7 +69,7 @@ extern ke_state_t user_main_state[ USER_MAIN_IDX_MAX ];
 // ============================================================
 // ==================ユーザーアプリケーション==================
 // ============================================================
-// システムモード ※H1D/G1D共通
+// システムモード
 typedef enum{
 	// 仕様上の状態下限
 	SYSTEM_MODE_INITIAL = 0,				// イニシャル
@@ -86,7 +85,7 @@ typedef enum{
 }SYSTEM_MODE;
 
 
-// イベント ※H1D/G1D共通
+// イベント ※G1D共通
 typedef enum{
 	EVENT_NON = 0,				// なし
 	EVENT_POW_SW_SHORT,			// 電源SW押下(短)
@@ -110,16 +109,12 @@ typedef enum{
 	ERR_ID_EEP = 1					,			/* EEP(汎用) */
 	ERR_ID_I2C						,			/* I2C(汎用) */
 	ERR_ID_MAIN						,			/* MAIN(汎用) */
-	ERR_ID_CPU_COM					,			/* CPU間通信(汎用) */
 	ERR_ID_ACL						,			/* 加速度センサ(汎用) */
 
-	ERR_ID_CPU_COM_ERR = 40			,			/* CPU間通信異常 */
-	ERR_ID_CPU_COM_RCV_RING			,			/* CPU間通信受信リングバッファ ※演算中はリングバッファを引き取れないので発生してしまう */
 	ERR_ID_DRV_UART_OERR = 50		,			/* UARTドライバ(オーバーランエラー) */
 	
 	// 高レベル異常
 	ERR_ID_BLE_SEND_ERR = 97	,				/* BLE送信異常 */
-	ERR_ID_CPU_COM_RETRYOUT = 98	,			/* CPU間通信リトライアウト(致命的) */
 	ERR_ID_LOGIC = 99				,			/* ロジック不具合(汎用) */
 
 	ERR_ID_MAX									/* 異常ID最大	*/
@@ -191,8 +186,6 @@ typedef enum{
 #define		YOKUSEI_INTERVAL_CNT				180		// 10秒毎 1分(6) * 30 = 180回 = 30分
 
 // 測定個数
-#define		MEAS_SEKIGAI_CNT_MAX		140
-#define		MEAS_SEKISHOKU_CNT_MAX		140
 #define		MEAS_KOKYU_CNT_MAX			200
 #define		MEAS_IBIKI_CNT_MAX			200
 #if FUNC_DEBUG_LOG == ON
@@ -200,6 +193,9 @@ typedef enum{
 #else
 #define		MEAS_ACL_CNT_MAX			3
 #endif
+
+#define		MEAS_SIZE_SENSOR_DATA		10
+
 
 // 演算結果書き込みタイミング
 #define		CALC_RESULT_WR_CYC			30			// 30秒
@@ -267,10 +263,8 @@ typedef enum program_ver{
 // 測定情報
 typedef struct{
 	union{
-		UB	byte[CPU_COM_SND_DATA_SIZE_SENSOR_DATA];
+		UB	byte[MEAS_SIZE_SENSOR_DATA];
 		struct{
-			W	sekigaival;		// 差動入力の為に符号あり
-			W	sekishoku_val;	// 差動入力の為に符号あり
 			UH	kokyu_val;		
 			UH	ibiki_val;		
 			B acl_x;
@@ -328,7 +322,7 @@ typedef struct{
 	UB	com_flg;		// 通信での自己診断フラグ
 }SELF_CHECK;
 
-// H1D情報
+// G1D情報
 typedef struct{
 	UB	ble				:1;		/* 1  BLE接続 */
 	UB	dummy1			:1;		/* 2  未定義  */
@@ -345,25 +339,6 @@ typedef struct{
 		BIT_G1D_INFO bit_f;
 	}info;
 }G1D_INFO;
-
-
-// H1D情報
-typedef struct{
-	UB	bat_chg			:1;		/* 1  充電検知ポート */
-	UB	kensa			:1;		/* 2  検査ポート */
-	UB	dummy1			:1;		/* 3  未定義 */
-	UB	dummy2			:1;		/* 4  未定義 */
-	UB	dummy3			:1;		/* 5  未定義 */
-	UB	dummy4			:1;		/* 6  未定義 */
-	UB	dummy5			:1;		/* 7  未定義 */
-	UB	dummy6			:1;		/* 8  未定義 */
-}BIT_H1D_INFO;
-typedef struct{
-	union {
-		UB	byte;
-		BIT_H1D_INFO bit_f;
-	}info;
-}H1D_INFO;
 
 
 // フレーム(枠)番号
@@ -388,9 +363,6 @@ typedef struct{
 	UB sensing_flg;					// センシング中フラグ
 	
 	UB battery_sts;			// 電池状態
-	H1D_INFO h1d;			// H1D情報
-	H1D_INFO h1d_last;		// H1D情報(前回)
-	
 	
 	// 演算関連
 	CALC calc;				// 演算後データ
@@ -413,8 +385,6 @@ typedef struct{
 	ALARM	alarm;						// 警告機能[EEPコピーエリア] ※EEPとは一致させておく
 	
 	// 機器データ(演算前)
-	H	sekigai_val[MEAS_SEKIGAI_CNT_MAX];		// 差動入力の為に符号あり
-	H	sekishoku_val[MEAS_SEKISHOKU_CNT_MAX];	// 差動入力の為に符号あり
 	UH	kokyu_val[MEAS_KOKYU_CNT_MAX];		
 	UH	ibiki_val[MEAS_IBIKI_CNT_MAX];		
 	B	acl_x[MEAS_ACL_CNT_MAX];
@@ -486,44 +456,10 @@ typedef struct{
 
 
 
-
-
-
-/*##################################################################*/
-/*							CPU間通信部								*/
-/*##################################################################*/
-typedef struct _DS_CPU_COM_INPUT{
-	UB rcv_cmd;											/* 受信コマンド */
-	UB rcv_data[CPU_COM_DATA_SIZE_MAX];					/* 受信データ */
-	UB cpu_com_send_status;								/* CPU間通信送信ステータス */
-														/* 	CPU_COM_SND_STATUS_IDLE			アイドル状態 ※送信可能状態	*/
-														/* 	CPU_COM_SND_STATUS_SEND			送信中						*/
-														/* 	CPU_COM_SND_STATUS_COMPLETE		送信完了					*/
-														/* 	CPU_COM_SND_STATUS_SEND_NG		リトライNG					*/
-}DS_CPU_COM_INPUT;
-
-typedef struct _DS_CPU_COM_ORDER{
-	CPU_COM_CMD_ID snd_cmd_id;							/* 送信コマンドID */
-	UB snd_data[CPU_COM_DATA_SIZE_MAX];					/* 送信データ */
-	UH data_size;										/* 送信データ長 */
-}DS_CPU_COM_ORDER;
-
-typedef struct _DS_CPU_COM{
-	DS_CPU_COM_INPUT input;
-	DS_CPU_COM_ORDER order;
-}DS_CPU_COM;
-
-typedef struct _CPU_COM_RCV_CMD_TBL{
-	UB cmd;							/* 受信コマンド */
-//	void (*func)(UB *p_data);		/* 受信処理 */
-	void (*func)(void);				/* 受信処理 */
-	UB res;							/* 応答有(ON)無(OFF) */
-}CPU_COM_RCV_CMD_TBL;
-
 /*##################################################################*/
 /*							VUART(BLE)通信部						*/
 /*##################################################################*/
-/* CPU間通信 コマンド種別 */
+/* VUART通信 コマンド種別 */
 /* 要求・応答のセット */
 typedef enum{
 	VUART_CMD_TYPE_NONE=0,							// なし
@@ -537,12 +473,7 @@ typedef enum{
 	VUART_CMD_TYPE_DATA_FRAME,						// 枠情報(日時等)
 	VUART_CMD_TYPE_DATA_CALC,						// 機器データ
 	VUART_CMD_TYPE_DATA_FIN,						// データ取得完了通知
-//	VUART_CMD_TYPE_PRG_H1D_DATA,					// プログラム転送(データ)
-//	VUART_CMD_TYPE_PRG_H1D_RESULT,					// プログラム転送結果
-//	VUART_CMD_TYPE_PRG_H1D_CHECK,					// プログラム更新完了確認
 	VUART_CMD_TYPE_DEVICE_SET,						// デバイス設定変更
-//	VUART_CMD_TYPE_ALARM_SET,						// 設定変更
-//	VUART_CMD_TYPE_ALARM_INFO,						// アラーム通知
 	VUART_CMD_TYPE_MAX								// 最大値					
 }VUART_CMD_TYPE;
 
@@ -568,12 +499,9 @@ typedef struct{
 #define	VUART_CMD_PRG_G1D_START	0xF0
 #define	VUART_CMD_PRG_G1D_VER	0xF9
 
-//#define	VUART_CMD_ALARM_SET		0xC0
-
 #define	VUART_CMD_INFO			0xC2
 #define	VUART_CMD_VERSION		0xC3
 #define	VUART_CMD_DEVICE_INFO	0xC5
-//#define	VUART_CMD_ALARM_INFO	0xC4
 #define	VUART_CMD_DEVICE_SET	0xC6
 #define	VUART_CMD_INVALID		0xFF	// コマンド無し特殊処理
 
@@ -596,8 +524,6 @@ typedef struct{
 
 #define	VUART_CMD_LEN_VERSION		1
 #define	VUART_CMD_LEN_DEVICE_INFO	1
-
-//#define	VUART_CMD_LEN_ALARM_SET		8
 #define	VUART_CMD_LEN_DEVICE_SET	5
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
@@ -628,7 +554,6 @@ typedef struct _DS_VUART{
 
 /* DS構造体 */
 typedef struct{
-	DS_CPU_COM 		cpu_com;		/* CPU間通信部 */
 	DS_VUART		vuart;			/* 仮想UART(BLE) */
 }DS;
 
@@ -662,15 +587,12 @@ typedef struct{
 /******************/
 extern void codeptr app_evt_usr_2(void);
 extern void codeptr app_evt_usr_3(void);
-extern void ds_get_cpu_com_order( DS_CPU_COM_ORDER **p_data );
-extern void ds_set_cpu_com_input( DS_CPU_COM_INPUT *p_data );
 extern bool user_main_sleep(void);
 extern void ds_set_vuart_data( UB *p_data, UB len );
 extern void ds_set_vuart_send_status( UB status );
 extern void user_system_init( void );
 extern void user_main_init( void );
 extern void err_info( ERR_ID id );
-extern void main_cpu_com_snd_pc_log( UB* data, UB size );
 extern void main_set_bd_adrs( UB* bda);
 extern void user_main_timer_10ms_set( void );
 extern void user_main_timer_cyc( void );

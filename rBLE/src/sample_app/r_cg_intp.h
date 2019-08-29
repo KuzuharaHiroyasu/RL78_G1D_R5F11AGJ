@@ -61,7 +61,6 @@ Macro definitions (Register bit)
 /***********************************************************************************************************************
 Macro definitions
 ***********************************************************************************************************************/
-#define DRV_I_PORT_H1D_INT	P3_bit.no0
 
 /***********************************************************************************************************************
 Typedef definitions
@@ -73,7 +72,6 @@ Global functions
 void R_INTC_Create(void);
 void R_INTC3_Start(void);
 void R_INTC3_Stop(void);
-UB drv_intp_read_h1d_int(void);
 
 /* Start user code for function. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
