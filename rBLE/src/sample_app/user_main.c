@@ -623,8 +623,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 /************************************************************************/
 STATIC void user_main_calc_data_set_acl( void )
 {
-//	uint8_t *ke_msg;
-	
 	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
 		s_unit.acl_x[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_x;
 		s_unit.acl_y[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_y;
@@ -636,7 +634,6 @@ STATIC void user_main_calc_data_set_acl( void )
 	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	
 }
 
 /************************************************************************/
