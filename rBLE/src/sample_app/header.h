@@ -38,6 +38,7 @@
 #include "i2c.h"
 #include "com_srv.h"
 #include "eep.h"
+#include "cpu_com.h"
 #include "calc_data.h"
 
 /* アプリケーション */

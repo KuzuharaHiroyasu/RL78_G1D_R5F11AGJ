@@ -59,6 +59,14 @@
 
 
 
+// プログラム転送(H1D)
+#define	EEP_PRG_H1D_RECODE_UNIT			(UW)20				//モトローラ―１列(アドレス4byte+データ16byte)[Byte]
+#define	EEP_PRG_H1D_RECODE_OFFSET		(UW)12				//調整領域(12バイト)[Byte]
+
+#define	EEP_PRG_H1D_RECODE_CNT_MAX		(UW)(( EEP_DATA_SIZE_ALL / ( EEP_PRG_H1D_RECODE_UNIT + EEP_PRG_H1D_RECODE_OFFSET )) - (UW)1 )	// 最終レコードはプログラム種別用
+
+
+
 // ラベル
 #define EEP_DATA_TYPE_NORMAL				0x11		// 通常時(0x11)
 #define EEP_DATA_TYPE_PRG_H1D				0xAA		// H1Dプログラム転送(0xAA)

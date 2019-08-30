@@ -41,13 +41,22 @@ STATIC void user_main_mode_sensing(void);
 STATIC void user_main_mode_move(void);
 STATIC void user_main_mode_get(void);
 STATIC void user_main_mode_prg_g1d(void);
+STATIC void user_main_req_cyc( void );
+STATIC UB main_cpu_com_snd_sts_req( void );
+STATIC void main_cpu_com_snd_mode_chg( void );
 #if FUNC_DEBUG_LOG != ON
 STATIC void user_main_mode( void );
+STATIC void main_cpu_com_proc(void);
 STATIC void user_main_mode_common( void );
 STATIC void main_vuart_proc(void);
 #endif
-STATIC void main_mode_chg( void );
+STATIC void main_cpu_com_rcv_sts_res( void );
+STATIC void main_cpu_com_rcv_sensor_res( void );
+STATIC void main_cpu_com_rcv_mode_chg( void );
+STATIC void main_mode_chg( void );				// ■暫定
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
+//STATIC void main_cpu_com_snd_pc_log( UB* data, UB size );
+//STATIC void main_cpu_com_snd_sensing_order( UB sekigai );
 STATIC void main_vuart_rcv_mode_chg( void );
 STATIC void main_vuart_rcv_date( void );
 STATIC void main_vuart_rcv_info( void );
@@ -68,6 +77,7 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
 STATIC SYSTEM_MODE evt_sensing( int evt);
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
 STATIC SYSTEM_MODE evt_initial( int evt);
+STATIC SYSTEM_MODE evt_initial_chg( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
 STATIC SYSTEM_MODE evt_send_clear( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
@@ -78,6 +88,9 @@ STATIC void user_main_eep_read_pow_on(void);
 //STATIC void eep_all_erase( void );		//未使用関数
 STATIC void eep_part_erase( void );
 STATIC void main_vuart_send( UB *p_data, UB len );
+STATIC void main_cpu_com_rcv_date_set( void );
+STATIC void main_cpu_com_rcv_disp_order( void );
+STATIC void main_cpu_com_rcv_version( void );
 void main_vuart_set_mode( void );
 void main_vuart_rcv_data_frame( void );
 void main_vuart_rcv_data_calc( void );
@@ -85,6 +98,11 @@ void main_vuart_rcv_data_end( void );
 STATIC void main_vuart_rcv_data_fin( void );
 void main_vuart_rcv_date( void );
 void main_vuart_rcv_device_set( void );
+//void main_vuart_rcv_alarm_set( void );
+//void main_vuart_snd_alarm_info( UB type, UB data );
+
+//STATIC void AlarmSnore(UB oldstate, UB newstate);
+//STATIC void AlarmApnea(UB oldstate, UB newstate);
 
 static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -97,6 +115,8 @@ STATIC void main_acl_start(void);
 STATIC void main_acl_read(void);
 
 // 以降演算部の処理
+//static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+//static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -289,7 +309,11 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 #else
 	sw_proc();				// SW検知処理
 	
+	cpu_com_proc();			// CPU間通信サービス
+	
 	main_vuart_proc();		// VUART通信サービス
+	
+	main_cpu_com_proc();	// 通信サービスアプリ
 	
 	user_main_mode();		// メインモード処理
 #endif
@@ -816,6 +840,7 @@ void user_system_init( void )
 void user_main_init( void )
 {
 	// ミドル初期化
+	cpu_com_init();
 	com_srv_init();
 	i2c_init();
 	eep_init();
@@ -838,6 +863,10 @@ void user_main_init( void )
 	// 演算初期化
 	calc_snore_init();
 	
+	// H1D起動待ち
+//	wait_ms(5);
+//	s_unit.last_time_sts_req = time_get_elapsed_time();
+
 	// ■暫定 待機モードへ遷移させるために仮に充電ポート
 	if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
 		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
@@ -945,7 +974,10 @@ STATIC void sw_proc(void)
 STATIC void user_main_calc_result( void )
 {
 	UW wr_adrs = 0;
-
+#if 0
+	//演算結果をPC送付するデバッグコード
+	main_cpu_com_snd_pc_log( &s_unit.calc.info.byte[0], CPU_COM_SND_DATA_SIZE_PC_LOG );
+#endif
 	//範囲チェック
 	if( s_unit.calc_cnt > EEP_CACL_DATA_NUM ){
 		err_info(ERR_ID_MAIN);
@@ -1255,6 +1287,8 @@ STATIC void user_main_mode_get_after( void )
 /************************************************************************/
 STATIC void user_main_mode_inital(void)
 {
+	//ステータス要求通知
+	user_main_req_cyc();
 }
 
 /************************************************************************/
@@ -1270,6 +1304,9 @@ STATIC void user_main_mode_inital(void)
 /************************************************************************/
 STATIC void user_main_mode_idle_com(void)
 {
+	//ステータス要求通知
+	user_main_req_cyc();
+	
 }
 
 /************************************************************************/
@@ -1285,6 +1322,17 @@ STATIC void user_main_mode_idle_com(void)
 /************************************************************************/
 STATIC void user_main_mode_sensing(void)
 {
+	UW now_time;
+	
+	now_time = time_get_elapsed_time();
+	
+	if(( now_time - s_unit.last_sensing_data_rcv ) >= SENSING_END_JUDGE_TIME ){
+		// 規定値時間センシングなし
+		user_main_req_cyc();
+	}else{
+		// センシングあり
+	}
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
 /************************************************************************/
@@ -1300,6 +1348,9 @@ STATIC void user_main_mode_sensing(void)
 /************************************************************************/
 STATIC void user_main_mode_move(void)
 {
+	// 要求送信
+	main_cpu_com_snd_mode_chg();
+	
 }
 
 /************************************************************************/
@@ -1471,35 +1522,35 @@ STATIC void user_main_mode_self_check( void )
 		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
 		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
 			s_unit.self_check.seq = 2;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_ERR;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
+			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_ERR;
+			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
 			s_unit.self_check.eep_cnt = 0;
 			s_unit.self_check.seq = 3;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
+			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
+			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 	}else if( 2 == s_unit.self_check.seq ){
 		// 異常表示
 		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_ERR ){
 			s_unit.self_check.seq = 3;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
+			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
+			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 	}else if( 3 == s_unit.self_check.seq ){
 		// 完了
 		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_FIN ){
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_NON;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
+			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_NON;
+			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.seq = 4;
 		}
 	}else{
@@ -1527,7 +1578,6 @@ STATIC void user_main_mode_self_check( void )
 /************************************************************************/
 void err_info( ERR_ID id )
 {
-#if 0	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
 #if FUNC_DEBUG_LOG == ON
 	// ログ出力
 	UB tx[CPU_COM_SND_DATA_SIZE_PC_LOG];
@@ -1554,8 +1604,6 @@ void err_info( ERR_ID id )
 	}
 #endif
 #endif
-#endif	// CPU間通信の削除のため一旦削除する(使用する場合は別のIFを用意する必要あり)
-
 	s_unit.err_cnt++;
 	s_unit.last_err_id = id;
 }
@@ -1580,6 +1628,13 @@ STATIC UB evt_act( EVENT_NUM evt )
 	system_mode = p_event_table[evt][s_unit.system_mode]( evt );
 	if( SYSTEM_MODE_NON == system_mode ){
 		return FALSE;
+	}
+	
+	// 影舞21:電源SW押下受付後の表示の為ここで行う
+	if( EVENT_POW_SW_LONG == evt ){
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
+		s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_TRG_LONG_SW_RECEPTION;
+		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 	}
 	
 	if(EVENT_POW_SW_SHORT != evt)
@@ -1715,6 +1770,28 @@ STATIC SYSTEM_MODE evt_initial( int evt)
 }
 
 /************************************************************************/
+/* 関数     : evt_initial_chg											*/
+/* 関数名   : イベント(イニシャル_充電チェックあり)						*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : イベント(イニシャル_充電チェックあり)							*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_initial_chg( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	if( ON == s_unit.h1d.info.bit_f.bat_chg ){
+		system_mode = SYSTEM_MODE_NON;
+	}
+	
+	return system_mode;
+}
+
+/************************************************************************/
 /* 関数     : evt_bat_check												*/
 /* 関数名   : イベント(電池残量確認)									*/
 /* 引数     : evt	イベント番号										*/
@@ -1808,14 +1885,418 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 
 
 
+// =============================================================
+// CPU通信関連
+// =============================================================
 /************************************************************************/
-/* 関数     : main_mode_chg												*/
-/* 関数名   : モード変更												*/
+/* 関数     : user_main_req_cyc											*/
+/* 関数名   : ステータス要求周期処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : ステータス要求周期処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void user_main_req_cyc( void )
+{
+	UW now_time;
+	
+	now_time = time_get_elapsed_time();
+	
+	// ステータス要求送信周期
+	if(( now_time - s_unit.last_time_sts_req ) >= MAIN_STATUS_REQ_TIME ){
+		if( ON == main_cpu_com_snd_sts_req() ){		/* ステータス要求送信 */
+			s_unit.last_time_sts_req = now_time;
+		}
+	}
+}
+
+
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_sts_req									*/
+/* 関数名   : ステータス要求通知										*/
+/* 引数     : なし														*/
+/* 戻り値   : ON	実行												*/
+/*          : ON	未実行												*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : ステータス要求通知											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC UB main_cpu_com_snd_sts_req( void )
+{
+	G1D_INFO g1d;
+	UB ret = OFF;
+	
+	g1d.info.byte = 0;
+	g1d.info.bit_f.ble = get_ble_connect();
+	
+	if( CPU_COM_SND_STATUS_IDLE == s_ds.cpu_com.input.cpu_com_send_status ){
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_STATUS_REQ;
+		s_ds.cpu_com.order.snd_data[0] = s_unit.system_mode;
+		s_ds.cpu_com.order.snd_data[1] = g1d.info.byte;
+		s_ds.cpu_com.order.snd_data[2] = 0;
+		s_ds.cpu_com.order.snd_data[3] = 0;
+		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_STATUS_REQ;
+		ret = ON;
+	}
+	
+	return ret;
+}
+
+
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_mode_chg									*/
+/* 関数名   : モード変更通知											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : モード変更通知												*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_snd_mode_chg( void )
+{
+	
+	if( CPU_COM_SND_STATUS_IDLE == s_ds.cpu_com.input.cpu_com_send_status ){
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_MODE_CHG;
+		s_ds.cpu_com.order.snd_data[0] = s_unit.next_system_mode;
+		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_MODE_CHG;
+	}
+}
+
+
+
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_pc_log									*/
+/* 関数名   : CPU間通信(ログ送信)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信(ログ送信)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+void main_cpu_com_snd_pc_log( UB* data, UB size )
+{
+#if FUNC_DEBUG_LOG == ON
+#endif
+}
+
+/************************************************************************/
+/* 関数     : main_cpu_com_snd_sensing_order							*/
+/* 関数名   : センシング指示送信										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.08.01  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : センシング指示送信											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+/*
+STATIC void main_cpu_com_snd_sensing_order( UB sekigai )
+{
+	if( CPU_COM_SND_STATUS_IDLE == s_ds.cpu_com.input.cpu_com_send_status ){
+		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_SENSING_ORDER;
+		s_ds.cpu_com.order.snd_data[0] = sekigai;
+		s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_SENSING_ORDER;
+	}
+}
+*/
+
+#if FUNC_DEBUG_LOG != ON
+/************************************************************************/
+/* 関数     : main_cpu_com_proc											*/
+/* 関数名   : CPU間通信周期処理											*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
 /************************************************************************/
-/* 機能 : モード変更													*/
+/* 機能 : 周期処理														*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_proc(void)
+{
+	int i = 0;
+
+	/* 受信データチェック */
+	if( 0x00 != s_ds.cpu_com.input.rcv_cmd ){
+		//何かデータ受信  旧アライブ
+//		s_unit.cpu_com_success_once = ON;
+//		time_get_elapsed_time( &s_unit.cpu_com_rcv_int_elapsed_time );
+		/* 受信コマンド有り */
+		for( i=CPU_COM_CMD_NONE; i<CPU_COM_CMD_MAX; i++){
+			if( s_cpu_com_rcv_func_tbl[i].cmd == s_ds.cpu_com.input.rcv_cmd ){
+				/* 受信コマンドとコマンドテーブルが一致 */
+				if( NULL != s_cpu_com_rcv_func_tbl[i].func ){
+					/* 受信処理有り */
+					s_cpu_com_rcv_func_tbl[i].func();
+				}
+			}
+		}
+		// 受信コマンドクリア
+		s_ds.cpu_com.input.rcv_cmd = 0x00;
+	}
+}
+#endif
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_date_set									*/
+/* 関数名   : CPU間通信受信(日時)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(日時)											*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_date_set( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	
+	tx[0] = VUART_CMD_DATE_SET;
+	tx[1] = s_ds.cpu_com.input.rcv_data[0];		// CPU間の応答をそのまま入れる
+	main_vuart_send( &tx[0], 2 );
+	
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+}
+
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_sts_res									*/
+/* 関数名   : CPU間通信受信(ステータス要求)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(ステータス要求)									*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_sts_res( void )
+{
+	UW now_time;
+	
+	// H1Dイベント処理
+	if( EVENT_NON != s_ds.cpu_com.input.rcv_data[0] ){
+		// 以降状態へ変更
+		if( FALSE == evt_act( (EVENT_NUM)s_ds.cpu_com.input.rcv_data[0] )){
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+		}
+	}
+	
+	// H1D状態　※現在未使用
+	// s_ds.cpu_com.input.rcv_data[1];
+	
+	// H1D情報
+	s_unit.h1d.info.byte = s_ds.cpu_com.input.rcv_data[2];
+	
+	// 検査ポートON状態
+	if( ON == s_unit.h1d.info.bit_f.kensa ){
+		if( FALSE == evt_act( EVENT_KENSA_ON )){
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+		}
+	}
+	// 充電ポートONエッジ
+	if(( ON  == s_unit.h1d.info.bit_f.bat_chg ) && 
+	   ( OFF == s_unit.h1d_last.info.bit_f.bat_chg )){
+		if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
+			NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+		}
+	}
+	
+	s_unit.h1d_last.info.byte = s_unit.h1d.info.byte;
+	
+	
+	// 日時
+	s_unit.date.year	 = s_ds.cpu_com.input.rcv_data[3];
+	s_unit.date.month	 = s_ds.cpu_com.input.rcv_data[4];
+	s_unit.date.week	 = s_ds.cpu_com.input.rcv_data[5];
+	s_unit.date.day		 = s_ds.cpu_com.input.rcv_data[6];
+	s_unit.date.hour	 = s_ds.cpu_com.input.rcv_data[7];
+	s_unit.date.min		 = s_ds.cpu_com.input.rcv_data[8];
+	s_unit.date.sec		 = s_ds.cpu_com.input.rcv_data[9];
+
+	// 電池状態更新
+	s_unit.battery_sts = s_ds.cpu_com.input.rcv_data[10];
+	
+	now_time = time_get_elapsed_time();
+	
+	if(( BAT_LEVEL_STS_MIN == s_unit.battery_sts ) &&
+	   (( now_time - s_unit.last_time_battery_level_min ) > TIME_CNT_BAT_LEVEL_MIN_INTERVAL )){
+		evt_act( EVENT_DENCH_LOW );			// 電池残量低下
+		s_unit.last_time_battery_level_min = now_time;
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_sensor_res								*/
+/* 関数名   : CPU間通信受信(センシングデータ)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(センシングデータ)								*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_sensor_res( void )
+{
+//	ke_time_t now_time;
+	uint8_t *ke_msg;
+	MEAS meas;
+	
+	// 受信日時格納
+	s_unit.last_sensing_data_rcv = time_get_elapsed_time();
+	
+	// センサーデータ格納
+	memcpy( &meas.info.byte[0], &s_ds.cpu_com.input.rcv_data[0], CPU_COM_SND_DATA_SIZE_SENSOR_DATA );
+	
+	if( s_unit.sekigai_cnt < MEAS_SEKIGAI_CNT_MAX ){
+		s_unit.sekigai_val[s_unit.sekigai_cnt] = meas.info.dat.sekigaival;
+	}
+	if( s_unit.sekishoku_cnt < MEAS_SEKISHOKU_CNT_MAX ){
+		s_unit.sekishoku_val[s_unit.sekishoku_cnt] = meas.info.dat.sekishoku_val;
+	}
+	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
+		s_unit.kokyu_val[s_unit.kokyu_cnt] = meas.info.dat.kokyu_val;
+	}
+	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
+		s_unit.ibiki_val[s_unit.ibiki_cnt] = meas.info.dat.ibiki_val;
+	}
+	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
+		s_unit.acl_x[s_unit.acl_cnt] = meas.info.dat.acl_x;
+		s_unit.acl_y[s_unit.acl_cnt] = meas.info.dat.acl_y;
+		s_unit.acl_z[s_unit.acl_cnt] = meas.info.dat.acl_z;
+	}
+	
+	
+	// データフルで演算呼出
+	if( s_unit.sekishoku_cnt >= ( DATA_SIZE_SPO2 - 1 )){
+		// 赤色→赤外の順番
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_SEKISHOKU, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+	if( s_unit.sekigai_cnt >= ( DATA_SIZE_SPO2 - 1 )){
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_SEKIGAI, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+	
+	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+
+	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
+	
+	INC_MAX( s_unit.sekigai_cnt, MEAS_SEKIGAI_CNT_MAX );
+	INC_MAX( s_unit.sekishoku_cnt, MEAS_SEKISHOKU_CNT_MAX );
+	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
+	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
+	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
+
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	
+}
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_mode_chg									*/
+/* 関数名   : CPU間通信受信(モード変更)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(モード変更)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_mode_chg( void )
+{
+	if( SYSTEM_MODE_MOVE != s_unit.system_mode){
+		return;
+	}
+	
+	if( 0 == s_ds.cpu_com.input.rcv_data[0] ){		// 正常終了
+		s_unit.system_mode = s_unit.next_system_mode;		// モード変更
+		
+	}else{
+		s_unit.system_mode = SYSTEM_MODE_IDLE_COM;				// モード変更
+		s_unit.next_system_mode = SYSTEM_MODE_IDLE_COM;			// モード変更
+		err_info(ERR_ID_MAIN);
+		return;
+	}
+	
+	if( SYSTEM_MODE_SENSING == s_unit.system_mode ){
+		user_main_mode_sensing_before();
+	}
+	
+	if( SYSTEM_MODE_IDLE_COM == s_unit.system_mode ){
+		if( ON == s_unit.sensing_flg ){
+			s_unit.sensing_flg = OFF;
+			user_main_mode_sensing_after();
+		}
+	}
+	
+	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
+		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
+		FW_Update_Receiver_Start();
+	}
+
+	
+	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
+		if( ON == s_unit.self_check.com_flg ){
+			{
+				UB tx[VUART_DATA_SIZE_MAX] = {0};
+				
+				// OK応答
+				tx[0] = VUART_CMD_MODE_CHG;
+				tx[1] = 0x00;
+				
+				s_ds.vuart.input.send_status = OFF;
+				main_vuart_send( &tx[0], 2 );
+				
+			}
+		}
+	}
+
+	if( SYSTEM_MODE_GET == s_unit.system_mode ){
+		{
+			UB tx[VUART_DATA_SIZE_MAX] = {0};
+			
+			// OK応答
+			tx[0] = VUART_CMD_MODE_CHG;
+			tx[1] = 0x00;
+			
+			s_ds.vuart.input.send_status = OFF;
+			main_vuart_send( &tx[0], 2 );
+			
+			s_unit.get_mode_seq = 0;
+		}
+	}
+	
+	
+}
+
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_mode_chg									*/
+/* 関数名   : CPU間通信受信(モード変更)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(モード変更)										*/
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
@@ -1878,6 +2359,65 @@ STATIC void main_mode_chg( void )
 	
 	
 }
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_disp_order								*/
+/* 関数名   : CPU間通信受信(表示指示)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(表示指示)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_disp_order( void )
+{
+	// 処理なし
+	
+}
+
+/************************************************************************/
+/* 関数     : main_cpu_com_rcv_disp_order								*/
+/* 関数名   : CPU間通信受信(バージョン)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.05.19  Axia Soft Design 西島 初版作成				*/
+/************************************************************************/
+/* 機能 : CPU間通信受信(バージョン)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC void main_cpu_com_rcv_version( void )
+{
+	// 処理なし
+	{
+		UB tx[VUART_DATA_SIZE_MAX] = {0};
+		
+		// OK応答
+		tx[0] = VUART_CMD_VERSION;
+		// H1Dバージョン
+		
+		tx[1] = VUART_DATA_RESULT_OK;
+		tx[2] = s_ds.cpu_com.input.rcv_data[0];
+		tx[3] = s_ds.cpu_com.input.rcv_data[1];
+		tx[4] = s_ds.cpu_com.input.rcv_data[2];
+		tx[5] = s_ds.cpu_com.input.rcv_data[3];
+		tx[6] = s_ds.cpu_com.input.rcv_data[4];
+		tx[7] = s_ds.cpu_com.input.rcv_data[5];
+		tx[8] = s_ds.cpu_com.input.rcv_data[6];
+		tx[9] = s_ds.cpu_com.input.rcv_data[7];
+		// G1Dバージョン
+		tx[10]  = version_product_tbl[0];
+		tx[11] = version_product_tbl[1];
+		tx[12] = version_product_tbl[2];
+		tx[13] = version_product_tbl[3];
+		
+		main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
+	}
+}
+
+
 /************************************************************************/
 /* 関数     : main_chg_system_mode										*/
 /* 関数名   : モード変更												*/
@@ -1894,8 +2434,7 @@ STATIC void main_chg_system_mode( SYSTEM_MODE next_mode )
 	s_unit.next_system_mode = next_mode;
 	s_unit.system_mode = SYSTEM_MODE_MOVE;
 	
-	// 以前はCPU間通信のモード変更を待ってモード遷移を行っていたが、
-	// CPU間通信はなくなったので、直接遷移処理を行う
+	// ■暫定 CPU間通信のモード変更はないので、直接遷移処理する
 	main_mode_chg();
 }
 
@@ -2102,15 +2641,22 @@ STATIC void main_vuart_rcv_version( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 
-	// OK応答
-	tx[0] = VUART_CMD_VERSION;
-	// G1Dバージョン
-	tx[1] = VUART_DATA_RESULT_OK;
-	tx[2] = version_product_tbl[0];
-	tx[3] = version_product_tbl[1];
-	tx[4] = version_product_tbl[2];
-	tx[5] = version_product_tbl[3];
-	main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
+//	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
+		
+		// OK応答
+		tx[0] = VUART_CMD_VERSION;
+		// G1Dバージョン
+		tx[1] = VUART_DATA_RESULT_OK;
+		tx[2] = version_product_tbl[0];
+		tx[3] = version_product_tbl[1];
+		tx[4] = version_product_tbl[2];
+		tx[5] = version_product_tbl[3];
+		main_vuart_send( &tx[0], VUART_SND_LEN_VERSION );
+//	}else{
+		// バージョンをブリッジで送信
+//		s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_VERSION;
+//		s_ds.cpu_com.order.data_size = 0;
+//	}
 }
 
 
@@ -2402,15 +2948,50 @@ void main_vuart_rcv_device_set( void )
 	}
 }
 
+
 /************************************************************************/
-/* 関数     : ds_set_vuart_data											*/
-/* 関数名   : VUART通信データセット										*/
-/* 引数     : VUART通信データ格納ポインタ								*/
+/* 関数     : ds_get_cpu_com_order										*/
+/* 関数名   : CPU間通信用データ取得										*/
+/* 引数     : なし														*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
-/* VUART通信ミドルデータセット取得										*/
+/* CPU間通信用データ取得												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+void ds_get_cpu_com_order( DS_CPU_COM_ORDER **p_data )
+{
+	*p_data = &s_ds.cpu_com.order;
+}
+/************************************************************************/
+/* 関数     : ds_set_cpu_com_input										*/
+/* 関数名   : CPU間通信データセット										*/
+/* 引数     : CPU間通信データ格納ポインタ								*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* CPU間通信ミドルデータセット取得										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void ds_set_cpu_com_input( DS_CPU_COM_INPUT *p_data )
+{
+	s_ds.cpu_com.input = *p_data;
+}
+
+/************************************************************************/
+/* 関数     : ds_set_vuart_data											*/
+/* 関数名   : CPU間通信データセット										*/
+/* 引数     : CPU間通信データ格納ポインタ								*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
+/************************************************************************/
+/* 機能 :																*/
+/* CPU間通信ミドルデータセット取得										*/
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
@@ -2422,13 +3003,13 @@ void ds_set_vuart_data( UB *p_data, UB len )
 
 /************************************************************************/
 /* 関数     : ds_set_vuart_send_status									*/
-/* 関数名   : VUART通信データセット										*/
-/* 引数     : VUART通信データ格納ポインタ								*/
+/* 関数名   : CPU間通信データセット										*/
+/* 引数     : CPU間通信データ格納ポインタ								*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2018.04.16  Axia Soft Design 西島	初版作成				*/
 /************************************************************************/
 /* 機能 :																*/
-/* VUART通信ミドルデータセット取得										*/
+/* CPU間通信ミドルデータセット取得										*/
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
@@ -2442,6 +3023,51 @@ void ds_set_vuart_send_status( UB status )
 // ============================
 // 以降演算部の処理
 // ============================
+/*
+static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+#if FUNC_DEBUG_CALC_NON == OFF
+	s_unit.sekigai_seq += 1;
+	// 4回に1回赤外を有効にする
+	if(s_unit.sekigai_seq == 3){
+		main_cpu_com_snd_sensing_order(ON);
+	}else if(s_unit.sekigai_seq >= 4){
+		calculator_pulse_oximeter_inf(&s_unit.sekigai_val[0]);
+		s_unit.calc.info.dat.spo2_val = get_spo2();
+		s_unit.sekigai_seq = 0;
+		
+		// 低呼吸 or 無呼吸時はOFFしない
+		if((s_unit.calc.info.dat.state & 0xC0) == 0){
+			main_cpu_com_snd_sensing_order(OFF);
+		}
+	}else{
+		// 処理なし
+	}
+	s_unit.sekigai_cnt = 0;
+#else
+	// ダミーデータ
+	s_unit.sekigai_cnt = 0;
+	s_unit.calc.info.dat.spo2_val = (UB)s_unit.sekigai_val[0];
+#endif
+	return (KE_MSG_CONSUMED);
+}
+
+static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+#if FUNC_DEBUG_CALC_NON == OFF
+	calculator_pulse_oximeter_red(&s_unit.sekishoku_val[0]);
+	s_unit.sekishoku_cnt = 0;
+	s_unit.calc.info.dat.myaku_val = get_sinpak();
+#else
+	// ダミーデータ
+	s_unit.sekishoku_cnt = 0;
+	s_unit.calc.info.dat.spo2_val = (UB)s_unit.sekishoku_val[0];
+#endif
+	
+	return (KE_MSG_CONSUMED);
+}
+*/
+
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -2491,7 +3117,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	//演算正規処理
 	int ii;
 	int max = s_unit.ibiki_val[0];
-//	static const int size = 9;
+	static const int size = 9;
 	UB newstate;
 //	UB state;
 	UB	set_ibiki_mask = 0x01;
@@ -2686,6 +3312,11 @@ bool user_main_sleep(void)
 #else
 	bool ret = true;
 	
+	if( OFF == cpu_com_get_can_sleep() ){
+		ret = false;
+		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	}
+	
 	if( ret == true ){
 		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	}
@@ -2800,6 +3431,46 @@ STATIC void eep_part_erase( void )
 	eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
 }
 
+
+
+
+#if 0
+STATIC void AlarmSnore(UB oldstate, UB newstate)
+{
+	// debug向け
+//	main_vuart_snd_alarm_info(0,1);
+	
+	// いびきアラーム
+	if((s_unit.alarm.info.dat.valid == 1) && (s_unit.alarm.info.dat.ibiki == 1)){
+		if((oldstate & 0x01) != (newstate & 0x01)){
+			if(newstate & 0x01){
+				// いびき発生
+				main_vuart_snd_alarm_info(0,0);
+			}else{
+				// いびき解除
+				main_vuart_snd_alarm_info(0,1);
+			}
+		}
+	}
+}
+
+STATIC void AlarmApnea(UB oldstate, UB newstate)
+{
+	// debug向け
+//	main_vuart_snd_alarm_info(0,1);
+	
+	// 無呼吸アラーム
+	if((s_unit.alarm.info.dat.valid == 1) && (s_unit.alarm.info.dat.low_kokyu == 1)){
+		if(((oldstate & 0xC0) != 0x00) && ((newstate & 0xC0) == 0x00)){
+			// 無呼吸解除
+			main_vuart_snd_alarm_info(1,1);
+		}else if(((oldstate & 0xC0) == 0x00) && ((newstate & 0xC0) != 0x00)){
+			// 無呼吸発生
+			main_vuart_snd_alarm_info(1,0);
+		}
+	}
+}
+#endif
 
 //================================
 //ACL関連
