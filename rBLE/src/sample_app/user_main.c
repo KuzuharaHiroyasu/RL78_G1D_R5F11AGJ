@@ -1224,7 +1224,7 @@ STATIC void user_main_mode_sensing_after( void )
 {
 	UB oikosi_flg = OFF;
 	UW wr_adrs = 0;
-	UB wr_data[2] = {0};
+	UB wr_data[3] = {0};
 	
 	set_led(LED_PATT_OFF);
 	
@@ -1256,18 +1256,20 @@ STATIC void user_main_mode_sensing_after( void )
 	INC_MAX_INI(s_unit.frame_num.write, (EEP_FRAME_MAX - 1), 0);
 	INC_MAX(s_unit.frame_num.cnt, EEP_FRAME_MAX );
 	
-	eep_write( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num.cnt, 1, ON );
 	
 	wr_adrs = EEP_ADRS_TOP_SETTING;
 	if( OFF == oikosi_flg ){
 		// 書き込みポインタ
-		eep_write( wr_adrs + 1, &s_unit.frame_num.write, 1, ON );
+		wr_data[0] = s_unit.frame_num.write;
+		wr_data[1] = s_unit.frame_num.cnt;
+		eep_write( wr_adrs + 1, &wr_data[0], 2, ON );
 	}else{
 		INC_MAX_INI(s_unit.frame_num.read, (EEP_FRAME_MAX  -1), 0);
 		// 書き込み、読み出しポインタ
 		wr_data[0] = s_unit.frame_num.read;
 		wr_data[1] = s_unit.frame_num.write;
-		eep_write( wr_adrs, &wr_data[0], 2, ON );
+		wr_data[2] = s_unit.frame_num.cnt;
+		eep_write( wr_adrs, &wr_data[0], 3, ON );
 	}
 }
 
