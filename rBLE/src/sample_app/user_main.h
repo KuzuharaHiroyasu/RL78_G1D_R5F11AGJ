@@ -252,6 +252,10 @@ typedef enum{
 #define	TIME_20MS_CNT_POW_SW_LONG			100				/* ìdåπSW_í∑(2ïb) */
 #define	TIME_20MS_CNT_POW_SW_SHORT			5				/* ìdåπSW_íZ(0.1ïb) */
 
+// 50ms timer
+#if FUNC_DEBUG_LOG == ON
+#define	TIME_20MS_CNT_POW_SW_SHORT_DEBUG		5			/* ìdåπSW_íZ(0.25ïb) */
+#endif
 
 typedef enum program_ver{
 	VERSION_MAJOR = 0,

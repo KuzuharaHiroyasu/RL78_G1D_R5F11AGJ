@@ -32,6 +32,12 @@ STATIC void make_send_data(char* pBuff);
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 #if FUNC_DEBUG_LOG != ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
+#else
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
+#endif
+#endif
+#if FUNC_DEBUG_LOG != ON
 STATIC void user_main_calc_data_set_acl( void );
 STATIC void user_main_calc_data_set_photoref( void );
 #endif
@@ -62,9 +68,7 @@ STATIC void main_vuart_rcv_date( void );
 STATIC void main_vuart_rcv_info( void );
 STATIC void main_vuart_rcv_version( void );
 STATIC void main_vuart_rcv_device_info( void );
-#if FUNC_DEBUG_LOG != ON
 STATIC void sw_proc(void);
-#endif
 STATIC void user_main_calc_result( void );
 STATIC void user_main_mode_sensing_before( void );
 STATIC void user_main_mode_sensing_after( void );
@@ -117,8 +121,15 @@ STATIC void main_acl_read(void);
 // 以降演算部の処理
 //static int_t main_calc_sekigai(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 //static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+#if FUNC_DEBUG_LOG != ON
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+#else
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+static UB main_calc_kokyu( void);
+static UB main_calc_ibiki( void);
+#endif
+#endif
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
@@ -149,6 +160,15 @@ bool vib_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB acl_photo_sens_read_flg = OFF;
 #endif
+
+#if FUNC_DEBUG_LOG == ON
+static UB sw_on_flg = OFF;
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+static UB snore_state;
+static UB apnea_state;
+#endif
+#endif
+
 /********************/
 /*     定数定義     */
 /********************/
@@ -379,8 +399,9 @@ void user_main_timer_cyc( void )
 {
 	UB bat;
 #if FUNC_DEBUG_LOG == ON
-	//デバッグ時は常時強制的にセンシング
-	s_unit.system_mode = SYSTEM_MODE_SENSING;
+	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+		sw_proc();				// SW検知処理
+	}
 #endif
 	
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
@@ -393,7 +414,11 @@ void user_main_timer_cyc( void )
 			
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-					
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+	// 波形&結果確認
+			user_main_calc_data_set_kyokyu_ibiki();
+#else
+	//通常デバッグ版
 			s_unit.acl_timing+=1;
 			if(s_unit.acl_timing >= ACL_TIMING_VAL){
 				s_unit.acl_timing = 0;
@@ -407,13 +432,11 @@ void user_main_timer_cyc( void )
 				s_unit.meas.info.dat.acl_z = 99;
 				s_unit.meas.info.dat.photoref_val = 0;
 			}
-			
+#endif
 			make_send_data(dbg_tx_data);
 			dbg_len = strlen(dbg_tx_data);
 			com_srv_send(dbg_tx_data, dbg_len);
 #else
-	//		ke_evt_set(KE_EVT_USR_1_BIT);
-			
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
 			user_main_calc_data_set_kyokyu_ibiki();
@@ -560,7 +583,7 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 	return (KE_MSG_CONSUMED);
 }
 
-#if FUNC_DEBUG_LOG != ON
+
 /************************************************************************/
 /* 関数     : user_main_calc_data_set_kokyu_ibiki						*/
 /* 関数名   : 演算データセット処理(呼吸・いびき)						*/
@@ -572,6 +595,7 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
+#if FUNC_DEBUG_LOG != ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 {
 	uint8_t *ke_msg;
@@ -599,9 +623,44 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	
 }
+#else
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
+{
+	uint8_t *ke_msg;
+	
+	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
+		s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
+	}
+	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
+		s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
+	}
+	
+	// データフルで演算呼出
+	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		apnea_state = main_calc_kokyu();
+	}else
+	{
+		apnea_state = 99;
+	}
 
+	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
+		snore_state = main_calc_ibiki();
+	}else
+	{
+		snore_state = 99;
+	}
+	
+	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
+	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
+
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+}
+#endif
+#endif
+
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_calc_data_set_acl								*/
 /* 関数名   : 演算データセット処理(加速)								*/
@@ -650,7 +709,6 @@ STATIC void user_main_calc_data_set_photoref( void )
 		s_unit.phase_photoref = SEC_PHASE_0_10;
 	}
 }
-
 #endif
 
 #if FUNC_DEBUG_LOG == ON
@@ -700,6 +758,8 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	pBuff[index++] = ',';
 	
+#if FUNC_DEBUG_WAVEFORM_LOG == OFF
+	//通常デバッグ版
 	// 加速度(X)
 	if(s_unit.meas.info.dat.acl_x >= 0){
 		tmp = s_unit.meas.info.dat.acl_x / 100;
@@ -784,7 +844,22 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
-
+#else
+	// いびき判定結果
+	tmp = snore_state / 10;
+	next = snore_state % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	
+	// 無呼吸判定結果
+	tmp = apnea_state / 10;
+	next = apnea_state % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+#endif
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
 }
@@ -905,7 +980,6 @@ void user_main_init( void )
 
 }
 
-#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : sw_proc													*/
 /* 関数名   : SW周期処理												*/
@@ -925,6 +999,30 @@ STATIC void sw_proc(void)
 	
 	pow_sw = drv_i_port_read_pow_sw();
 	
+#if FUNC_DEBUG_LOG == ON
+	if( ON == pow_sw ){		// ON処理
+		// 電源SW押下タイマー継続
+		s_unit.sw_time_cnt++;
+		if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
+			sw_on_flg = ON;
+			s_unit.system_mode = SYSTEM_MODE_SENSING;
+			led_green_on();
+			s_unit.sw_time_cnt = 0;
+		}
+		
+		if(s_unit.system_mode == SYSTEM_MODE_SENSING && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
+			sw_on_flg = ON;
+			s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+			led_on();
+			s_unit.sw_time_cnt = 0;
+		}
+	}else{
+		sw_on_flg = OFF;
+		s_unit.sw_time_cnt = 0;
+//		led_green_off();
+		led_off();
+	}
+#else
 	if( ON == pow_sw ){		// ON処理
 		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
@@ -957,8 +1055,8 @@ STATIC void sw_proc(void)
 		s_unit.sw_time_cnt = 0;
 	}
 	s_unit.pow_sw_last = pow_sw;
-}
 #endif
+}
 
 /************************************************************************/
 /* 関数     : user_main_calc_result										*/
@@ -3068,6 +3166,19 @@ static int_t main_calc_sekishoku(ke_msg_id_t const msgid, void const *param, ke_
 }
 */
 
+/************************************************************************/
+/* 関数     : main_calc_kokyu											*/
+/* 関数名   : 無呼吸演算処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/* 																		*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+#if FUNC_DEBUG_LOG != ON
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -3109,8 +3220,31 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	
 	return (KE_MSG_CONSUMED);
 }
+#else
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+//デバッグ版演算処理
+static UB main_calc_kokyu( void)
+{
+	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
+	s_unit.kokyu_cnt = 0;
+	return get_state();
+}
+#endif
+#endif
 
-
+/************************************************************************/
+/* 関数     : main_calc_ibiki											*/
+/* 関数名   : いびき演算処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/* 																		*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+#if FUNC_DEBUG_LOG != ON
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -3229,6 +3363,17 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 
 	return (KE_MSG_CONSUMED);
 }
+#else
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+static UB main_calc_ibiki( void)
+{
+	// いびき演算
+	calc_snore_proc(&s_unit.ibiki_val[0]);
+	s_unit.ibiki_cnt = 0;
+	return calc_snore_get();
+}
+#endif
+#endif
 
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
