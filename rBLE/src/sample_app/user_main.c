@@ -30,8 +30,8 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 STATIC void make_send_data(char* pBuff);
 #endif
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 #if FUNC_DEBUG_LOG != ON
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_calc_data_set_acl( void );
 STATIC void user_main_calc_data_set_photoref( void );
 #endif
@@ -97,13 +97,8 @@ STATIC void main_acl_start(void);
 STATIC void main_acl_read(void);
 
 // 以降演算部の処理
-#if FUNC_DEBUG_LOG != ON
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-#else
-static UB main_calc_kokyu( void);
-static UB main_calc_ibiki( void);
-#endif
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
@@ -134,12 +129,6 @@ bool vib_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB acl_photo_sens_read_flg = OFF;
 #endif
-
-#if FUNC_DEBUG_LOG == ON
-static UB snore_state;
-static UB apnea_state;
-#endif
-
 /********************/
 /*     定数定義     */
 /********************/
@@ -380,8 +369,7 @@ void user_main_timer_cyc( void )
 			
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-			user_main_calc_data_set_kyokyu_ibiki();
-			
+					
 			s_unit.acl_timing+=1;
 			if(s_unit.acl_timing >= ACL_TIMING_VAL){
 				s_unit.acl_timing = 0;
@@ -548,6 +536,7 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 	return (KE_MSG_CONSUMED);
 }
 
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_calc_data_set_kokyu_ibiki						*/
 /* 関数名   : 演算データセット処理(呼吸・いびき)						*/
@@ -570,7 +559,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
 	}
 	
-#if FUNC_DEBUG_LOG != ON
 	// データフルで演算呼出
 	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
@@ -582,27 +570,12 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
-#else
-	// データフルで演算呼出
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
-		apnea_state = main_calc_kokyu();
-	}else
-	{
-		apnea_state = 99;
-	}
-
-	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
-		snore_state = main_calc_ibiki();
-	}else
-	{
-		snore_state = 99;
-	}
-#endif
 	
 	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
 	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	
 }
 
 /************************************************************************/
@@ -653,6 +626,8 @@ STATIC void user_main_calc_data_set_photoref( void )
 		s_unit.phase_photoref = SEC_PHASE_0_10;
 	}
 }
+
+#endif
 
 #if FUNC_DEBUG_LOG == ON
 /************************************************************************/
@@ -782,22 +757,6 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	tmp = next / 10;
 	next = next % 10;
-	pBuff[index++] = '0' + tmp;
-	tmp = next % 10;
-	pBuff[index++] = '0' + tmp;
-	pBuff[index++] = ',';
-	
-	// いびき判定結果
-	tmp = snore_state / 10;
-	next = snore_state % 10;
-	pBuff[index++] = '0' + tmp;
-	tmp = next % 10;
-	pBuff[index++] = '0' + tmp;
-	pBuff[index++] = ',';
-	
-	// 無呼吸判定結果
-	tmp = apnea_state / 10;
-	next = apnea_state % 10;
 	pBuff[index++] = '0' + tmp;
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
@@ -2480,22 +2439,11 @@ void ds_set_vuart_send_status( UB status )
 	s_ds.vuart.input.send_status = status;
 }
 
+
+
 // ============================
 // 以降演算部の処理
 // ============================
-/************************************************************************/
-/* 関数     : main_calc_kokyu											*/
-/* 関数名   : 無呼吸演算処理											*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 															*/
-/************************************************************************/
-/* 機能 :																*/
-/* 																		*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-#if FUNC_DEBUG_LOG != ON
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -2537,29 +2485,8 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	
 	return (KE_MSG_CONSUMED);
 }
-#else
-//デバッグ版演算処理
-static UB main_calc_kokyu( void)
-{
-	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
-	s_unit.kokyu_cnt = 0;
-	return get_state();
-}
-#endif
 
-/************************************************************************/
-/* 関数     : main_calc_ibiki											*/
-/* 関数名   : いびき演算処理											*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 															*/
-/************************************************************************/
-/* 機能 :																*/
-/* 																		*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
-#if FUNC_DEBUG_LOG != ON
+
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
@@ -2678,28 +2605,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 
 	return (KE_MSG_CONSUMED);
 }
-#else
-static UB main_calc_ibiki( void)
-{
-	// いびき演算
-	calc_snore_proc(&s_unit.ibiki_val[0]);
-	s_unit.ibiki_cnt = 0;
-	return calc_snore_get();
-}
-#endif
 
-/************************************************************************/
-/* 関数     : main_calc_acl												*/
-/* 関数名   : 加速度センサー演算処理									*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 															*/
-/************************************************************************/
-/* 機能 :																*/
-/* 																		*/
-/************************************************************************/
-/* 注意事項 :															*/
-/************************************************************************/
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 	B	acc_x;
