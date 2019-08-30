@@ -25,33 +25,38 @@
 #include	"r_vuart_app.h"
 
 // プロトタイプ宣言
-static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-#if FUNC_DEBUG_LOG == ON
-STATIC void make_send_data(char* pBuff);
-#endif
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+
 #if FUNC_DEBUG_LOG != ON
+static void set_yokusei_cnt_time(UB yokusei_max_time);
+static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
-#else
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
-STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
-#endif
-#endif
-#if FUNC_DEBUG_LOG != ON
+STATIC void user_main_mode( void );
+STATIC void user_main_mode_common( void );
 STATIC void user_main_calc_data_set_acl( void );
 STATIC void user_main_calc_data_set_photoref( void );
+STATIC void main_vuart_proc(void);
+#else
+STATIC void make_send_data(char* pBuff);
+#if FUNC_DEBUG_WAVEFORM_LOG == ON
+static UB main_calc_kokyu( void);
+static UB main_calc_ibiki( void);
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 #endif
+#endif
+
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_com(void);
 STATIC void user_main_mode_sensing(void);
 STATIC void user_main_mode_move(void);
 STATIC void user_main_mode_get(void);
 STATIC void user_main_mode_prg_g1d(void);
-#if FUNC_DEBUG_LOG != ON
-STATIC void user_main_mode( void );
-STATIC void user_main_mode_common( void );
-STATIC void main_vuart_proc(void);
-#endif
 STATIC void main_mode_chg( void );
 STATIC void main_chg_system_mode( SYSTEM_MODE next_mode );
 STATIC void main_vuart_rcv_mode_chg( void );
@@ -63,8 +68,8 @@ STATIC void sw_proc(void);
 STATIC void user_main_calc_result( void );
 STATIC void user_main_mode_sensing_before( void );
 STATIC void user_main_mode_sensing_after( void );
-STATIC UB user_main_mode_get_frame_before( void );
 STATIC void user_main_mode_self_check( void );
+STATIC UB user_main_mode_get_frame_before( void );
 STATIC UB evt_act( EVENT_NUM evt );
 STATIC SYSTEM_MODE evt_non( int evt);
 STATIC SYSTEM_MODE evt_idle_com( int evt);
@@ -79,42 +84,25 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
-//STATIC void eep_all_erase( void );		//未使用関数
 STATIC void eep_part_erase( void );
 STATIC void main_vuart_send( UB *p_data, UB len );
+STATIC void main_vuart_rcv_data_fin( void );
+//STATIC void eep_all_erase( void );		//未使用関数
 void main_vuart_set_mode( void );
 void main_vuart_rcv_data_frame( void );
 void main_vuart_rcv_data_calc( void );
 void main_vuart_rcv_data_end( void );
-STATIC void main_vuart_rcv_data_fin( void );
 void main_vuart_rcv_date( void );
 void main_vuart_rcv_device_set( void );
 
-static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static void set_yokusei_cnt_time(UB yokusei_max_time);
-
-// ACL関連
+// ACL、フォト関連
 STATIC void main_acl_init(void);
 STATIC void main_acl_stop(void);
 STATIC void main_acl_start(void);
+#if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 STATIC void main_acl_read(void);
-
-// 以降演算部の処理
-#if FUNC_DEBUG_LOG != ON
-static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-#else
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
-static UB main_calc_kokyu( void);
-static UB main_calc_ibiki( void);
-#endif
-#endif
-static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-
-// フォトセンサー
 STATIC UH main_photo_read(void);
+#endif
 
 /********************/
 /*     外部参照     */
@@ -128,20 +116,17 @@ extern RBLE_STATUS FW_Update_Receiver_Start( void );
 /* Status */// プラットフォーム
 ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
 
-
 STATIC T_UNIT s_unit;
 STATIC DS s_ds;
 
+static bool vib_flg = false;
+#if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
 static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 static UB yokusei_max_cnt_over_flg = OFF;
-bool vib_flg = false;
-#if FUNC_DEBUG_LOG != ON
 static UB acl_photo_sens_read_flg = OFF;
-#endif
-
-#if FUNC_DEBUG_LOG == ON
+#else
 static UB sw_on_flg = OFF;
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 static UB snore_state;
@@ -220,10 +205,6 @@ void codeptr app_evt_usr_2(void)
 	}
 #endif
 	
-	// RD8001:加速度演算暫定追加 ■暫定
-//	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
-//	ke_msg_send(ke_msg);
-	
 	// 電池残量取得(10分周期)
 	s_unit.sec600_cnt++;
 	if(s_unit.sec600_cnt >= BAT_LEVEL_GET_CYC)
@@ -288,6 +269,7 @@ void codeptr app_evt_usr_3(void)
 #endif
 }
 
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : user_main_cyc												*/
 /* 関数名   : ユーザーアプリ周期処理									*/
@@ -301,22 +283,15 @@ void codeptr app_evt_usr_3(void)
 /************************************************************************/
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-#if FUNC_DEBUG_LOG == ON
-//	char dbg_tx_data[50] = {0};
-	char dummydata[] = "abcdefghijk\r\n";
-	int dbg_len = sizeof(dummydata);
-	com_srv_send(dummydata, dbg_len);
-#else
 	sw_proc();				// SW検知処理
 	
 	main_vuart_proc();		// VUART通信サービス
 	
 	user_main_mode();		// メインモード処理
-#endif
 
 	return (KE_MSG_CONSUMED);
 }
-
+#endif
 
 /************************************************************************/
 /* 関数     : user_main_calc_result_cyc									*/
@@ -373,13 +348,13 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+#if FUNC_DEBUG_LOG != ON
 	UB bat;
-#if FUNC_DEBUG_LOG == ON
+#else
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 		sw_proc();				// SW検知処理
 	}
 #endif
-	
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
 		// 50ms周期
@@ -604,8 +579,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 {
-	uint8_t *ke_msg;
-	
 	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
 		s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
 	}
@@ -891,7 +864,9 @@ void user_system_init( void )
 void user_main_init( void )
 {
 	// ミドル初期化
+#if FUNC_DEBUG_LOG == ON
 	com_srv_init();
+#endif
 	i2c_init();
 	eep_init();
 	main_acl_init();
@@ -924,29 +899,6 @@ void user_main_init( void )
 //    write1_sfr(PM1,  6, PORT_OUTPUT);		//使うとBLEが動かなくなるので削除
 
     write1_sfr(P1, 5, 0);
-	
-	NO_OPERATION_BREAK_POINT();				// ブレイクポイント設置用
-
-#if 0
-	// デバッグ用計測処理
-	DI();
-	
-	write1_sfr(P1, 5, 1);
-	{
-		UB wait = 200;
-	    /* Wait */
-	    while (wait--)
-	    {
-	        ;
-	    }
-	}
-		wait_ms(1);
-    write1_sfr(P1, 5, 0);
-
-	wait_ms(5);
-	write1_sfr(P1, 5, 1);
-#endif
-
 #endif
 
 }
@@ -990,7 +942,6 @@ STATIC void sw_proc(void)
 	}else{
 		sw_on_flg = OFF;
 		s_unit.sw_time_cnt = 0;
-//		led_green_off();
 		led_off();
 	}
 #else
@@ -998,24 +949,15 @@ STATIC void sw_proc(void)
 		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
 		
-#if FUNC_SW_LONGPUSH_RELEASE == OFF
 		if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
 			// 規定時間以上連続押下と判断
 			evt_act( EVENT_POW_SW_LONG );
 		}
-#endif
-
 	}else{					// OFF処理
 		if( ON == s_unit.pow_sw_last ){
 			// ON→OFFエッジ
-#if FUNC_SW_LONGPUSH_RELEASE == ON
-			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
-				// 規定時間以上連続押下と判断
-				evt_act( EVENT_POW_SW_LONG );
-#else
 			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
 				// ON確定時にイベント発生済みなのでここでは何もしない
-#endif
 			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
 				evt_act( EVENT_POW_SW_SHORT );
 			}else{
@@ -1057,7 +999,6 @@ STATIC void user_main_calc_result( void )
 	
 	s_unit.calc_cnt++;
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	
 }
 
 #if FUNC_DEBUG_LOG != ON
@@ -1241,7 +1182,6 @@ STATIC void user_main_mode_sensing_after( void )
 	}
 }
 
-
 /************************************************************************/
 /* 関数     : user_main_mode_get_frame_before							*/
 /* 関数名   : GETモードフレーム前処理									*/
@@ -1339,8 +1279,6 @@ STATIC void user_main_mode_get_after( void )
 	// システム戻す
 	evt_act( EVENT_COMPLETE );
 }
-
-
 
 /************************************************************************/
 /* 関数     : user_main_mode_inital										*/
@@ -1537,7 +1475,6 @@ STATIC void user_main_mode_get(void)
 //RD8001暫定：G1Dダウンロード_処理確認中
 STATIC void user_main_mode_prg_g1d(void)
 {
-	
 }
 
 /************************************************************************/
@@ -1571,35 +1508,23 @@ STATIC void user_main_mode_self_check( void )
 		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
 		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
 			s_unit.self_check.seq = 2;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_ERR;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
 			s_unit.self_check.eep_cnt = 0;
 			s_unit.self_check.seq = 3;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 	}else if( 2 == s_unit.self_check.seq ){
 		// 異常表示
 		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_ERR ){
 			s_unit.self_check.seq = 3;
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_FIN;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.last_time = now_time;
 		}
 	}else if( 3 == s_unit.self_check.seq ){
 		// 完了
 		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_FIN ){
-//			s_ds.cpu_com.order.snd_cmd_id = CPU_COM_CMD_DISP_ORDER;
-//			s_ds.cpu_com.order.snd_data[0] = CPU_COM_DISP_ORDER_SELF_CHECK_NON;
-//			s_ds.cpu_com.order.data_size = CPU_COM_SND_DATA_SIZE_DISP_ORDER;
 			s_unit.self_check.seq = 4;
 		}
 	}else{
@@ -1845,7 +1770,7 @@ STATIC SYSTEM_MODE evt_send_clear( int evt)
 	set_led( LED_PATT_YELLOW_BLINK );
 	return s_unit.system_mode;
 }
-	
+
 /************************************************************************/
 /* 関数     : evt_get													*/
 /* 関数名   : イベント(GETモード)										*/
@@ -1906,8 +1831,6 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 	return system_mode;
 }
 
-
-
 /************************************************************************/
 /* 関数     : main_mode_chg												*/
 /* 関数名   : モード変更												*/
@@ -1943,7 +1866,6 @@ STATIC void main_mode_chg( void )
 		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
 		FW_Update_Receiver_Start();
 	}
-
 	
 	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
 		if( ON == s_unit.self_check.com_flg ){
@@ -1975,9 +1897,8 @@ STATIC void main_mode_chg( void )
 			s_unit.get_mode_seq = 0;
 		}
 	}
-	
-	
 }
+
 /************************************************************************/
 /* 関数     : main_chg_system_mode										*/
 /* 関数名   : モード変更												*/
@@ -2491,6 +2412,7 @@ void main_vuart_rcv_device_set( void )
 	
 	if(result == VUART_DATA_RESULT_OK)
 	{
+#if FUNC_DEBUG_LOG != ON		
 		// 動作モード設定
 		act_mode = s_unit.alarm.info.dat.act_mode;
 		// いびき感度設定
@@ -2499,6 +2421,7 @@ void main_vuart_rcv_device_set( void )
 		vib_str = s_unit.alarm.info.dat.yokusei_str;
 		//抑制動作最大継続時間
 		set_yokusei_cnt_time(s_unit.alarm.info.dat.yokusei_max_time);
+#endif
 	}
 }
 
@@ -2537,8 +2460,6 @@ void ds_set_vuart_send_status( UB status )
 	s_ds.vuart.input.send_status = status;
 }
 
-
-
 // ============================
 // 以降演算部の処理
 // ============================
@@ -2559,7 +2480,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 {
 #if FUNC_DEBUG_CALC_NON == OFF
 	UB newstate;
-//	UB state;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
@@ -2567,9 +2487,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	s_unit.kokyu_cnt = 0;
 	newstate = get_state();
-//	AlarmApnea(s_unit.calc.info.dat.state, newstate);
-//	state = (s_unit.calc.info.dat.state & 0x3F);
-//	s_unit.calc.info.dat.state = (newstate | state);
 	
 	bit_shift = s_unit.phase_kokyu * 2;
 	if(newstate == APNEA_ERROR){
@@ -2591,7 +2508,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	if(s_unit.phase_kokyu >= SEC_PHASE_NUM){
 		s_unit.phase_kokyu = SEC_PHASE_0_10;
 	}
-	
 #endif
 	
 	return (KE_MSG_CONSUMED);
@@ -2882,8 +2798,6 @@ STATIC void user_main_eep_read_pow_on(void)
 	// 警告機能
 	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
 	// RD8001暫：範囲チェック入れる
-
-	
 }
 
 /************************************************************************/
@@ -3030,6 +2944,7 @@ STATIC void main_acl_start(void)
 	
 }
 
+#if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 /************************************************************************/
 /* 関数     : main_acl_stop												*/
 /* 関数名   : 加速度センサ読出し										*/
@@ -3100,6 +3015,7 @@ STATIC UH main_photo_read(void)
 	
 	return ret_photoref_val;
 }
+#endif
 
 /************************************************************************/
 /* 関数     : reset_vib_timer											*/
@@ -3161,10 +3077,11 @@ void main_set_battery(void)
 	}
 }
 
+#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
-/* 関数     : main_set_battery											*/
-/* 関数名   : 電池残量設定												*/
-/* 引数     : なし														*/
+/* 関数     : set_yokusei_cnt_time										*/
+/* 関数名   : 抑制最大連続時間設定										*/
+/* 引数     : yokusei_max_time											*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2019.07.26 oneA 葛原 弘安	初版作成						*/
 /************************************************************************/
@@ -3190,3 +3107,4 @@ static void set_yokusei_cnt_time(UB yokusei_max_time)
 		break;
 	}
 }
+#endif

@@ -13,8 +13,8 @@
 
 static const struct ke_msg_handler cpu_com_handler[] =
 {
+#if FUNC_DEBUG_LOG != ON
 	{ USER_MAIN_CYC_ACT			, (ke_msg_func_t)user_main_cyc },
-#if FUNC_DEBUG_LOG == OFF
 	{ USER_MAIN_CALC_KOKYU		, (ke_msg_func_t)main_calc_kokyu },
 	{ USER_MAIN_CALC_IBIKI		, (ke_msg_func_t)main_calc_ibiki },
 #endif
