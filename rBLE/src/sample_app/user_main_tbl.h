@@ -14,8 +14,6 @@
 static const struct ke_msg_handler cpu_com_handler[] =
 {
 	{ USER_MAIN_CYC_ACT			, (ke_msg_func_t)user_main_cyc },
-//	{ USER_MAIN_CALC_SEKIGAI	, (ke_msg_func_t)main_calc_sekigai },
-//	{ USER_MAIN_CALC_SEKISHOKU	, (ke_msg_func_t)main_calc_sekishoku },
 #if FUNC_DEBUG_LOG == OFF
 	{ USER_MAIN_CALC_KOKYU		, (ke_msg_func_t)main_calc_kokyu },
 	{ USER_MAIN_CALC_IBIKI		, (ke_msg_func_t)main_calc_ibiki },
@@ -40,27 +38,12 @@ const struct ke_state_handler user_main_default_handler = KE_STATE_HANDLER_NONE;
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 1, 2};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 1, 7};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
 																/* ③リビジョン：[0 ～ 99] */
 																/* ④ビルドバージョン：[0 ～ 99] */
-
-
-/* CPU間通信受信データ処理 関数テーブル */
-STATIC const CPU_COM_RCV_CMD_TBL s_cpu_com_rcv_func_tbl[CPU_COM_CMD_MAX] = {
-	/* コマンド */		/* 関数  */					/* 応答有無 */
-	{	0x00,			NULL,								OFF	},	/* 【CPU間通信コマンド】コマンド無し				*/
-	{	0xE0,			main_cpu_com_rcv_sts_res,			OFF	},	/* 【CPU間通信コマンド】ステータス要求				*/
-	{	0xA0,			main_cpu_com_rcv_sensor_res,		OFF	},	/* 【CPU間通信コマンド】センサーデータ更新			*/
-	{	0xA1,			NULL,								OFF	},	/* 【CPU間通信コマンド】センシング指示				*/
-	{	0xB0,			main_cpu_com_rcv_mode_chg,			OFF	},	/* 【CPU間通信コマンド】状態変更(G1D)				*/
-	{	0xF0,			NULL,								OFF	},	/* 【CPU間通信コマンド】PCログ送信(内部コマンド)	*/
-	{	0xB1,			main_cpu_com_rcv_date_set,			OFF	},	/* 【CPU間通信コマンド】日時設定					*/
-	{	0xB2,			main_cpu_com_rcv_disp_order,		OFF	},	/* 【CPU間通信コマンド】表示指示				*/
-	{	0xB3,			main_cpu_com_rcv_version,			OFF	},	/* 【CPU間通信コマンド】バージョン				*/
-};
 
 /* VUART通信受信データ処理 関数テーブル */
 STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
@@ -76,9 +59,6 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DATA_FRAME,	VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
 	{	VUART_CMD_DATA_CALC,	VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
 	{	VUART_CMD_DATA_FIN,		VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// データ取得完了通知
-//	{	VUART_CMD_INVALID,		VUART_CMD_LEN_PRG_DATA,		main_vuart_rcv_prg_hd_record	},	// プログラム転送(データ)
-//	{	VUART_CMD_PRG_RESULT,	VUART_CMD_LEN_PRG_RESULT,	main_vuart_rcv_prg_hd_result	},	// プログラム転送結果
-//	{	VUART_CMD_PRG_CHECK,	VUART_CMD_LEN_PRG_CHECK,	main_vuart_rcv_prg_hd_update	},	// プログラム更新完了確認
 	{	VUART_CMD_DEVICE_SET,	VUART_CMD_LEN_DEVICE_SET,	main_vuart_rcv_device_set		},	// デバイス設定変更
 };
 
