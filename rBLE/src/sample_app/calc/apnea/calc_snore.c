@@ -16,7 +16,6 @@
 static int proc_on(int Pos);
 static int proc_off(int Pos);
 static void Save(void);
-static void Reset(void);
 static void Judge(void);
 
 /************************************************************/
@@ -241,7 +240,7 @@ static void Judge(void)
 /* íçà”éñçÄ :															*/
 /* Ç»Çµ																	*/
 /************************************************************************/
-static void Reset(void)
+void Reset(void)
 {
 	int ii;
 	

@@ -925,6 +925,14 @@ STATIC void sw_proc(void)
 		s_unit.sw_time_cnt++;
 		if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
 			sw_on_flg = ON;
+			// �f�[�^������
+			memset(&s_unit.kokyu_val, 0, sizeof(s_unit.kokyu_val));
+			memset(&s_unit.ibiki_val, 0, sizeof(s_unit.ibiki_val));
+			s_unit.kokyu_cnt = 0;
+			s_unit.ibiki_cnt = 0;
+			Reset();
+			
+			
 			s_unit.system_mode = SYSTEM_MODE_SENSING;
 			led_green_on();
 			s_unit.sw_time_cnt = 0;
@@ -1096,6 +1104,7 @@ STATIC void user_main_mode_sensing_before( void )
 	memset(s_unit.acl_x, 0, MEAS_ACL_CNT_MAX);
 	memset(s_unit.acl_y, 0, MEAS_ACL_CNT_MAX);
 	memset(s_unit.acl_z, 0, MEAS_ACL_CNT_MAX);
+	Reset();
 	
 	s_unit.kokyu_cnt = 0;
 	s_unit.ibiki_cnt = 0;
