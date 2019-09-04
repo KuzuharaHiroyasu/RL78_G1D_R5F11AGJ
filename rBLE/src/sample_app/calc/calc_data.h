@@ -13,9 +13,9 @@
 /************************************************************/
 /*					マクロ定数定義							*/
 /************************************************************/
-#define BUF_SIZE		(256)
-#define DATA_SIZE_SPO2	(128)
-#define DATA_SIZE_APNEA	(200)
+//#define DATA_SIZE_SPO2	(128)
+#define DATA_SIZE		(200)
+#define DATA_SIZE_PRMS	(10)
 
 // いびき判定結果
 #define SNORE_OFF		0	// いびきなし
@@ -29,14 +29,14 @@
 /************************************************************/
 /*					外部参照宣言							*/
 /************************************************************/
-extern	double	temp_dbl_buf0[BUF_SIZE];
-extern	double	temp_dbl_buf1[BUF_SIZE];
-extern	double	temp_dbl_buf2[BUF_SIZE];
-extern	double	temp_dbl_buf3[DATA_SIZE_APNEA];
+extern	double	data_apnea_temp_[DATA_SIZE];
+extern	double	prms_temp[DATA_SIZE_PRMS];
+extern	double	data_movave_temp_[DATA_SIZE];
+extern	double	ppoint_temp[DATA_SIZE];
 
-extern	H		temp_int_buf0[BUF_SIZE];
-extern	H		temp_int_buf1[BUF_SIZE];
-extern	H		temp_int_buf2[BUF_SIZE];
+extern	H		thresholds_over_num[DATA_SIZE];
+//extern	H		temp_int_buf1[DATA_SIZE];
+//extern	H		temp_int_buf2[DATA_SIZE];
 
 #endif	/*_CALC_DATA_H_*/
 /************************************************************/

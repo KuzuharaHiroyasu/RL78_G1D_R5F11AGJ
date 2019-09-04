@@ -50,11 +50,11 @@ void calculator_apnea(const UH *data_apnea, const UH *data_snore)
 	int ii;
 	
 	//データサイズ制限
-	datasize = DATA_SIZE_APNEA;
+	datasize = DATA_SIZE;
 	
 	// 演算用データ移行
-	data_apnea_temp = &temp_dbl_buf0[0];	//calloc
-	movave_ = &temp_dbl_buf2[0];	
+	data_apnea_temp = &data_apnea_temp_[0];	//calloc
+	movave_ = &data_movave_temp_[0];	
 	
 	for(ii = 0; ii < datasize; ++ii){
 		data_apnea_temp[ii] = data_apnea[ii];
@@ -111,7 +111,7 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	// (42)
 	// (43) = prms
 	datasize = DSize / 20;
-	prms = &temp_dbl_buf1[0];
+	prms = &prms_temp[0];
 	for(ii=0;ii<datasize;++ii){
 		double tmp = 0.0f;
 		prms[ii] = 0.0f;
@@ -124,7 +124,7 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	
 	// (44) = ppoint
 	// (45) = prms
-	ppoint = &temp_dbl_buf0[0];
+	ppoint = &ppoint_temp[0];
 	for(ii=0;ii<datasize;++ii){
 		if(prms[ii] >= Param3){
 			ppoint[ii] = 1;

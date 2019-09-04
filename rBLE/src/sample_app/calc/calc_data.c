@@ -16,14 +16,14 @@
 /* 変数定義													*/
 /************************************************************/
 // 演算用データ領域
-double	temp_dbl_buf0[BUF_SIZE];
-double	temp_dbl_buf1[BUF_SIZE];
-double	temp_dbl_buf2[BUF_SIZE];
-double	temp_dbl_buf3[DATA_SIZE_APNEA];
+double	data_apnea_temp_[DATA_SIZE];
+double	prms_temp[DATA_SIZE_PRMS];
+double	ppoint_temp[DATA_SIZE];
+double	data_movave_temp_[DATA_SIZE];
 
-H		temp_int_buf0[BUF_SIZE];
-H		temp_int_buf1[BUF_SIZE];
-H		temp_int_buf2[BUF_SIZE];
+H		thresholds_over_num[DATA_SIZE];
+//H		temp_int_buf1[BUF_SIZE];
+//H		temp_int_buf2[BUF_SIZE];
 
 /*==============================================================================*/
 /* EOF */

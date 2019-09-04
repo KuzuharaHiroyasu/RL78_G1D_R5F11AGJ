@@ -77,13 +77,13 @@ void calc_snore_proc(const UH *pData)
 	int pos=0;
 	
 	// 閾値を超えた回数の移動累計をとる
-	loop = DATA_SIZE_APNEA - SNORE_PARAM_SIZE;
+	loop = DATA_SIZE - SNORE_PARAM_SIZE;
 	for(ii=0;ii<loop;++ii){
-		temp_int_buf0[ii] = 0;
+		thresholds_over_num[ii] = 0;
 		size = ii+SNORE_PARAM_SIZE;
 		for(jj=ii;jj<size;++jj){
 			if(pData[jj] >= snore_sens){
-				temp_int_buf0[ii] += 1;
+				thresholds_over_num[ii] += 1;
 			}
 		}
 	}
@@ -118,12 +118,12 @@ void calc_snore_proc(const UH *pData)
 static int proc_on(int Pos)
 {
 	int ii;
-	int loop = DATA_SIZE_APNEA - SNORE_PARAM_SIZE;
+	int loop = DATA_SIZE - SNORE_PARAM_SIZE;
 	int pos = loop;
 	
 	// OFF確定している場所を特定する
 	for(ii=Pos;ii<loop;++ii){
-		if(temp_int_buf0[ii] <= SNORE_PARAM_OFF_CNT){
+		if(thresholds_over_num[ii] <= SNORE_PARAM_OFF_CNT){
 			SnoreFlg_ = OFF;
 			pos = ii;
 			Save();
@@ -152,12 +152,12 @@ static int proc_on(int Pos)
 static int proc_off(int Pos)
 {
 	int ii;
-	int loop = DATA_SIZE_APNEA - SNORE_PARAM_SIZE;
+	int loop = DATA_SIZE - SNORE_PARAM_SIZE;
 	int pos = loop;
 	
 	// ON確定している場所を特定する
 	for(ii=Pos;ii<loop;++ii){
-		if(temp_int_buf0[ii] >= SNORE_PARAM_ON_CNT){
+		if(thresholds_over_num[ii] >= SNORE_PARAM_ON_CNT){
 			SnoreFlg_ = ON;
 			SnoreCnt_ = 0;
 			pos = ii;

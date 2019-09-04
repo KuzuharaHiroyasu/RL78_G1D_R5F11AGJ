@@ -559,13 +559,13 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	}
 	
 	// ƒf[ƒ^ƒtƒ‹‚Å‰‰ZŒÄo
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
+	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 		set_led( LED_PATT_GREEN_BLINK_SENSING );
 	}
 
-	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
+	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
@@ -587,14 +587,14 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	}
 	
 	// ƒf[ƒ^ƒtƒ‹‚Å‰‰ZŒÄo
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE_APNEA - 1 )){
+	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
 		apnea_state = main_calc_kokyu();
 	}else
 	{
 		apnea_state = 99;
 	}
 
-	if( s_unit.ibiki_cnt >= ( DATA_SIZE_APNEA - 1 )){
+	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
 		snore_state = main_calc_ibiki();
 	}else
 	{
@@ -925,7 +925,7 @@ STATIC void sw_proc(void)
 		s_unit.sw_time_cnt++;
 		if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
 			sw_on_flg = ON;
-			// ï¿½fï¿½[ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			// E½fE½[E½^E½E½E½E½E½E½
 			memset(&s_unit.kokyu_val, 0, sizeof(s_unit.kokyu_val));
 			memset(&s_unit.ibiki_val, 0, sizeof(s_unit.ibiki_val));
 			s_unit.kokyu_cnt = 0;
@@ -2636,7 +2636,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 #if 0	
 	// ˆÚ“®—İŒv‚Æ‚é‚Ì‚Å‘O‚Ìƒf[ƒ^‚ğc‚·
 	for(ii=0;ii<size;++ii){
-		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE_APNEA-size+ii];
+		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE-size+ii];
 	}
 	s_unit.ibiki_cnt = size;
 #else
