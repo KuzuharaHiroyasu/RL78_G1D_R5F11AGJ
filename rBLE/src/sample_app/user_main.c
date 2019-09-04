@@ -601,8 +601,8 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		snore_state = 99;
 	}
 	
-	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
-	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
+	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );		
+	INC_MAX_INI( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX - 1, 0 );		
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -2524,7 +2524,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 static UB main_calc_kokyu( void)
 {
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
-	s_unit.kokyu_cnt = 0;
 	return get_state();
 }
 #endif
@@ -2661,7 +2660,6 @@ static UB main_calc_ibiki( void)
 {
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
-	s_unit.ibiki_cnt = 0;
 	return calc_snore_get();
 }
 #endif
