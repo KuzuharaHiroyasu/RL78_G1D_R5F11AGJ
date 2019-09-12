@@ -925,7 +925,6 @@ STATIC void sw_proc(void)
 		s_unit.sw_time_cnt++;
 		if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
 			sw_on_flg = ON;
-			// ・ｽf・ｽ[・ｽ^・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ
 			memset(&s_unit.kokyu_val, 0, sizeof(s_unit.kokyu_val));
 			memset(&s_unit.ibiki_val, 0, sizeof(s_unit.ibiki_val));
 			s_unit.kokyu_cnt = 0;
@@ -1097,6 +1096,13 @@ STATIC void user_main_mode_sensing_before( void )
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
 
 	s_unit.calc_cnt = 0;
+	s_unit.ibiki_detect_cnt = 0;
+	s_unit.mukokyu_detect_cnt = 0;
+	s_unit.ibiki_time = 0;
+	s_unit.mukokyu_time = 0;
+	s_unit.max_mukokyu_sec = 0;
+	s_unit.cont_mukokyu_detect_cnt_max = 0;
+	s_unit.cont_mukokyu_detect_cnt_current = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
@@ -1159,6 +1165,28 @@ STATIC void user_main_mode_sensing_after( void )
 	// 演算回数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_CALC_CNT;
 	eep_write( wr_adrs, (UB*)&s_unit.calc_cnt, 2, ON );
+	
+	// いびき時間、無呼吸時間更新
+	s_unit.ibiki_time = s_unit.ibiki_detect_cnt * SAMPLING_INTERVAL_SEC;
+	s_unit.mukokyu_time = s_unit.mukokyu_detect_cnt * SAMPLING_INTERVAL_SEC;
+	// 最大無呼吸時間は継続回数の最大値から計算する
+	s_unit.max_mukokyu_sec = s_unit.cont_mukokyu_detect_cnt_max * SAMPLING_INTERVAL_SEC;
+	
+	// いびき検知数書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
+	// 無呼吸検知数書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+	// いびき時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE, ON );
+	// 無呼吸時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_TIME;
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_time, EEP_MUKOKYU_TIME_SIZE, ON );
+	// 最高無呼吸時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MAX_MUKOKYU_TIME;
+	eep_write( wr_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MAX_MUKOKYU_TIME_SIZE, ON );
 	
 	// 追い越し判定
 	if(( s_unit.frame_num.write == s_unit.frame_num.read ) &&
@@ -2510,6 +2538,19 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 	}
 	
+	// 無呼吸検知数更新
+	if( (s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask == set_kokyu_mask ){
+		s_unit.mukokyu_detect_cnt++;
+		s_unit.cont_mukokyu_detect_cnt_current++;
+	}else{
+		// 継続無呼吸検知の終了処理(最大値を更新)
+		if(s_unit.cont_mukokyu_detect_cnt_current > s_unit.cont_mukokyu_detect_cnt_max){
+			s_unit.cont_mukokyu_detect_cnt_max = s_unit.cont_mukokyu_detect_cnt_current;
+		}
+		s_unit.cont_mukokyu_detect_cnt_current = 0;
+	}
+	
+	
 	s_unit.phase_kokyu++;
 	if(s_unit.phase_kokyu >= SEC_PHASE_NUM){
 		s_unit.phase_kokyu = SEC_PHASE_0_10;
@@ -2626,6 +2667,11 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
+	}
+	
+	// いびき検知数更新
+	if( (s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask == set_ibiki_mask ){
+		s_unit.ibiki_detect_cnt++;
 	}
 	
 	s_unit.phase_ibiki++;

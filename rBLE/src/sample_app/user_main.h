@@ -230,7 +230,7 @@ typedef enum{
 #define	PRG_HD_UPDATE_STATE_OK			1	//正常完了(成功)
 #define	PRG_HD_UPDATE_STATE_NG			2	//異常完了(失敗)
 
-
+#define	SAMPLING_INTERVAL_SEC		10	// 10秒間隔
 
 
 #define	BD_ADRS_NUM						6			// BLEアドレス数
@@ -376,6 +376,8 @@ typedef struct{
 	UH ibiki_time;			// いびき時間
 	UH mukokyu_time;		// 無呼吸時間
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
+	UH cont_mukokyu_detect_cnt_max;		// 継続無呼吸検知数(最大値保存用)
+	UH cont_mukokyu_detect_cnt_current;	// 継続無呼吸検知数(現在値)
 	
 	UB phase_ibiki;			// 秒間フェイズ(いびき)
 	UB phase_kokyu;			// 秒間フェイズ(呼吸)
