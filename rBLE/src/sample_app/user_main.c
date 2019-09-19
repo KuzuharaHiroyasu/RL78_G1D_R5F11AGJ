@@ -631,7 +631,7 @@ STATIC void user_main_calc_data_set_acl( void )
 	
 	// 加速の演算はユーザーイベント(1秒周期)で実施する
 	
-	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
+//	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -989,7 +989,9 @@ STATIC void sw_proc(void)
 STATIC void user_main_calc_result( void )
 {
 	UW wr_adrs = 0;
-
+	UW rd_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE );// + ( s_unit.calc_cnt * EEP_CACL_DATA_SIZE );
+	CALC calc_eep;
+	
 	//範囲チェック
 	if( s_unit.calc_cnt > EEP_CACL_DATA_NUM ){
 		err_info(ERR_ID_MAIN);
@@ -999,7 +1001,20 @@ STATIC void user_main_calc_result( void )
 	// フレーム位置とデータ位置からEEPアドレスを算出
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CACL_DATA_SIZE );
 
+	s_unit.calc.info.dat.ibiki_val[0] = 300;
+	s_unit.calc.info.dat.ibiki_val[1] = 300;
+	s_unit.calc.info.dat.ibiki_val[2] = 300;
+	s_unit.calc.info.dat.body_direct = 0x2f;
+	s_unit.calc.info.dat.photoref[0] = 100;
+	s_unit.calc.info.dat.photoref[1] = 100;
+	s_unit.calc.info.dat.photoref[2] = 100;
+	
+	
 	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CACL_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
+	
+	wait_ms(50);
+	
+	eep_read( rd_adrs, (UB*)&calc_eep, EEP_CACL_DATA_SIZE );
 	
 	s_unit.calc_cnt++;
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
@@ -1118,6 +1133,7 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	s_unit.sensing_cnt_50ms = 0;
 	s_unit.yokusei_cnt_time_10sec = 0;
+	s_unit.sec30_cnt = 0;
 	s_unit.sensing_flg = ON;
 	
 	// センシング移行時にLEDとバイブ動作
@@ -1463,6 +1479,12 @@ STATIC void user_main_mode_get(void)
 			tx[6] = calc_eep.info.dat.photoref[0];
 			tx[7] = calc_eep.info.dat.photoref[1];
 			tx[8] = calc_eep.info.dat.photoref[2];
+			
+			if(calc_eep.info.dat.body_direct == 0)
+			{
+				NO_OPERATION_BREAK_POINT();
+			}
+			
 			main_vuart_send( &tx[0], 9 );
 			s_unit.get_mode_calc_cnt++;
 		}
@@ -2721,42 +2743,43 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	UB	clear_mask = BODY_DIRECTION_MASK;
 	UB	bit_shift = 0;
 	
-	// 最新のデータを使う
-	acc_x = s_unit.acl_x[s_unit.acl_cnt];
-//	acc_y = s_unit.acl_y[s_unit.acl_cnt];		//現状未使用
-	acc_z = s_unit.acl_z[s_unit.acl_cnt];
-
-	s_unit.acl_cnt = 0;
-	
-	// 体の向き判定
-	if( 0 <= acc_x )
-	{// 上 or 右
-		if( 0 <= acc_z )
-		{// 上
-			body_direct = BODY_DIRECTION_UP;
-		} else {
-		 // 右
-			body_direct = BODY_DIRECTION_RIGHT;
-		}
-	} else {
-	// 下 or 左
-		if( 0 <= acc_z )
-		{// 左
-			body_direct = BODY_DIRECTION_LEFT;
-		} else {
-		 // 下
-			body_direct = BODY_DIRECTION_DOWN;
-		}
-	}
-	
-	// 10秒ごとの判定値をbitで設定する
-	bit_shift = s_unit.phase_body_direct * BODY_DIRECTION_BIT;
-	s_unit.calc.info.dat.body_direct &= ~(clear_mask << bit_shift);
-	s_unit.calc.info.dat.body_direct |= (body_direct << bit_shift);
-	// ■暫定 本関数は10秒に1回呼び出されることを前提とし、10秒ごとに秒間フェイズを進める
 	s_unit.sec10_cnt++;
 	if(s_unit.sec10_cnt >= 10){
 		s_unit.sec10_cnt = 0;
+		// 最新のデータを使う
+		acc_x = s_unit.acl_x[s_unit.acl_cnt];
+	//	acc_y = s_unit.acl_y[s_unit.acl_cnt];		//現状未使用
+		acc_z = s_unit.acl_z[s_unit.acl_cnt];
+
+//		s_unit.acl_cnt = 0;
+		
+		// 体の向き判定
+		if( 0 <= acc_x )
+		{// 上 or 右
+			if( 0 <= acc_z )
+			{// 上
+				body_direct = BODY_DIRECTION_UP;
+			} else {
+			 // 右
+				body_direct = BODY_DIRECTION_RIGHT;
+			}
+		} else {
+		// 下 or 左
+			if( 0 <= acc_z )
+			{// 左
+				body_direct = BODY_DIRECTION_LEFT;
+			} else {
+			 // 下
+				body_direct = BODY_DIRECTION_DOWN;
+			}
+		}
+		
+		// 10秒ごとの判定値をbitで設定する
+		bit_shift = s_unit.phase_body_direct * BODY_DIRECTION_BIT;
+		s_unit.calc.info.dat.body_direct &= ~(clear_mask << bit_shift);
+		s_unit.calc.info.dat.body_direct |= (body_direct << bit_shift);
+		// ■暫定 本関数は10秒に1回呼び出されることを前提とし、10秒ごとに秒間フェイズを進める
+
 		
 		s_unit.phase_body_direct++;
 		if(s_unit.phase_body_direct >= SEC_PHASE_NUM){
@@ -2926,7 +2949,7 @@ STATIC void main_acl_init(void)
 	
 	wait_ms( 30 );		// 加速度センサ　※電源ON待ち
 
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_WHO_AM_I, &rd_data[0], 1 );
+	i2c_read_sub_debug( ACL_DEVICE_ADR, ACL_REG_ADR_WHO_AM_I, &rd_data[0], 1 );
 	if( rd_data[0] != ACL_REG_RECOGNITION_CODE ){
 		err_info( ERR_ID_ACL );
 	}
@@ -2955,14 +2978,14 @@ STATIC void main_acl_stop(void)
 	// 動作モード設定
 	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
 	
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_CTRL_REG1, &rd_data[0], 1 );
+	i2c_read_sub_debug( ACL_DEVICE_ADR, ACL_REG_ADR_CTRL_REG1, &rd_data[0], 1 );
 	if( rd_data[0] != 0x00 ){
 		err_info( ERR_ID_ACL );
 	}
 }
 
 /************************************************************************/
-/* 関数     : main_acl_stop												*/
+/* 関数     : main_acl_start											*/
 /* 関数名   : 加速度センサスタート										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2996,7 +3019,7 @@ STATIC void main_acl_start(void)
 
 #if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 /************************************************************************/
-/* 関数     : main_acl_stop												*/
+/* 関数     : main_acl_read												*/
 /* 関数名   : 加速度センサ読出し										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -3011,7 +3034,7 @@ STATIC void main_acl_read(void)
 	UB rd_data[10];
 	
 	// INT_SOURCE1		
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
+	i2c_read_sub_debug( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
 	if( 0 == ( rd_data[0] & BIT04 )){
 		// データ未達
 		err_info( ERR_ID_ACL );
@@ -3019,13 +3042,15 @@ STATIC void main_acl_read(void)
 	}
 	
 	// データ取得
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
+	i2c_read_sub_debug( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
 	s_unit.meas.info.dat.acl_x = rd_data[1];
 	s_unit.meas.info.dat.acl_y = rd_data[3];
 	s_unit.meas.info.dat.acl_z = rd_data[5];
 	
+	NO_OPERATION_BREAK_POINT();
+	
 	// INT_REL読み出し　※割り込み要求クリア
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
+	i2c_read_sub_debug( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
 
 /************************************************************************/

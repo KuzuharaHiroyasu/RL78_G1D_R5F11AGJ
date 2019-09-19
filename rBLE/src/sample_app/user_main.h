@@ -177,8 +177,8 @@ typedef enum{
 
 #define		HOUR12_CNT_50MS		(UW)( 12L * 60L * 60L * (1000L / 50L))	//12時間のカウント値[50ms]
 
-#define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
-//#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
+//#define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
+#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
 
 #define		MAX_YOKUSEI_CONT_TIME_5_MIN_CNT		30		// 10秒毎 1分(6) * 5 = 30回 = 5分
 #define		MAX_YOKUSEI_CONT_TIME_10_MIN_CNT	60		// 10秒毎 1分(6) * 10 = 60回 = 10分
@@ -198,8 +198,8 @@ typedef enum{
 
 
 // 演算結果書き込みタイミング
-#define		CALC_RESULT_WR_CYC			30			// 30秒
-//#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
+//#define		CALC_RESULT_WR_CYC			30			// 30秒
+#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
 
 
 

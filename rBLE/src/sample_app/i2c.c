@@ -125,14 +125,10 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	UB adrs_size = 0;
 	UW lcok_cnt = 0;
 
-#if FUNC_DEBUG_LOG == ON
-	adrs[0] = (UB)( read_adrs & 0x00ff );			//アドレス下位
-	adrs_size  = 1;
-#else
 	adrs[0] = (UB)(( read_adrs >> 8 ) & 0xff );			//アドレス上位
 	adrs[1] = (UB)( read_adrs & 0x00ff );			//アドレス下位
 	adrs_size  = 2;
-#endif
+
 	if( 0 != R_IICA0_Master_Send( device_adrs, &adrs[0], adrs_size, I2C_WAIT )){
 		err_info(ERR_ID_EEP);
 	}else{
@@ -180,6 +176,61 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	}
 }
 
+void i2c_read_sub_debug( UB device_adrs, UH read_adrs, UB* read_data, UH len )
+{
+	UB adrs[2];
+	UB adrs_size = 0;
+	UW lcok_cnt = 0;
+
+	adrs[0] = (UB)( read_adrs & 0x00ff );			//アドレス下位
+	adrs_size  = 1;
+
+	if( 0 != R_IICA0_Master_Send( device_adrs, &adrs[0], adrs_size, I2C_WAIT )){
+		err_info(ERR_ID_EEP);
+	}else{
+		while(1){
+			if( OFF == i2c_snd_flg ){
+				// 送信完了
+				break;
+			}
+			if( lcok_cnt++ >= EEP_I2C_LOCK_ERR_VAL ){
+				// 異常時
+				err_info(ERR_ID_EEP);
+				i2c_err_flg = ON;
+				break;
+			}
+		}
+	}
+	//バス開放
+	R_IICA0_Stop();
+	R_IICA0_Create();
+	
+	if( 0 != R_IICA0_Master_Receive(device_adrs, read_data, len, I2C_WAIT)){
+		err_info(ERR_ID_EEP);
+	}else{
+		while(1){
+			if( OFF == i2c_rcv_flg ){
+				// 受信完了
+				break;
+			}
+			if( lcok_cnt++ >= EEP_I2C_LOCK_ERR_VAL ){
+				// 異常時
+				err_info(ERR_ID_EEP);
+				i2c_err_flg = ON;
+				break;
+			}
+		}
+		if( OFF == i2c_err_flg ){
+			R_IICA0_StopCondition();		//　異常発生時は予期せぬ書き込みを防止する為にストップコンディション発行しない
+		}
+	}
+	while(0U == SPD0){}
+	
+	if( ON == i2c_err_flg ){
+		i2c_err_flg = OFF;
+		R_IICA0_Create();		// I2C初期化
+	}
+}
 
 /************************************************************************/
 /* 関数     : i2c_set_snd_flg											*/
