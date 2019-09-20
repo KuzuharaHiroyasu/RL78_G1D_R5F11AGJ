@@ -288,7 +288,6 @@ typedef struct{
 			UB	state;						// 状態
 			UB	body_direct;				// 体の向き
 			UB	photoref[SEC_PHASE_NUM];	// フォトセンサー
-			UB	dummy[4];					// 境界値調整用
 		}dat;
 	}info;
 }CALC;
