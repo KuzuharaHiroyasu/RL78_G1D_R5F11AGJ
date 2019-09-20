@@ -457,6 +457,9 @@ typedef struct{
 	MEAS meas;				/* 計測値(50ms) */
 	UH acl_timing;
 	
+	// 
+	UB ble_state;			// BLE管理状態
+	
 }T_UNIT;
 
 
@@ -587,6 +590,12 @@ typedef struct{
 // レジスタデータ
 #define ACL_REG_RECOGNITION_CODE		0x35				// 認識コード(0x35)
 
+// BLE管理状態
+#define BLE_STATE_ON		(1)					// ON状態
+#define BLE_STATE_OFF		(0)					// OFF状態
+#define BLE_STATE_INITIAL	(2)					// 起動状態
+
+
 /******************/
 /*  外部参照宣言  */
 /******************/
@@ -607,5 +616,7 @@ extern void reset_led_timer( void );
 extern void vib_cyc( void );
 extern void set_vib_flg( bool flg );
 extern void main_set_battery( void );
+extern void set_ble_state(UB state);
+extern UB get_ble_state(void);
 
 #endif // __MAIN_USR_INC__

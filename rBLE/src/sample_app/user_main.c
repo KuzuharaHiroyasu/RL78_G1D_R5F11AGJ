@@ -1073,6 +1073,7 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
+	RBLE_STATUS ret_status = RBLE_OK;
 	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
 	led_yellow_off();
@@ -1128,6 +1129,11 @@ STATIC void user_main_mode_sensing_before( void )
 		set_led( LED_PATT_GREEN_BLINK );
 	}
 	set_vib(VIB_MODE_SENSING);
+	
+	/* BLEを無効化(電力消費量低減の為) */
+	set_ble_state(BLE_STATE_ON); // BLE初期化完了時がわからないため、ここで状態更新する(これでOFF処理ができるようになる)
+	ret_status = RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWDOWN );
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
 /************************************************************************/
@@ -1146,8 +1152,13 @@ STATIC void user_main_mode_sensing_after( void )
 	UB oikosi_flg = OFF;
 	UW wr_adrs = 0;
 	UB wr_data[3] = {0};
+	RBLE_STATUS ret_status = RBLE_OK;
 	
 	set_led(LED_PATT_OFF);
+	
+	/* BLEを無効→有効化(APIリファレンスマニュアルの通り、電源ON後にResetする) */
+	ret_status = RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWUP_DDCON );
+	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 	if( 0 == s_unit.calc_cnt ){
 		err_info(ERR_ID_MAIN);
@@ -3170,3 +3181,38 @@ static void set_yokusei_cnt_time(UB yokusei_max_time)
 	}
 }
 #endif
+
+/************************************************************************/
+/* 関数     : set_ble_state												*/
+/* 関数名   : BLE管理状態設定											*/
+/* 引数     : state														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.09.18 Axia Soft Design 和田 耕太	初版作成			*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_ble_state(UB state)
+{
+	if( (state != BLE_STATE_ON)&&(state != BLE_STATE_OFF)&&(state != BLE_STATE_INITIAL)){
+		return;
+	}
+	s_unit.ble_state = state;
+}
+
+/************************************************************************/
+/* 関数     : get_ble_state												*/
+/* 関数名   : BLE管理状態取得											*/
+/* 引数     : なし														*/
+/* 戻り値   : BLE管理状態												*/
+/* 変更履歴	: 2019.09.18 Axia Soft Design 和田 耕太	初版作成			*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+UB get_ble_state(void)
+{
+	return s_unit.ble_state;
+}

@@ -1244,9 +1244,16 @@ static void app_gap_change_connection_param_req_ind(RBLE_GAP_EVENT *event)
 *******************************************************************************/
 static void app_gap_callback(RBLE_GAP_EVENT *event)
 {
+	UB state = 0;
+	
     switch (event->type) {
     case RBLE_GAP_EVENT_RESET_RESULT:
         app_gap_reset_result(event);
+    	state = get_ble_state();
+    	if(state == BLE_STATE_OFF){
+    		app_gap_broadcast_enable(APP_ADV_NORMAL_CYCLE);
+    		set_ble_state(BLE_STATE_ON);
+    	}
         break;
 
     case RBLE_GAP_EVENT_OBSERVATION_DISABLE_COMP:
@@ -1756,6 +1763,8 @@ static void app_vs_flash_operation_comp(RBLE_VS_EVENT *event)
 *******************************************************************************/
 static void app_vs_callback(RBLE_VS_EVENT *event)
 {
+    UB state = 0;
+
     switch (event->type) {
     case RBLE_VS_EVENT_FLASH_MANAGEMENT_COMP:
         app_vs_flash_management_comp(event);
@@ -1767,6 +1776,21 @@ static void app_vs_callback(RBLE_VS_EVENT *event)
 
     case RBLE_VS_EVENT_FLASH_OPERATION_COMP:
         app_vs_flash_operation_comp(event);
+        break;
+
+    case RBLE_VS_EVENT_RF_CONTROL_COMP:
+        // BLEŠÇ—ó‘Ô‚É‚æ‚èONˆ— or OFFˆ—‚ğs‚¤
+        state = get_ble_state();
+        if(state == BLE_STATE_INITIAL){
+            break;
+        }else if(state == BLE_STATE_ON){    // ONó‘Ô‚Å‚ÍOFFˆ—‚ğs‚¤
+            set_ble_state(BLE_STATE_OFF);
+            break;
+        }else if(state == BLE_STATE_OFF){   // OFFó‘Ô‚Å‚ÍONˆ—‚ğs‚¤
+            app_gap_reset();
+        }else{
+            break;
+        }
         break;
 
     default:
