@@ -33,6 +33,7 @@ extern void i2c_set_err_flg( UB data );
 // ƒAƒvƒŠ‚É’ñ‹Ÿ‚·‚éAPI
 void i2c_write_sub( UB device_adrs, UB* wr_data, UH len, UB wait_flg );
 void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len );
+void i2c_read_sub_for_acl( UB device_adrs, UH read_adrs, UB* read_data, UH len );
 
 
 #endif

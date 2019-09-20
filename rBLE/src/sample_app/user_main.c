@@ -2938,7 +2938,7 @@ STATIC void main_acl_init(void)
 	
 	wait_ms( 30 );		// 加速度センサ　※電源ON待ち
 
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_WHO_AM_I, &rd_data[0], 1 );
+	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_WHO_AM_I, &rd_data[0], 1 );
 	if( rd_data[0] != ACL_REG_RECOGNITION_CODE ){
 		err_info( ERR_ID_ACL );
 	}
@@ -2967,7 +2967,7 @@ STATIC void main_acl_stop(void)
 	// 動作モード設定
 	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
 	
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_CTRL_REG1, &rd_data[0], 1 );
+	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_CTRL_REG1, &rd_data[0], 1 );
 	if( rd_data[0] != 0x00 ){
 		err_info( ERR_ID_ACL );
 	}
@@ -3023,7 +3023,7 @@ STATIC void main_acl_read(void)
 	UB rd_data[10];
 	
 	// INT_SOURCE1		
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
+	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
 	if( 0 == ( rd_data[0] & BIT04 )){
 		// データ未達
 		err_info( ERR_ID_ACL );
@@ -3031,13 +3031,13 @@ STATIC void main_acl_read(void)
 	}
 	
 	// データ取得
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
+	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
 	s_unit.meas.info.dat.acl_x = rd_data[1];
 	s_unit.meas.info.dat.acl_y = rd_data[3];
 	s_unit.meas.info.dat.acl_z = rd_data[5];
 	
 	// INT_REL読み出し　※割り込み要求クリア
-	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
+	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
 
 /************************************************************************/
