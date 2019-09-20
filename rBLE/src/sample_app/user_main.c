@@ -887,10 +887,8 @@ void user_main_init( void )
 	// 演算初期化
 	calc_snore_init();
 	
-	// ■暫定 待機モードへ遷移させるために仮に充電ポート
-	if( FALSE == evt_act( EVENT_CHG_PORT_ON )){
-		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
-	}
+	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	set_ble_state(BLE_STATE_INITIAL);
 
 #if FUNC_DEBUG_PORT == ON
 	//空きポートによる計測用設定(スリープなど)
