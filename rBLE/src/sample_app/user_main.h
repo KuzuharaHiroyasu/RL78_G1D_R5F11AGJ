@@ -378,6 +378,11 @@ typedef struct{
 	UH cont_mukokyu_detect_cnt_max;		// 継続無呼吸検知数(最大値保存用)
 	UH cont_mukokyu_detect_cnt_current;	// 継続無呼吸検知数(現在値)
 	
+	UH ibiki_chg_detect_cnt;	// いびき発生検知数(通信で送る"いびき検知数")
+	UH mukokyu_chg_detect_cnt;	// 無呼吸発生検知数(通信で送る"無呼吸検知数)
+	UB ibiki_state_flg;			// いびき発生状態フラグ(いびき発生時ON)
+	UB mukokyu_state_flg;		// 無呼吸発生状態フラグ(無呼吸発生時ON)
+	
 	UB phase_ibiki;			// 秒間フェイズ(いびき)
 	UB phase_kokyu;			// 秒間フェイズ(呼吸)
 	UB phase_body_direct;	// 秒間フェイズ(体の向き)

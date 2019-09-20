@@ -1104,6 +1104,10 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.max_mukokyu_sec = 0;
 	s_unit.cont_mukokyu_detect_cnt_max = 0;
 	s_unit.cont_mukokyu_detect_cnt_current = 0;
+	s_unit.ibiki_chg_detect_cnt = 0;
+	s_unit.mukokyu_chg_detect_cnt = 0;
+	s_unit.ibiki_state_flg = 0;
+	s_unit.mukokyu_state_flg = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
@@ -1185,10 +1189,10 @@ STATIC void user_main_mode_sensing_after( void )
 	
 	// いびき検知数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
-	eep_write( wr_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_chg_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
 	// 無呼吸検知数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
-	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_chg_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
 	// いびき時間書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
 	eep_write( wr_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE, ON );
@@ -1415,10 +1419,10 @@ STATIC void user_main_mode_get(void)
 		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_CALC_DATA_SIZE );
 		// いびき検知数読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
-		eep_read( rd_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE );
+		eep_read( rd_adrs, (UB*)&s_unit.ibiki_chg_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE );
 		// 無呼吸検知数読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
-		eep_read( rd_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE );
+		eep_read( rd_adrs, (UB*)&s_unit.mukokyu_chg_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE );
 		// いびき時間読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
 		eep_read( rd_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE );
@@ -1439,10 +1443,10 @@ STATIC void user_main_mode_get(void)
 		tx[5] = s_unit.date.hour;	
 		tx[6] = s_unit.date.min;	
 		tx[7] = s_unit.date.sec;
-		tx[8] =  ( s_unit.ibiki_detect_cnt & 0x00ff );
-		tx[9] = (( s_unit.ibiki_detect_cnt & 0xff00 ) >> 8 );
-		tx[10] =  ( s_unit.mukokyu_detect_cnt & 0x00ff );
-		tx[11] = (( s_unit.mukokyu_detect_cnt & 0xff00 ) >> 8 );
+		tx[8] =  ( s_unit.ibiki_chg_detect_cnt & 0x00ff );
+		tx[9] = (( s_unit.ibiki_chg_detect_cnt & 0xff00 ) >> 8 );
+		tx[10] =  ( s_unit.mukokyu_chg_detect_cnt & 0x00ff );
+		tx[11] = (( s_unit.mukokyu_chg_detect_cnt & 0xff00 ) >> 8 );
 		tx[12] =  ( s_unit.ibiki_time & 0x00ff );
 		tx[13] = (( s_unit.ibiki_time & 0xff00 ) >> 8 );
 		tx[14] =  ( s_unit.mukokyu_time & 0x00ff );
@@ -2283,10 +2287,10 @@ void main_vuart_rcv_data_frame( void )
 	s_unit.date.min = s_ds.vuart.input.rcv_data[6];
 	s_unit.date.sec = s_ds.vuart.input.rcv_data[7];
 	
-	s_unit.ibiki_detect_cnt  = s_ds.vuart.input.rcv_data[9] << 8;
-	s_unit.ibiki_detect_cnt  |= s_ds.vuart.input.rcv_data[8];
-	s_unit.mukokyu_detect_cnt  = s_ds.vuart.input.rcv_data[11] << 8;
-	s_unit.mukokyu_detect_cnt  |= s_ds.vuart.input.rcv_data[10];
+	s_unit.ibiki_chg_detect_cnt  = s_ds.vuart.input.rcv_data[9] << 8;
+	s_unit.ibiki_chg_detect_cnt  |= s_ds.vuart.input.rcv_data[8];
+	s_unit.mukokyu_chg_detect_cnt  = s_ds.vuart.input.rcv_data[11] << 8;
+	s_unit.mukokyu_chg_detect_cnt  |= s_ds.vuart.input.rcv_data[10];
 	s_unit.ibiki_time  = s_ds.vuart.input.rcv_data[13] << 8;
 	s_unit.ibiki_time  |= s_ds.vuart.input.rcv_data[12];
 	s_unit.mukokyu_time  = s_ds.vuart.input.rcv_data[15] << 8;
@@ -2299,10 +2303,10 @@ void main_vuart_rcv_data_frame( void )
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
 	// いびき検知数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
-	eep_write( wr_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
+	eep_write( wr_adrs, (UB*)&s_unit.ibiki_chg_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
 	// 無呼吸検知数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
-	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_chg_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
 	// いびき時間書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
 	eep_write( wr_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE, ON );
@@ -2553,12 +2557,20 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	if( (s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask == set_kokyu_mask ){
 		s_unit.mukokyu_detect_cnt++;
 		s_unit.cont_mukokyu_detect_cnt_current++;
+		
+		// 無呼吸発生検知回数
+		if(s_unit.mukokyu_state_flg == OFF){
+			s_unit.mukokyu_state_flg = ON;
+			s_unit.mukokyu_chg_detect_cnt++;
+		}
 	}else{
 		// 継続無呼吸検知の終了処理(最大値を更新)
 		if(s_unit.cont_mukokyu_detect_cnt_current > s_unit.cont_mukokyu_detect_cnt_max){
 			s_unit.cont_mukokyu_detect_cnt_max = s_unit.cont_mukokyu_detect_cnt_current;
 		}
 		s_unit.cont_mukokyu_detect_cnt_current = 0;
+		
+		s_unit.mukokyu_state_flg = OFF;
 	}
 	
 	
@@ -2683,6 +2695,14 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	// いびき検知数更新
 	if( (s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask == set_ibiki_mask ){
 		s_unit.ibiki_detect_cnt++;
+		
+		// いびき発生検知回数
+		if(s_unit.ibiki_state_flg == OFF){
+			s_unit.ibiki_state_flg = ON;
+			s_unit.ibiki_chg_detect_cnt++;
+		}
+	}else{
+		s_unit.ibiki_state_flg = OFF;
 	}
 	
 	s_unit.phase_ibiki++;
