@@ -76,7 +76,6 @@ STATIC SYSTEM_MODE evt_idle_com( int evt);
 STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
 STATIC SYSTEM_MODE evt_sensing( int evt);
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
-STATIC SYSTEM_MODE evt_initial( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
 STATIC SYSTEM_MODE evt_send_clear( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
@@ -1766,24 +1765,6 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 		// 充電中ならセンシングに移行しない
 		system_mode = SYSTEM_MODE_IDLE_COM;
 	}
-	
-	return system_mode;
-}
-
-/************************************************************************/
-/* 関数     : evt_initial												*/
-/* 関数名   : イベント(イニシャル)										*/
-/* 引数     : evt	イベント番号										*/
-/* 戻り値   : システムモード											*/
-/* 変更履歴 : 2018.09.07  Axia Soft Design 西島 初版作成				*/
-/************************************************************************/
-/* 機能 : イベント(イニシャル)											*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC SYSTEM_MODE evt_initial( int evt)
-{
-	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	
 	return system_mode;
 }
