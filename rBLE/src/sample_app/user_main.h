@@ -402,8 +402,6 @@ typedef struct{
 	UB	sekishoku_cnt;
 	UB	kokyu_cnt;
 	UB	ibiki_cnt;
-	UB	sekigai_seq;		// 赤外有効/無効切替用のシーケンス
-	
 	
 	UW	timer_sec;			// タイマー[秒]　※カウントダウン
 	
