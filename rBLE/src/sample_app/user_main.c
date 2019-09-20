@@ -99,9 +99,9 @@ void main_vuart_rcv_device_set( void );
 STATIC void main_acl_init(void);
 STATIC void main_acl_stop(void);
 STATIC void main_acl_start(void);
+STATIC UH main_photo_read(void);
 #if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 STATIC void main_acl_read(void);
-STATIC UH main_photo_read(void);
 #endif
 
 /********************/
@@ -368,6 +368,14 @@ void user_main_timer_cyc( void )
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 	// 波形&結果確認
 			user_main_calc_data_set_kyokyu_ibiki();
+			s_unit.acl_timing+=1;
+			if(s_unit.acl_timing >= ACL_TIMING_VAL){
+				s_unit.acl_timing = 0;
+				// フォトセンサー値取得
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+			}else{
+				s_unit.meas.info.dat.photoref_val = 65535;
+			}
 #else
 	//通常デバッグ版
 			s_unit.acl_timing+=1;
@@ -802,6 +810,17 @@ STATIC void make_send_data(char* pBuff)
 	// 無呼吸判定結果
 	tmp = apnea_state / 10;
 	next = apnea_state % 10;
+	pBuff[index++] = '0' + tmp;
+	tmp = next % 10;
+	pBuff[index++] = '0' + tmp;
+	pBuff[index++] = ',';
+	
+	// フォトセンサー
+	tmp = s_unit.meas.info.dat.photoref_val / 100;
+	next = s_unit.meas.info.dat.photoref_val % 100;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 10;
+	next = next % 10;
 	pBuff[index++] = '0' + tmp;
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
@@ -2981,6 +3000,7 @@ STATIC void main_acl_read(void)
 	// INT_REL読み出し　※割り込み要求クリア
 	i2c_read_sub( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
+#endif
 
 /************************************************************************/
 /* 関数     : main_photo_read											*/
@@ -3019,7 +3039,6 @@ STATIC UH main_photo_read(void)
 	
 	return ret_photoref_val;
 }
-#endif
 
 /************************************************************************/
 /* 関数     : reset_vib_timer											*/
