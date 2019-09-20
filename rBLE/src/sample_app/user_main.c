@@ -649,7 +649,9 @@ STATIC void user_main_calc_data_set_acl( void )
 /************************************************************************/
 STATIC void user_main_calc_data_set_photoref( void )
 {
-	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = s_unit.meas.info.dat.photoref_val;
+	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
+	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = (UB)(( s_unit.meas.info.dat.photoref_val >> 2 ) & 0xff );
+
 	s_unit.phase_photoref++;
 	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
 		s_unit.phase_photoref = SEC_PHASE_0_10;
@@ -2647,7 +2649,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 			max = s_unit.ibiki_val[ii];
 		}
 	}
-	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = max;
+	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
+	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( max >> 2 ) & 0xff );
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
