@@ -1122,6 +1122,10 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	s_unit.sensing_cnt_50ms = 0;
 	s_unit.yokusei_cnt_time_10sec = 0;
+	s_unit.sec10_cnt = 0;
+	s_unit.sec30_cnt = 0;
+	s_unit.sec600_cnt = 0;
+	
 	s_unit.sensing_flg = ON;
 	
 	// センシング移行時にLEDとバイブ動作
