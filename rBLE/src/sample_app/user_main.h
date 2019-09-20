@@ -397,15 +397,11 @@ typedef struct{
 	// 機器データ(演算前)
 	UH	kokyu_val[MEAS_KOKYU_CNT_MAX];		
 	UH	ibiki_val[MEAS_IBIKI_CNT_MAX];		
-	B	acl_x[MEAS_ACL_CNT_MAX];
-	B	acl_y[MEAS_ACL_CNT_MAX];
-	B	acl_z[MEAS_ACL_CNT_MAX];
 	// 機器データ(演算前)回数
 	UB	sekigai_cnt;
 	UB	sekishoku_cnt;
 	UB	kokyu_cnt;
 	UB	ibiki_cnt;
-	UB	acl_cnt;
 	UB	sekigai_seq;		// 赤外有効/無効切替用のシーケンス
 	
 	

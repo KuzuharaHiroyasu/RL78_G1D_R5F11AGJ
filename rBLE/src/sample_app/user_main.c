@@ -203,7 +203,10 @@ void codeptr app_evt_usr_2(void)
 		}
 	}
 #endif
-
+	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
+		return;
+	}
+	
 	// 加速度センサ、フォトセンサ値演算(10秒周期)
 	s_unit.sec10_cnt++;
 	if(s_unit.sec10_cnt >= 10){
@@ -227,11 +230,6 @@ void codeptr app_evt_usr_2(void)
 		ke_msg_send(ke_msg);
 	}
 	
-	
-	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
-		return;
-	}
-
 	// 取得データ保存(30秒周期)
 	s_unit.sec30_cnt++;
 	if( s_unit.sec30_cnt >= CALC_RESULT_WR_CYC ){		// 30秒
@@ -405,11 +403,11 @@ void user_main_timer_cyc( void )
 				{
 					// 加速度取得
 					main_acl_read();
-					user_main_calc_data_set_acl();
+			//		user_main_calc_data_set_acl();
 					
 					// フォトセンサー値取得
 					s_unit.meas.info.dat.photoref_val = main_photo_read();
-					user_main_calc_data_set_photoref();
+			//		user_main_calc_data_set_photoref();
 					
 					acl_photo_sens_read_flg = ON;
 				}
@@ -628,17 +626,7 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 /************************************************************************/
 STATIC void user_main_calc_data_set_acl( void )
 {
-	if( s_unit.acl_cnt < MEAS_ACL_CNT_MAX ){
-		s_unit.acl_x[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_x;
-		s_unit.acl_y[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_y;
-		s_unit.acl_z[s_unit.acl_cnt] = s_unit.meas.info.dat.acl_z;
-	}
-	
-	// 加速の演算はユーザーイベント(1秒周期)で実施する
-	
-	INC_MAX( s_unit.acl_cnt, MEAS_ACL_CNT_MAX );
 
-	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
 /************************************************************************/
@@ -654,13 +642,7 @@ STATIC void user_main_calc_data_set_acl( void )
 /************************************************************************/
 STATIC void user_main_calc_data_set_photoref( void )
 {
-	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
-	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = (UB)(( s_unit.meas.info.dat.photoref_val >> 2 ) & 0xff );
 
-	s_unit.phase_photoref++;
-	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
-		s_unit.phase_photoref = SEC_PHASE_0_10;
-	}
 }
 #endif
 
@@ -1117,14 +1099,10 @@ STATIC void user_main_mode_sensing_before( void )
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
 	memset(s_unit.ibiki_val, 0, MEAS_IBIKI_CNT_MAX);
-	memset(s_unit.acl_x, 0, MEAS_ACL_CNT_MAX);
-	memset(s_unit.acl_y, 0, MEAS_ACL_CNT_MAX);
-	memset(s_unit.acl_z, 0, MEAS_ACL_CNT_MAX);
 	Reset();
 	
 	s_unit.kokyu_cnt = 0;
 	s_unit.ibiki_cnt = 0;
-	s_unit.acl_cnt = 0;
 	
 	s_unit.sensing_cnt_50ms = 0;
 	s_unit.yokusei_cnt_time_10sec = 0;
@@ -2748,25 +2726,14 @@ static UB main_calc_ibiki( void)
 /************************************************************************/
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-	B	acc_x;
-//	B	acc_y;		//現状未使用
-	B	acc_z;
-	
 	UB	body_direct = BODY_DIRECTION_LEFT;
 	UB	clear_mask = BODY_DIRECTION_MASK;
 	UB	bit_shift = 0;
-	
-	// 最新のデータを使う
-	acc_x = s_unit.acl_x[s_unit.acl_cnt];
-//	acc_y = s_unit.acl_y[s_unit.acl_cnt];		//現状未使用
-	acc_z = s_unit.acl_z[s_unit.acl_cnt];
 
-	s_unit.acl_cnt = 0;
-	
 	// 体の向き判定
-	if( 0 <= acc_x )
+	if( 0 <= s_unit.meas.info.dat.acl_x )
 	{// 上 or 右
-		if( 0 <= acc_z )
+		if( 0 <= s_unit.meas.info.dat.acl_z )
 		{// 上
 			body_direct = BODY_DIRECTION_UP;
 		} else {
@@ -2775,7 +2742,7 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 		}
 	} else {
 	// 下 or 左
-		if( 0 <= acc_z )
+		if( 0 <= s_unit.meas.info.dat.acl_z )
 		{// 左
 			body_direct = BODY_DIRECTION_LEFT;
 		} else {
@@ -2796,8 +2763,27 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	return (KE_MSG_CONSUMED);
 }
 
+/************************************************************************/
+/* 関数     : main_calc_photoref										*/
+/* 関数名   : フォトセンサ保存処理										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/* 																		*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
+	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
+	s_unit.calc.info.dat.photoref[s_unit.phase_photoref] = (UB)(( s_unit.meas.info.dat.photoref_val >> 2 ) & 0xff );
+
+	s_unit.phase_photoref++;
+	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
+		s_unit.phase_photoref = SEC_PHASE_0_10;
+	}
 	
 	return (KE_MSG_CONSUMED);
 }
