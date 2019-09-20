@@ -282,7 +282,7 @@ typedef struct{
 // ‰‰Zî•ñ
 typedef struct{
 	union{
-		UB	byte[EEP_CACL_DATA_SIZE];
+		UB	byte[EEP_CALC_DATA_SIZE];
 		struct{
 			UB	ibiki_val[SEC_PHASE_NUM];	// ‚¢‚Ñ‚«‚Ì‘å‚«‚³
 			UB	state;						// ó‘Ô

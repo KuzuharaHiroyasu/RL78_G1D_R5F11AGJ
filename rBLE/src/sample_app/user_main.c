@@ -991,15 +991,15 @@ STATIC void user_main_calc_result( void )
 	UW wr_adrs = 0;
 
 	//範囲チェック
-	if( s_unit.calc_cnt > EEP_CACL_DATA_NUM ){
+	if( s_unit.calc_cnt > EEP_CALC_DATA_NUM ){
 		err_info(ERR_ID_MAIN);
 		return;
 	}
 	
 	// フレーム位置とデータ位置からEEPアドレスを算出
-	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CACL_DATA_SIZE );
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CALC_DATA_SIZE );
 
-	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CACL_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
+	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CALC_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
 	
 	s_unit.calc_cnt++;
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
@@ -1241,7 +1241,7 @@ STATIC UB user_main_mode_get_frame_before( void )
 	
 	eep_read( rd_adrs, (UB*)&calc_cnt, 2 );
 	
-	if( calc_cnt > EEP_CACL_DATA_NUM ){
+	if( calc_cnt > EEP_CALC_DATA_NUM ){
 		err_info(ERR_ID_MAIN);
 		calc_cnt = 0;
 	}
@@ -1401,7 +1401,7 @@ STATIC void user_main_mode_get(void)
 	}else if( 1 == s_unit.get_mode_seq ){
 		// 日時読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
-		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_CACL_DATA_SIZE );
+		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_CALC_DATA_SIZE );
 		// いびき検知数読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
 		eep_read( rd_adrs, (UB*)&s_unit.ibiki_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE );
@@ -1448,9 +1448,9 @@ STATIC void user_main_mode_get(void)
 		}else{
 			// EEP読み出し
 			// フレーム位置とデータ位置からEEPアドレスを算出
-			rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + ( s_unit.get_mode_calc_cnt * EEP_CACL_DATA_SIZE );
+			rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + ( s_unit.get_mode_calc_cnt * EEP_CALC_DATA_SIZE );
 			
-			eep_read( rd_adrs, (UB*)&calc_eep, EEP_CACL_DATA_SIZE );
+			eep_read( rd_adrs, (UB*)&calc_eep, EEP_CALC_DATA_SIZE );
 			
 			// VUART(BLE)送信
 			// スマホのIFに合わせる
@@ -1846,7 +1846,7 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt)
 }
 
 /************************************************************************/
-/* 関数     : evt_g1d_prg_denchi										*/
+/* 関数     : evt_self_check											*/
 /* 関数名   : イベント(自己診断)										*/
 /* 引数     : evt	イベント番号										*/
 /* 戻り値   : システムモード											*/
@@ -2711,6 +2711,18 @@ static UB main_calc_ibiki( void)
 #endif
 #endif
 
+/************************************************************************/
+/* 関数     : main_calc_acl												*/
+/* 関数名   : 加速度演算処理											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 															*/
+/************************************************************************/
+/* 機能 :																*/
+/* 																		*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 	B	acc_x;
@@ -2962,7 +2974,7 @@ STATIC void main_acl_stop(void)
 }
 
 /************************************************************************/
-/* 関数     : main_acl_stop												*/
+/* 関数     : main_acl_start											*/
 /* 関数名   : 加速度センサスタート										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2996,7 +3008,7 @@ STATIC void main_acl_start(void)
 
 #if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 /************************************************************************/
-/* 関数     : main_acl_stop												*/
+/* 関数     : main_acl_read												*/
 /* 関数名   : 加速度センサ読出し										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
