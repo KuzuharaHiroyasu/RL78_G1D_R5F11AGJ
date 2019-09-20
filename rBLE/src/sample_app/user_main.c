@@ -374,7 +374,7 @@ void user_main_timer_cyc( void )
 				// フォトセンサー値取得
 				s_unit.meas.info.dat.photoref_val = main_photo_read();
 			}else{
-				s_unit.meas.info.dat.photoref_val = 65535;
+				s_unit.meas.info.dat.photoref_val = 2000;
 			}
 #else
 	//通常デバッグ版
@@ -816,8 +816,11 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = ',';
 	
 	// フォトセンサー
-	tmp = s_unit.meas.info.dat.photoref_val / 100;
-	next = s_unit.meas.info.dat.photoref_val % 100;
+	tmp = s_unit.meas.info.dat.photoref_val / 1000;
+	next = s_unit.meas.info.dat.photoref_val % 1000;
+	pBuff[index++] = '0' + tmp;
+	tmp = next / 100;
+	next = next % 100;
 	pBuff[index++] = '0' + tmp;
 	tmp = next / 10;
 	next = next % 10;
