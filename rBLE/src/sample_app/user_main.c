@@ -203,6 +203,20 @@ void codeptr app_evt_usr_2(void)
 		}
 	}
 #endif
+
+	// 加速度センサ、フォトセンサ値演算(10秒周期)
+	s_unit.sec10_cnt++;
+	if(s_unit.sec10_cnt >= 10){
+		s_unit.sec10_cnt = 0;
+
+		// 加速度演算
+		ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+		
+		// フォトセンサ値
+		ke_msg = ke_msg_alloc( USER_MAIN_CYC_PHOTOREF, USER_MAIN_ID, USER_MAIN_ID, 0 );
+		ke_msg_send(ke_msg);
+	}
 	
 	// 電池残量取得(10分周期)
 	s_unit.sec600_cnt++;
@@ -218,7 +232,7 @@ void codeptr app_evt_usr_2(void)
 		return;
 	}
 
-
+	// 取得データ保存(30秒周期)
 	s_unit.sec30_cnt++;
 	if( s_unit.sec30_cnt >= CALC_RESULT_WR_CYC ){		// 30秒
 		s_unit.sec30_cnt = 0;
@@ -226,14 +240,6 @@ void codeptr app_evt_usr_2(void)
 		ke_msg = ke_msg_alloc( USER_MAIN_CYC_CALC_RESULT, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
-	
-	// 加速度演算
-	ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
-	ke_msg_send(ke_msg);
-	
-	// フォトセンサ値
-	ke_msg = ke_msg_alloc( USER_MAIN_CYC_PHOTOREF, USER_MAIN_ID, USER_MAIN_ID, 0 );
-	ke_msg_send(ke_msg);
 	
 #endif
 }
@@ -2782,15 +2788,9 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	bit_shift = s_unit.phase_body_direct * BODY_DIRECTION_BIT;
 	s_unit.calc.info.dat.body_direct &= ~(clear_mask << bit_shift);
 	s_unit.calc.info.dat.body_direct |= (body_direct << bit_shift);
-	// ■暫定 本関数は10秒に1回呼び出されることを前提とし、10秒ごとに秒間フェイズを進める
-	s_unit.sec10_cnt++;
-	if(s_unit.sec10_cnt >= 10){
-		s_unit.sec10_cnt = 0;
-		
-		s_unit.phase_body_direct++;
-		if(s_unit.phase_body_direct >= SEC_PHASE_NUM){
-			s_unit.phase_body_direct = SEC_PHASE_0_10;
-		}
+	s_unit.phase_body_direct++;
+	if(s_unit.phase_body_direct >= SEC_PHASE_NUM){
+		s_unit.phase_body_direct = SEC_PHASE_0_10;
 	}
 
 	return (KE_MSG_CONSUMED);
