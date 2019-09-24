@@ -1401,7 +1401,7 @@ STATIC void user_main_mode_get(void)
 	}else if( 1 == s_unit.get_mode_seq ){
 		// “ú“Ç‚İo‚µ
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
-		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_CALC_DATA_SIZE );
+		eep_read( rd_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE );
 		// ‚¢‚Ñ‚«ŒŸ’m”“Ç‚İo‚µ
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_DETECT_CNT;
 		eep_read( rd_adrs, (UB*)&s_unit.ibiki_chg_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE );
