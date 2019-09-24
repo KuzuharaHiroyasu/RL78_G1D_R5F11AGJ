@@ -91,7 +91,8 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 /*完了				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
 /*中断				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*タイムアウト		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*検査				*/	{ evt_idle_com_denchi,evt_self_check,	evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non }
+/*検査				*/	{ evt_idle_com_denchi,evt_self_check,	evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*取り外れﾀｲﾑｱｳﾄ	*/	{ evt_non,			evt_non,			evt_remove,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 };
 
 // 1ページ256byteの０埋めテーブル

@@ -79,6 +79,7 @@ STATIC SYSTEM_MODE evt_send_clear( int evt);
 STATIC SYSTEM_MODE evt_get( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
+STATIC SYSTEM_MODE evt_remove( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 STATIC void eep_part_erase( void );
@@ -114,6 +115,7 @@ extern RBLE_STATUS FW_Update_Receiver_Start( void );
 ke_state_t user_main_state[ USER_MAIN_IDX_MAX ] = {0};
 
 STATIC T_UNIT s_unit;
+STATIC T_UNIT_SAVE s_unit_save;
 STATIC DS s_ds;
 
 static bool vib_flg = false;
@@ -428,6 +430,13 @@ void user_main_timer_cyc( void )
 			}
 			
 			s_unit.sensing_cnt_50ms++;
+			
+			// フォトセンサー
+			if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_TIMER)
+			{
+				// 30分間外れていた（閾値を下回っている）
+				evt_act(EVENT_REMOVE_TIMEOUT);
+			}
 			
 			//充電検知
 			bat = drv_i_port_bat_chg_detect();
@@ -1821,6 +1830,32 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 }
 
 /************************************************************************/
+/* 関数     : evt_remove												*/
+/* 関数名   : イベント(取り外れタイムアウト)							*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.09.24  OneA 葛原 初版作成							*/
+/************************************************************************/
+/* 機能 : イベント(取り外れタイムアウト)								*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_remove( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	s_unit.calc_cnt						= s_unit_save.calc_cnt;
+	s_unit.ibiki_detect_cnt				= s_unit_save.ibiki_detect_cnt;
+	s_unit.mukokyu_detect_cnt			= s_unit_save.mukokyu_detect_cnt;
+	s_unit.ibiki_chg_detect_cnt			= s_unit_save.ibiki_chg_detect_cnt;
+	s_unit.mukokyu_chg_detect_cnt		= s_unit_save.mukokyu_chg_detect_cnt;
+	s_unit.cont_mukokyu_detect_cnt_max	= s_unit_save.cont_mukokyu_detect_cnt_max;
+	
+	return system_mode;
+}
+
+
+/************************************************************************/
 /* 関数     : main_mode_chg												*/
 /* 関数名   : モード変更												*/
 /* 引数     : なし														*/
@@ -2756,6 +2791,24 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 	s_unit.phase_photoref++;
 	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
 		s_unit.phase_photoref = SEC_PHASE_0_10;
+	}
+	
+	// 装着判定
+	if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
+	{
+		if(s_unit.photosens_remove_cnt == 0)
+		{
+			// 判定はじめのデータを保存
+			s_unit_save.calc_cnt					= s_unit.calc_cnt;
+			s_unit_save.ibiki_detect_cnt			= s_unit.ibiki_detect_cnt;
+			s_unit_save.mukokyu_detect_cnt			= s_unit.mukokyu_detect_cnt;
+			s_unit_save.ibiki_chg_detect_cnt		= s_unit.ibiki_chg_detect_cnt;
+			s_unit_save.mukokyu_chg_detect_cnt		= s_unit.mukokyu_chg_detect_cnt;
+			s_unit_save.cont_mukokyu_detect_cnt_max	= s_unit.cont_mukokyu_detect_cnt_max;
+		}
+		s_unit.photosens_remove_cnt++;
+	}else{
+		s_unit.photosens_remove_cnt = 0; // 途切れたらリセット
 	}
 	
 	return (KE_MSG_CONSUMED);

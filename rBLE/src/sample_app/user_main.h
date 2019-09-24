@@ -101,6 +101,7 @@ typedef enum{
 	EVENT_STOP,					// 中断
 	EVENT_TIME_OUT,				// タイムアウト
 	EVENT_KENSA_ON,				// 検査ポートON
+	EVENT_REMOVE_TIMEOUT,		// 取り外れタイムアウト
 	EVENT_MAX,					// 最大
 }EVENT_NUM;
 
@@ -457,13 +458,22 @@ typedef struct{
 	// 
 	MEAS meas;				/* 計測値(50ms) */
 	UH acl_timing;
+	UH photosens_remove_cnt;
 	
 	// 
 	UB ble_state;			// BLE管理状態
 	
 }T_UNIT;
 
-
+// 取り外しタイムアウト時の保存用
+typedef struct{
+	UH calc_cnt;						// 演算カウント(保存データ数)
+	UH ibiki_detect_cnt;				// いびき検知数
+	UH mukokyu_detect_cnt;				// 無呼吸検知数
+	UH ibiki_chg_detect_cnt;			// いびき発生検知数(通信で送る"いびき検知数")
+	UH mukokyu_chg_detect_cnt;			// 無呼吸発生検知数(通信で送る"無呼吸検知数)
+	UH cont_mukokyu_detect_cnt_max;		// 継続無呼吸検知数(最大値保存用)
+}T_UNIT_SAVE;
 
 /*##################################################################*/
 /*							VUART(BLE)通信部						*/
@@ -596,6 +606,9 @@ typedef struct{
 #define BLE_STATE_OFF		(0)					// OFF状態
 #define BLE_STATE_INITIAL	(2)					// 起動状態
 
+// フォトセンサ
+#define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
+#define PHOTO_SENSOR_REMOVE_TIMER		180		// 10秒毎なので 6 * 30 = 180 (30分)
 
 /******************/
 /*  外部参照宣言  */
