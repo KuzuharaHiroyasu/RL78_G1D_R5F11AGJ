@@ -442,6 +442,8 @@ typedef struct{
 	// プログラム書き換え(G1D)
 	UB prg_g1d_send_ver_flg;				// G1Dバージョン送信
 	UB prg_g1d_send_ver_sec;				// G1Dバージョン送信秒
+	UB prg_g1d_update_wait_flg;				// G1Dアップデート開始待ち
+	UB prg_g1d_update_wait_sec;				// G1Dアップデート開始待ち秒
 	
 	// 自己診断
 	SELF_CHECK	self_check;

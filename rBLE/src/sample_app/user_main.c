@@ -207,6 +207,17 @@ void codeptr app_evt_usr_2(void)
 		return;
 	}
 	
+	// G1Dダウンロード_応答を返してからアップデートを開始するための待ちに入る
+	if( ON == s_unit.prg_g1d_update_wait_flg ){
+		DEC_MIN( s_unit.prg_g1d_update_wait_sec ,0 );
+		if( 0 == s_unit.prg_g1d_update_wait_sec ){
+			s_unit.prg_g1d_update_wait_flg = OFF;
+			{
+				FW_Update_Receiver_Start();
+			}
+		}
+	}
+	
 	// 加速度センサ、フォトセンサ値演算(10秒周期)
 	s_unit.sec10_cnt++;
 	if(s_unit.sec10_cnt >= 10){
@@ -1879,8 +1890,10 @@ STATIC void main_mode_chg( void )
 	}
 	
 	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
-		//RD8001暫定：G1Dダウンロード_処理確認中_応答を返せるように修正
-		FW_Update_Receiver_Start();
+		// 応答を返してからアップデートを開始するための待ちに入る
+		s_unit.prg_g1d_update_wait_flg = ON;
+		s_unit.prg_g1d_update_wait_sec = 2;	// 2秒後
+//		FW_Update_Receiver_Start();
 	}
 	
 	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
