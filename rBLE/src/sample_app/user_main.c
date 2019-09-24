@@ -2528,13 +2528,13 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
-	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
+	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 	}
 	
 	// 無呼吸検知数更新
-	if( (s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask == set_kokyu_mask ){
+	if( ((s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask) == set_kokyu_mask ){
 		s_unit.mukokyu_detect_cnt++;
 		s_unit.cont_mukokyu_detect_cnt_current++;
 		
@@ -2668,13 +2668,13 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.yokusei_cnt_time_10sec = 0;	// 初期化
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
-	if( (s_unit.calc.info.dat.state >> bit_shift) & 0x03 == 0x03 ){
+	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 	}
 	
 	// いびき検知数更新
-	if( (s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask == set_ibiki_mask ){
+	if( ((s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask) == set_ibiki_mask ){
 		s_unit.ibiki_detect_cnt++;
 		
 		// いびき発生検知回数
