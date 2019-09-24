@@ -39,8 +39,6 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_mode( void );
 STATIC void user_main_mode_common( void );
-STATIC void user_main_calc_data_set_acl( void );
-STATIC void user_main_calc_data_set_photoref( void );
 STATIC void main_vuart_proc(void);
 #else
 STATIC void make_send_data(char* pBuff);
@@ -414,11 +412,9 @@ void user_main_timer_cyc( void )
 				{
 					// 加速度取得
 					main_acl_read();
-			//		user_main_calc_data_set_acl();
 					
 					// フォトセンサー値取得
 					s_unit.meas.info.dat.photoref_val = main_photo_read();
-			//		user_main_calc_data_set_photoref();
 					
 					acl_photo_sens_read_flg = ON;
 				}
@@ -621,40 +617,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 #endif
-#endif
-
-#if FUNC_DEBUG_LOG != ON
-/************************************************************************/
-/* 関数     : user_main_calc_data_set_acl								*/
-/* 関数名   : 演算データセット処理(加速)								*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2019.07.19 Axia Soft Design 和田 耕太	初版作成			*/
-/************************************************************************/
-/* 機能 : 演算データセット処理(加速)									*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC void user_main_calc_data_set_acl( void )
-{
-
-}
-
-/************************************************************************/
-/* 関数     : user_main_calc_data_set_photoref							*/
-/* 関数名   : 						*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴	: 2019.08.02 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 							*/
-/************************************************************************/
-/* 注意事項 :なし														*/
-/************************************************************************/
-STATIC void user_main_calc_data_set_photoref( void )
-{
-
-}
 #endif
 
 #if FUNC_DEBUG_LOG == ON
