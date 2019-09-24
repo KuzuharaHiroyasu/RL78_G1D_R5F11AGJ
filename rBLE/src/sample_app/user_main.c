@@ -1060,7 +1060,6 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
-	RBLE_STATUS ret_status = RBLE_OK;
 	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
 	led_yellow_off();
@@ -1123,7 +1122,7 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	/* BLEを無効化(電力消費量低減の為) */
 	set_ble_state(BLE_STATE_ON); // BLE初期化完了時がわからないため、ここで状態更新する(これでOFF処理ができるようになる)
-	ret_status = RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWDOWN );
+	RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWDOWN );
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
@@ -1143,12 +1142,11 @@ STATIC void user_main_mode_sensing_after( void )
 	UB oikosi_flg = OFF;
 	UW wr_adrs = 0;
 	UB wr_data[3] = {0};
-	RBLE_STATUS ret_status = RBLE_OK;
 	
 	set_led(LED_PATT_OFF);
 	
 	/* BLEを無効→有効化(APIリファレンスマニュアルの通り、電源ON後にResetする) */
-	ret_status = RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWUP_DDCON );
+	RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWUP_DDCON );
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 	
 	if( 0 == s_unit.calc_cnt ){
