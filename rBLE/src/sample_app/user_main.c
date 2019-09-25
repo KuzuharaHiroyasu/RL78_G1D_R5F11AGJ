@@ -203,9 +203,6 @@ void codeptr app_evt_usr_2(void)
 		}
 	}
 #endif
-	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
-		return;
-	}
 	
 	// G1Dダウンロード_応答を返してからアップデートを開始するための待ちに入る
 	if( ON == s_unit.prg_g1d_update_wait_flg ){
@@ -216,6 +213,10 @@ void codeptr app_evt_usr_2(void)
 				FW_Update_Receiver_Start();
 			}
 		}
+	}
+	
+	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
+		return;
 	}
 	
 	// 加速度センサ、フォトセンサ値演算(10秒周期)
