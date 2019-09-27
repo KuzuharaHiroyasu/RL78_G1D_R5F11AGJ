@@ -1077,6 +1077,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.mukokyu_chg_detect_cnt = 0;
 	s_unit.ibiki_state_flg = 0;
 	s_unit.mukokyu_state_flg = 0;
+	s_unit.photosens_remove_cnt = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
