@@ -413,7 +413,6 @@ typedef struct{
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	UW tick_led_20ms_sec;
-	UW sensing_cnt_50ms;		// センシング終了[50ms]
 	UW yokusei_cnt_time_10sec;	// 抑制継続時間用カウント
 	UW cnt_overtime_10sec;		// 抑制最大時間のインターバルカウント
 	

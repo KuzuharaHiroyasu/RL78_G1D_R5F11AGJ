@@ -430,8 +430,6 @@ void user_main_timer_cyc( void )
 				}
 			}
 			
-			s_unit.sensing_cnt_50ms++;
-			
 			// フォトセンサー
 			if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_TIMER)
 			{
@@ -455,7 +453,7 @@ void user_main_timer_cyc( void )
 			}
 			
 			// センシング時間上限検知
-			if( s_unit.sensing_cnt_50ms >= HOUR12_CNT_50MS )
+			if( s_unit.calc_cnt >= EEP_CALC_DATA_NUM )
 			{
 				// 12時間を超えたなら待機モードへ
 				evt_act( EVENT_COMPLETE );
@@ -1087,7 +1085,6 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.kokyu_cnt = 0;
 	s_unit.ibiki_cnt = 0;
 	
-	s_unit.sensing_cnt_50ms = 0;
 	s_unit.yokusei_cnt_time_10sec = 0;
 	s_unit.sec10_cnt = 0;
 	s_unit.sec30_cnt = 0;
