@@ -72,7 +72,9 @@ STATIC UB evt_act( EVENT_NUM evt );
 STATIC SYSTEM_MODE evt_non( int evt);
 STATIC SYSTEM_MODE evt_idle_com( int evt);
 STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
+#if 0
 STATIC SYSTEM_MODE evt_sensing( int evt);
+#endif
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
 #if 0
@@ -1699,6 +1701,7 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt)
 	
 	return system_mode;
 }
+#if 0
 /************************************************************************/
 /* 関数     : evt_sensing												*/
 /* 関数名   : イベント(センシング)										*/
@@ -1716,6 +1719,7 @@ STATIC SYSTEM_MODE evt_sensing( int evt)
 	
 	return system_mode;
 }
+#endif
 
 /************************************************************************/
 /* 関数     : evt_sensing_chg											*/
