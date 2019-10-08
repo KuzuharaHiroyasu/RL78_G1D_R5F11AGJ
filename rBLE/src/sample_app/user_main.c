@@ -979,6 +979,11 @@ STATIC void user_main_calc_result( void )
 	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CALC_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
 	
 	s_unit.calc_cnt++;
+	
+	/* いびき検知回数と無呼吸検知回数の確定処理 */
+	s_unit.ibiki_detect_cnt_decided = s_unit.ibiki_detect_cnt;
+	s_unit.mukokyu_detect_cnt_decided = s_unit.mukokyu_detect_cnt;
+	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
@@ -1085,6 +1090,8 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.ibiki_state_flg = 0;
 	s_unit.mukokyu_state_flg = 0;
 	s_unit.photosens_remove_cnt = 0;
+	s_unit.ibiki_detect_cnt_decided = 0;
+	s_unit.mukokyu_detect_cnt_decided = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
@@ -1156,9 +1163,9 @@ STATIC void user_main_mode_sensing_after( void )
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_CALC_CNT;
 	eep_write( wr_adrs, (UB*)&s_unit.calc_cnt, 2, ON );
 	
-	// いびき時間、無呼吸時間更新
-	s_unit.ibiki_time = s_unit.ibiki_detect_cnt * SAMPLING_INTERVAL_SEC;
-	s_unit.mukokyu_time = s_unit.mukokyu_detect_cnt * SAMPLING_INTERVAL_SEC;
+	// いびき時間、無呼吸時間更新(30秒保存周期ごとに確定したカウント数を使用する)
+	s_unit.ibiki_time = s_unit.ibiki_detect_cnt_decided * SAMPLING_INTERVAL_SEC;
+	s_unit.mukokyu_time = s_unit.mukokyu_detect_cnt_decided * SAMPLING_INTERVAL_SEC;
 	// 最大無呼吸時間は継続回数の最大値から計算する
 	s_unit.max_mukokyu_sec = s_unit.cont_mukokyu_detect_cnt_max * SAMPLING_INTERVAL_SEC;
 	
@@ -1869,6 +1876,8 @@ STATIC SYSTEM_MODE evt_remove( int evt)
 	s_unit.ibiki_chg_detect_cnt			= s_unit_save.ibiki_chg_detect_cnt;
 	s_unit.mukokyu_chg_detect_cnt		= s_unit_save.mukokyu_chg_detect_cnt;
 	s_unit.cont_mukokyu_detect_cnt_max	= s_unit_save.cont_mukokyu_detect_cnt_max;
+	s_unit.ibiki_detect_cnt_decided		= s_unit_save.ibiki_detect_cnt_decided;
+	s_unit.mukokyu_detect_cnt_decided	= s_unit_save.mukokyu_detect_cnt_decided;
 	
 	return system_mode;
 }
@@ -2841,6 +2850,8 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 			s_unit_save.ibiki_chg_detect_cnt		= s_unit.ibiki_chg_detect_cnt;
 			s_unit_save.mukokyu_chg_detect_cnt		= s_unit.mukokyu_chg_detect_cnt;
 			s_unit_save.cont_mukokyu_detect_cnt_max	= s_unit.cont_mukokyu_detect_cnt_max;
+			s_unit_save.ibiki_detect_cnt_decided	= s_unit.ibiki_detect_cnt_decided;
+			s_unit_save.mukokyu_detect_cnt_decided	= s_unit.mukokyu_detect_cnt_decided;
 		}
 		s_unit.photosens_remove_cnt++;
 	}else{
