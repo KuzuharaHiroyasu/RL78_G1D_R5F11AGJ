@@ -199,8 +199,8 @@ typedef enum{
 
 
 // 演算結果書き込みタイミング
-//#define		CALC_RESULT_WR_CYC			30			// 30秒
-#define		CALC_RESULT_WR_CYC			1			// 3秒[デバッグ用短縮版]
+#define		CALC_RESULT_WR_CYC			30			// 30秒
+//#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
 
 
 

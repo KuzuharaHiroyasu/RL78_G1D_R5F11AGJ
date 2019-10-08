@@ -1476,8 +1476,8 @@ STATIC void user_main_mode_get(void)
 			user_main_mode_get_frame_before();
 		}
 	}else if( 5 == s_unit.get_mode_seq ){
-//		tx[0] = VUART_CMD_DATA_END;				// END
-//		main_vuart_send( &tx[0], 1 );
+		tx[0] = VUART_CMD_DATA_END;				// END
+		main_vuart_send( &tx[0], 1 );
 		
 		// タイムアウトタイマー初期化
 		s_unit.data_end_timeout = 0;
