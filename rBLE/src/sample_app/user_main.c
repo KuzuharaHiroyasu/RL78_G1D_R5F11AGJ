@@ -959,7 +959,7 @@ STATIC void user_main_calc_result( void )
 	UW wr_adrs = 0;
 
 	//範囲チェック
-	if( s_unit.calc_cnt > EEP_CALC_DATA_NUM ){
+	if( s_unit.calc_cnt >= EEP_CALC_DATA_NUM ){
 		err_info(ERR_ID_MAIN);
 		return;
 	}
