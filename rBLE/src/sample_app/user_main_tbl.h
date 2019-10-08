@@ -78,8 +78,7 @@ typedef SYSTEM_MODE ( *EVENT_TABLE )( int event );
 STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 // モード				INITAL				IDLE_COM			SENSING			GET					PRG_G1D			SELF_CHECK		MOVE				NON
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-///*電源SW(短)		*/	{ evt_non,			evt_non,			evt_bat_check,	evt_idle_com,		evt_non,		evt_non,		evt_non,			evt_non },	// ■暫定 アプリとのBLE通信で同期失敗の暫定対策でGETモード中の電源SW短押しでIDLE_COMに戻る
-/*電源SW(短)		*/	{ evt_non,			evt_send_clear,		evt_bat_check,	evt_send_clear,		evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW(短)		*/	{ evt_non,			evt_non,			evt_bat_check,	evt_idle_com,		evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW押下(長)	*/	{ evt_non,			evt_sensing_chg,	evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートON	*/	{ evt_idle_com,		evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
@@ -90,7 +89,7 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 /*自己診断(通信)	*/	{ evt_non,			evt_self_check,		evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*完了				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
 /*中断				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*タイムアウト		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*タイムアウト		*/	{ evt_non,			evt_non,			evt_non,		evt_time_out,		evt_non,		evt_non,		evt_non,			evt_non },
 /*検査				*/	{ evt_idle_com_denchi,evt_self_check,	evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*取り外れﾀｲﾑｱｳﾄ	*/	{ evt_non,			evt_non,			evt_remove,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 };

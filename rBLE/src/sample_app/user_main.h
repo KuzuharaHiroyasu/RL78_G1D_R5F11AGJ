@@ -199,8 +199,8 @@ typedef enum{
 
 
 // 演算結果書き込みタイミング
-#define		CALC_RESULT_WR_CYC			30			// 30秒
-//#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
+//#define		CALC_RESULT_WR_CYC			30			// 30秒
+#define		CALC_RESULT_WR_CYC			1			// 3秒[デバッグ用短縮版]
 
 
 
@@ -420,6 +420,8 @@ typedef struct{
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ
 	UB pow_sw_last;							// 電源ボタン状態(前回)
 	
+	UH data_end_timeout;		// VUART_CMD_DATA_ENDの応答タイムアウト
+	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
 	UW sec10_cnt;			//10秒カウント
@@ -608,6 +610,9 @@ typedef struct{
 // フォトセンサ
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
 #define PHOTO_SENSOR_REMOVE_TIMER		180		// 10秒毎なので 6 * 30 = 180 (30分)
+
+// データ取得完了通知タイムアウト
+#define DATA_END_TIME_OUT				5
 
 /******************/
 /*  外部参照宣言  */

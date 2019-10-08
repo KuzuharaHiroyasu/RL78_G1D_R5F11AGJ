@@ -75,11 +75,14 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
 STATIC SYSTEM_MODE evt_sensing( int evt);
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
 STATIC SYSTEM_MODE evt_bat_check( int evt);
+#if 0
 STATIC SYSTEM_MODE evt_send_clear( int evt);
+#endif
 STATIC SYSTEM_MODE evt_get( int evt);
 STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC SYSTEM_MODE evt_remove( int evt);
+STATIC SYSTEM_MODE evt_time_out( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 STATIC void eep_part_erase( void );
@@ -216,6 +219,10 @@ void codeptr app_evt_usr_2(void)
 	}
 	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
+		if( SYSTEM_MODE_GET == s_unit.system_mode ){
+			// データ取得モード時にタイマーアップ
+			s_unit.data_end_timeout++;
+		}
 		return;
 	}
 	
@@ -1460,8 +1467,11 @@ STATIC void user_main_mode_get(void)
 			user_main_mode_get_frame_before();
 		}
 	}else if( 5 == s_unit.get_mode_seq ){
-		tx[0] = VUART_CMD_DATA_END;				// END
-		main_vuart_send( &tx[0], 1 );
+//		tx[0] = VUART_CMD_DATA_END;				// END
+//		main_vuart_send( &tx[0], 1 );
+		
+		// タイムアウトタイマー初期化
+		s_unit.data_end_timeout = 0;
 		
 		#if FUNC_DEBUG_FIN_NON == OFF
 			s_unit.get_mode_seq = 6;
@@ -1470,7 +1480,11 @@ STATIC void user_main_mode_get(void)
 			s_unit.get_mode_seq = 7;
 		#endif
 	}else if( 6 == s_unit.get_mode_seq ){
-		// RD8001暫定：影舞19:完了通知待ち　※タイムアウト必要？
+		if(s_unit.data_end_timeout >= DATA_END_TIME_OUT)
+		{
+			// タイムアウト
+			evt_act( EVENT_TIME_OUT );
+		}
 	}else{
 		user_main_mode_get_after();
 	}
@@ -1760,6 +1774,7 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 	return s_unit.system_mode;
 }
 
+#if 0
 STATIC SYSTEM_MODE evt_send_clear( int evt)
 {
 	s_ds.vuart.input.send_status = OFF;
@@ -1767,6 +1782,7 @@ STATIC SYSTEM_MODE evt_send_clear( int evt)
 	set_led( LED_PATT_YELLOW_BLINK );
 	return s_unit.system_mode;
 }
+#endif
 
 /************************************************************************/
 /* 関数     : evt_get													*/
@@ -1830,12 +1846,12 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 
 /************************************************************************/
 /* 関数     : evt_remove												*/
-/* 関数名   : イベント(取り外れタイムアウト)							*/
+/* 関数名   : イベント(未装着検知)										*/
 /* 引数     : evt	イベント番号										*/
 /* 戻り値   : システムモード											*/
 /* 変更履歴 : 2018.09.24  OneA 葛原 初版作成							*/
 /************************************************************************/
-/* 機能 : イベント(取り外れタイムアウト)								*/
+/* 機能 : イベント(未装着検知)											*/
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
@@ -1853,6 +1869,23 @@ STATIC SYSTEM_MODE evt_remove( int evt)
 	return system_mode;
 }
 
+/************************************************************************/
+/* 関数     : evt_time_out												*/
+/* 関数名   : イベント(タイムアウト)									*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2018.10.08  OneA 葛原 初版作成							*/
+/************************************************************************/
+/* 機能 : イベント(タイムアウト)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_time_out( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	return system_mode;
+}
 
 /************************************************************************/
 /* 関数     : main_mode_chg												*/
