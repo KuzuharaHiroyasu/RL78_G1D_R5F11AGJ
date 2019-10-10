@@ -124,6 +124,7 @@ STATIC T_UNIT_SAVE s_unit_save;
 STATIC DS s_ds;
 
 static bool vib_flg = false;
+static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
@@ -589,7 +590,12 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
-		set_led( LED_PATT_GREEN_BLINK_SENSING );
+		if( bat_check_flg != true )
+		{
+			set_led( LED_PATT_GREEN_BLINK_SENSING );
+		} else {
+			bat_check_flg = false;
+		}
 	}
 
 	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
@@ -1782,6 +1788,7 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 	} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
 		set_led( LED_PATT_GREEN_BLINK );
 	}
+	bat_check_flg = true;
 	return s_unit.system_mode;
 }
 
