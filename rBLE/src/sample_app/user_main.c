@@ -32,7 +32,7 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 #if FUNC_DEBUG_LOG != ON
-static void set_yokusei_cnt_time(UB yokusei_max_time);
+static void set_suppress_cnt_time(UB suppress_max_time);
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -128,8 +128,8 @@ static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
-static UH yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
-static UB yokusei_max_cnt_over_flg = OFF;
+static UH suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
 #else
 static UB sw_on_flg = OFF;
@@ -1110,7 +1110,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.kokyu_cnt = 0;
 	s_unit.ibiki_cnt = 0;
 	
-	s_unit.yokusei_cnt_time_10sec = 0;
+	s_unit.suppress_cont_time_cnt = 0;
 	s_unit.sec10_cnt = 0;
 	s_unit.sec30_cnt = 0;
 	s_unit.sec600_cnt = 0;
@@ -2481,8 +2481,8 @@ void main_vuart_rcv_device_set( void )
 	}else{
 		s_unit.alarm.info.dat.act_mode = s_ds.vuart.input.rcv_data[1];
 		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[2];
-		s_unit.alarm.info.dat.yokusei_str = s_ds.vuart.input.rcv_data[3];
-		s_unit.alarm.info.dat.yokusei_max_time = s_ds.vuart.input.rcv_data[4];
+		s_unit.alarm.info.dat.suppress_str = s_ds.vuart.input.rcv_data[3];
+		s_unit.alarm.info.dat.suppress_max_time = s_ds.vuart.input.rcv_data[4];
 		
 		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
 	}
@@ -2499,9 +2499,9 @@ void main_vuart_rcv_device_set( void )
 		// いびき感度設定
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 		//抑制強度設定
-		vib_str = s_unit.alarm.info.dat.yokusei_str;
+		vib_str = s_unit.alarm.info.dat.suppress_str;
 		//抑制動作最大継続時間
-		set_yokusei_cnt_time(s_unit.alarm.info.dat.yokusei_max_time);
+		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 #endif
 	}
 }
@@ -2690,26 +2690,26 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	newstate = calc_snore_get();
 	
 	
-	if(yokusei_max_cnt_over_flg == ON)
+	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
-		s_unit.cnt_overtime_10sec++;
-		if( YOKUSEI_INTERVAL_CNT <= s_unit.cnt_overtime_10sec )
+		s_unit.suppress_max_time_interval_cnt++;
+		if( YOKUSEI_INTERVAL_CNT <= s_unit.suppress_max_time_interval_cnt )
 		{// 抑制動作最大時間オーバー時のインターバル満了
-			yokusei_max_cnt_over_flg = OFF;
-			s_unit.cnt_overtime_10sec = 0;
-			s_unit.yokusei_cnt_time_10sec = 0;
+			suppress_max_cnt_over_flg = OFF;
+			s_unit.suppress_max_time_interval_cnt = 0;
+			s_unit.suppress_cont_time_cnt = 0;
 		}
 	}
 	
 	bit_shift = s_unit.phase_ibiki * 2;
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		s_unit.yokusei_cnt_time_10sec++;
+		s_unit.suppress_cont_time_cnt++;
 		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでない
-			if(s_unit.yokusei_cnt_time_10sec <= yokusei_max_cnt)
+			if(s_unit.suppress_cont_time_cnt <= suppress_max_cnt)
 			{//抑制動作最大時間以下
-				if(yokusei_max_cnt_over_flg == OFF)
+				if(suppress_max_cnt_over_flg == OFF)
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
 					{// 抑制開始時間経過（センシング開始から20分)
@@ -2718,12 +2718,12 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				}
 			} else {
 				//抑制動作最大時間オーバー時にフラグON
-				yokusei_max_cnt_over_flg = ON;
+				suppress_max_cnt_over_flg = ON;
 			}
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
-		s_unit.yokusei_cnt_time_10sec = 0;	// 初期化
+		s_unit.suppress_cont_time_cnt = 0;	// 初期化
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
@@ -3233,9 +3233,9 @@ void main_set_battery(void)
 
 #if FUNC_DEBUG_LOG != ON
 /************************************************************************/
-/* 関数     : set_yokusei_cnt_time										*/
+/* 関数     : set_suppress_cnt_time										*/
 /* 関数名   : 抑制最大連続時間設定										*/
-/* 引数     : yokusei_max_time											*/
+/* 引数     : suppress_max_time											*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2019.07.26 oneA 葛原 弘安	初版作成						*/
 /************************************************************************/
@@ -3243,21 +3243,21 @@ void main_set_battery(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-static void set_yokusei_cnt_time(UB yokusei_max_time)
+static void set_suppress_cnt_time(UB suppress_max_time)
 {
-	switch(yokusei_max_time)
+	switch(suppress_max_time)
 	{
 	case SET_MAX_YOKUSEI_CONT_5_MIN:
-		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_5_MIN_CNT;
+		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_5_MIN_CNT;
 		break;
 	case SET_MAX_YOKUSEI_CONT_10_MIN:
-		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 		break;
 	case SET_MAX_YOKUSEI_CONT_NON:
-		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_NON_CNT;
+		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_NON_CNT;
 		break;
 	default:
-		yokusei_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
 		break;
 	}
 }

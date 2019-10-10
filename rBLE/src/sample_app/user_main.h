@@ -311,8 +311,8 @@ typedef struct{
 		struct{
 			UB	act_mode;		// 動作モード
 			UB	ibiki_sens;		// いびき感度
-			UB	yokusei_str;	// 抑制強度
-			UB	yokusei_max_time;	// 抑制動作最大継続時間
+			UB	suppress_str;	// 抑制強度
+			UB	suppress_max_time;	// 抑制動作最大継続時間
 		}dat;
 	}info;
 }ALARM;
@@ -415,9 +415,9 @@ typedef struct{
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	UW tick_led_20ms_sec;
-	UW yokusei_cnt_time_10sec;	// 抑制継続時間用カウント
-	UW cnt_overtime_10sec;		// 抑制最大時間のインターバルカウント
-	UW suppress_start_cnt;		// 抑制開始カウント
+	UW suppress_cont_time_cnt;				// 抑制継続時間用カウント
+	UW suppress_max_time_interval_cnt;		// 抑制最大時間のインターバルカウント
+	UW suppress_start_cnt;					// 抑制開始カウント
 
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ
