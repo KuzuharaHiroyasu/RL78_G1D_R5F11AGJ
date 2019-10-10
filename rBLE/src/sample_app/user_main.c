@@ -588,6 +588,8 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	
 	// データフルで演算呼出
 	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
+		s_unit.suppress_start_cnt++;
+		
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 		if( bat_check_flg != true )
@@ -1098,6 +1100,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.photosens_remove_cnt = 0;
 	s_unit.ibiki_detect_cnt_decided = 0;
 	s_unit.mukokyu_detect_cnt_decided = 0;
+	s_unit.suppress_start_cnt = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
@@ -2571,7 +2574,10 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode != ACT_MODE_MONITOR)
 		{//モニタリングモードでないならバイブレーション動作
-//			set_vib(set_vib_mode(vib_str));
+			if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
+			{// 抑制開始時間経過（センシング開始から20分)
+//				set_vib(set_vib_mode(vib_str));
+			}
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
@@ -2705,7 +2711,10 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 			{//抑制動作最大時間以下
 				if(yokusei_max_cnt_over_flg == OFF)
 				{//抑制動作最大時間オーバー時以外
-					set_vib(set_vib_mode(vib_str));
+					if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
+					{// 抑制開始時間経過（センシング開始から20分)
+						set_vib(set_vib_mode(vib_str));
+					}
 				}
 			} else {
 				//抑制動作最大時間オーバー時にフラグON

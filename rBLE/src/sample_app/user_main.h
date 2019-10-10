@@ -417,7 +417,8 @@ typedef struct{
 	UW tick_led_20ms_sec;
 	UW yokusei_cnt_time_10sec;	// 抑制継続時間用カウント
 	UW cnt_overtime_10sec;		// 抑制最大時間のインターバルカウント
-	
+	UW suppress_start_cnt;		// 抑制開始カウント
+
 	UW last_time_battery_level_min;			// 電池残量低下時間[10ms]
 	UW sw_time_cnt;							// 電源SW押下時間カウンタ
 	UB pow_sw_last;							// 電源ボタン状態(前回)
@@ -614,6 +615,9 @@ typedef struct{
 // フォトセンサ
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
 #define PHOTO_SENSOR_REMOVE_CNT			180		// 10秒毎なので 6 * 30 = 180 (30分)
+
+// 抑制開始カウント
+#define SUPPRESS_START_CNT				120		// センシング開始20分間は抑制しない 20min = 1200sec = 10 × 120
 
 // データ取得完了通知タイムアウト
 #define DATA_END_TIME_OUT				5
