@@ -19,7 +19,7 @@
 #define APNEA_ERROR		2	// 完全無呼吸
 #define APNEA_NONE		3	// 判定エラー
 
-#define APNEA_JUDGE_CNT 1	// 無呼吸判定カウント
+#define APNEA_JUDGE_CNT 0	// 無呼吸判定カウント
 
 /************************************************************/
 /* 						型定義								*/
