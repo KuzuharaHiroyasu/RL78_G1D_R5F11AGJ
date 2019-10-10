@@ -128,7 +128,7 @@ static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_NORMAL;
 static UB vib_str = VIB_MODE_DURING;
-static UH suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
 #else
@@ -2693,7 +2693,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
 		s_unit.suppress_max_time_interval_cnt++;
-		if( YOKUSEI_INTERVAL_CNT <= s_unit.suppress_max_time_interval_cnt )
+		if( SUPPRESS_INTERVAL_CNT <= s_unit.suppress_max_time_interval_cnt )
 		{// 抑制動作最大時間オーバー時のインターバル満了
 			suppress_max_cnt_over_flg = OFF;
 			s_unit.suppress_max_time_interval_cnt = 0;
@@ -3247,17 +3247,17 @@ static void set_suppress_cnt_time(UB suppress_max_time)
 {
 	switch(suppress_max_time)
 	{
-	case SET_MAX_YOKUSEI_CONT_5_MIN:
-		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_5_MIN_CNT;
+	case SET_MAX_SUPPRESS_CONT_5_MIN:
+		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_5_MIN_CNT;
 		break;
-	case SET_MAX_YOKUSEI_CONT_10_MIN:
-		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+	case SET_MAX_SUPPRESS_CONT_10_MIN:
+		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 		break;
-	case SET_MAX_YOKUSEI_CONT_NON:
-		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_NON_CNT;
+	case SET_MAX_SUPPRESS_CONT_NON:
+		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_NON_CNT;
 		break;
 	default:
-		suppress_max_cnt = MAX_YOKUSEI_CONT_TIME_10_MIN_CNT;
+		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 		break;
 	}
 }

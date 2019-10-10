@@ -146,10 +146,10 @@ typedef enum{
 #define ACT_MODE_NORMAL						0	// 通常動作モード
 #define ACT_MODE_MONITOR					1	// モニタリングモード
 
-// 抑制動作最大継続時間
-#define SET_MAX_YOKUSEI_CONT_5_MIN			0	// 5分
-#define SET_MAX_YOKUSEI_CONT_10_MIN			1	// 10分
-#define SET_MAX_YOKUSEI_CONT_NON			2	// 設定しない
+// 抑制最大連続時間
+#define SET_MAX_SUPPRESS_CONT_5_MIN			0	// 5分
+#define SET_MAX_SUPPRESS_CONT_10_MIN		1	// 10分
+#define SET_MAX_SUPPRESS_CONT_NON			2	// 設定しない
 
 // プログラムシーケンス
 typedef enum{
@@ -181,10 +181,11 @@ typedef enum{
 #define		SENSING_CNT_MIN							(40)		/* センシング回数の下限(20分) */
 //#define		SENSING_CNT_MIN							(1)		/* センシング回数の下限(30秒)[デバッグ用短縮版] */
 
-#define		MAX_YOKUSEI_CONT_TIME_5_MIN_CNT		30		// 10秒毎 1分(6) * 5 = 30回 = 5分
-#define		MAX_YOKUSEI_CONT_TIME_10_MIN_CNT	60		// 10秒毎 1分(6) * 10 = 60回 = 10分
-#define		MAX_YOKUSEI_CONT_TIME_NON_CNT		4320	// 10秒毎 1分(6) * 60 * 12 = 4320回 = 720分 = 12時間
-#define		YOKUSEI_INTERVAL_CNT				180		// 10秒毎 1分(6) * 30 = 180回 = 30分
+// 抑制最大連続時間
+#define		MAX_SUPPRESS_CONT_TIME_5_MIN_CNT	30		// 10秒毎 1分(6) * 5 = 30回 = 5分
+#define		MAX_SUPPRESS_CONT_TIME_10_MIN_CNT	60		// 10秒毎 1分(6) * 10 = 60回 = 10分
+#define		MAX_SUPPRESS_CONT_TIME_NON_CNT		4320	// 10秒毎 1分(6) * 60 * 12 = 4320回 = 720分 = 12時間
+#define		SUPPRESS_INTERVAL_CNT				180		// 10秒毎 1分(6) * 30 = 180回 = 30分
 
 // 測定個数
 #define		MEAS_KOKYU_CNT_MAX			200
