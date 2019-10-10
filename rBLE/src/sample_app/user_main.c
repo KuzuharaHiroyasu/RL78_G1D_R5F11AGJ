@@ -441,7 +441,7 @@ void user_main_timer_cyc( void )
 			}
 			
 			// フォトセンサー
-			if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_TIMER)
+			if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_CNT)
 			{
 				// 30分間外れていた（閾値を下回っている）
 				evt_act(EVENT_REMOVE_TIMEOUT);

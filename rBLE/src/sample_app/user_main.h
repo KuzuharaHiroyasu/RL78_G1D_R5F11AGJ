@@ -613,7 +613,7 @@ typedef struct{
 
 // フォトセンサ
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
-#define PHOTO_SENSOR_REMOVE_TIMER		180		// 10秒毎なので 6 * 30 = 180 (30分)
+#define PHOTO_SENSOR_REMOVE_CNT			180		// 10秒毎なので 6 * 30 = 180 (30分)
 
 // データ取得完了通知タイムアウト
 #define DATA_END_TIME_OUT				5
