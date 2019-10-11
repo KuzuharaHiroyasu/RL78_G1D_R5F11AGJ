@@ -83,7 +83,7 @@
  ****************************************************************************************
  */
 /* Public Device Address for test and development use */
-#define CFG_TEST_BDADDR     {{0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12}}
+#define CFG_TEST_BDADDR     {{0xba, 0x9a, 0x78, 0x56, 0x34, 0x12}}
 
 #endif /* _ARCH_CONFIG_H_ */
 
