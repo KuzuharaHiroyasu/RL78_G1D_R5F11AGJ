@@ -40,6 +40,8 @@ extern	H		thresholds_over_num[DATA_SIZE];
 //extern	H		temp_int_buf1[DATA_SIZE];
 //extern	H		temp_int_buf2[DATA_SIZE];
 
+extern UB cont_apnea_point;
+
 #endif	/*_CALC_DATA_H_*/
 /************************************************************/
 /* END OF TEXT												*/

@@ -107,6 +107,8 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	int loop=0;
 	int apnea=0;
 	
+	apnea_ = APNEA_NORMAL;
+	
 	// (41) ... égópÇµÇƒÇ¢Ç»Ç¢ÇΩÇﬂè»ó™
 	// (42)
 	// (43) = prms
@@ -128,31 +130,41 @@ void calc_apnea(const double* pData, int DSize, int Param1, double Param2, doubl
 	for(ii=0;ii<datasize;++ii){
 		if(prms[ii] >= Param3){
 			ppoint[ii] = 1;
+			cont_apnea_point = 0;
 		}else{
 			ppoint[ii] = 0;
+			cont_apnea_point++;
+			if(cont_apnea_point >= APNEA_CONT_POINT)
+			{
+				apnea_ = APNEA_ERROR;
+				cont_apnea_point = 0;
+			}
 		}
 	}
 	
 	// (46)
-	if(datasize == 0){
-		apnea_ = APNEA_NORMAL;
-	}
-	else if(datasize > 9){
-		apnea_ = APNEA_ERROR;
-		loop = datasize - 9;
-		for(ii = 0; ii < loop; ++ii){
-			apnea = 0;
-			for(jj = 0; jj < datasize; ++jj){
-				apnea += ppoint[ii + jj];
-				if(APNEA_JUDGE_CNT < apnea){
-					// í èÌåƒãzÇ∆îªífÇµÇΩéûì_Ç≈î≤ÇØÇÈ
-					apnea_ = APNEA_NORMAL;
-					break;
+	if(apnea_ != APNEA_ERROR)
+	{
+		if(datasize == 0){
+			apnea_ = APNEA_NORMAL;
+		}
+		else if(datasize > 9){
+			apnea_ = APNEA_ERROR;
+			loop = datasize - 9;
+			for(ii = 0; ii < loop; ++ii){
+				apnea = 0;
+				for(jj = 0; jj < datasize; ++jj){
+					apnea += ppoint[ii + jj];
+					if(APNEA_JUDGE_CNT < apnea){
+						// í èÌåƒãzÇ∆îªífÇµÇΩéûì_Ç≈î≤ÇØÇÈ
+						apnea_ = APNEA_NORMAL;
+						break;
+					}
 				}
 			}
+		}else{
+			apnea_ = APNEA_NORMAL;
 		}
-	}else{
-		apnea_ = APNEA_NORMAL;
 	}
 	
 /* //í·åƒãzÇ‡ñ≥åƒãzÇ∆îªíËÇ∑ÇÈÇΩÇﬂ

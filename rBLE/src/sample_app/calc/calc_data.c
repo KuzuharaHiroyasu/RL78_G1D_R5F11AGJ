@@ -26,6 +26,8 @@ H		thresholds_over_num[DATA_SIZE];
 //H		temp_int_buf1[BUF_SIZE];
 //H		temp_int_buf2[BUF_SIZE];
 
+UB cont_apnea_point;
+
 /************************************************************************/
 /* 関数     : calc_data_init											*/
 /* 関数名   : 演算用データ初期化										*/
@@ -45,6 +47,8 @@ void calc_data_init(void)
 	memset( ppoint_temp, 0, sizeof(ppoint_temp));
 	memset( data_movave_temp_, 0, sizeof(data_movave_temp_));
 	memset( thresholds_over_num, 0, sizeof(thresholds_over_num));
+	
+	cont_apnea_point = 0;
 }
 /*==============================================================================*/
 /* EOF */

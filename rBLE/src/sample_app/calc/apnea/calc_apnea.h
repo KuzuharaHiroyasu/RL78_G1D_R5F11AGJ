@@ -19,7 +19,8 @@
 #define APNEA_ERROR		2	// 完全無呼吸
 #define APNEA_NONE		3	// 判定エラー
 
-#define APNEA_JUDGE_CNT 0	// 無呼吸判定カウント
+#define APNEA_JUDGE_CNT 	0	// 無呼吸判定カウント
+#define APNEA_CONT_POINT	10	// APNEA_PARAM_BIN_THREを超えていない連続データ数
 
 /************************************************************/
 /* 						型定義								*/
