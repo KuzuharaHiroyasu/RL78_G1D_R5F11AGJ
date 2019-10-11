@@ -29,6 +29,8 @@
 /************************************************************/
 /*					ŠO•”QÆéŒ¾							*/
 /************************************************************/
+extern void calc_data_init(void);
+
 extern	double	data_apnea_temp_[DATA_SIZE];
 extern	double	prms_temp[DATA_SIZE_PRMS];
 extern	double	data_movave_temp_[DATA_SIZE];

@@ -1765,6 +1765,8 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 	else if( bat == ON ){
 		// 充電中ならセンシングに移行しない
 		system_mode = SYSTEM_MODE_IDLE_COM;
+	} else {
+		calc_data_init();
 	}
 	
 	return system_mode;
