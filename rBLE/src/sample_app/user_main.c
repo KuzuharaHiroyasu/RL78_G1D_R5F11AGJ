@@ -2871,7 +2871,7 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 			s_unit_save.ibiki_detect_cnt_decided	= s_unit.ibiki_detect_cnt_decided;
 			s_unit_save.mukokyu_detect_cnt_decided	= s_unit.mukokyu_detect_cnt_decided;
 		}
-		s_unit.photosens_remove_cnt++;
+//		s_unit.photosens_remove_cnt++;
 	}else{
 		s_unit.photosens_remove_cnt = 0; // “rØ‚ê‚½‚çƒŠƒZƒbƒg
 	}
