@@ -203,7 +203,8 @@ typedef enum{
 #define		CALC_RESULT_WR_CYC			30			// 30秒
 //#define		CALC_RESULT_WR_CYC			3			// 3秒[デバッグ用短縮版]
 
-
+// 加速度、フォトセンサ書き込みタイミング
+#define		CALC_ACL_PHOTO_WR_CYC		10			// 10秒
 
 // 秒タイマー ※+1した値を設定 // RD8001暫定：本来は経過時間[10ms]を使いたい
 #define		TIMER_SEC_PRG_READY_WAIT	( 1 + 1 )

@@ -147,6 +147,7 @@ int n = 0;
 int m = 0;
 int p = 0;
 
+int test_cnt = 0;
 /********************/
 /*     定数定義     */
 /********************/
@@ -237,10 +238,24 @@ void codeptr app_evt_usr_2(void)
 		return;
 	}
 	
+	// フォトセンサー
+	if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_CNT)
+	{
+		// 30分間外れていた（閾値を下回っている）
+		evt_act(EVENT_REMOVE_TIMEOUT);
+	}
+	
+	// センシング時間上限検知
+	if( s_unit.calc_cnt >= EEP_CALC_DATA_NUM )
+	{
+		// 12時間を超えたなら待機モードへ
+		evt_act( EVENT_COMPLETE );
+	}
+
 	// 加速度センサ、フォトセンサ値演算(10秒周期)
 	s_unit.sec10_cnt++;
-	if(s_unit.sec10_cnt >= 10){
-		s_unit.sec10_cnt -= 10;
+	if(s_unit.sec10_cnt >= CALC_ACL_PHOTO_WR_CYC){
+		s_unit.sec10_cnt -= CALC_ACL_PHOTO_WR_CYC;
 
 		// 加速度演算
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_ACL, USER_MAIN_ID, USER_MAIN_ID, 0 );
@@ -255,7 +270,7 @@ void codeptr app_evt_usr_2(void)
 	s_unit.sec600_cnt++;
 	if(s_unit.sec600_cnt >= BAT_LEVEL_GET_CYC)
 	{
-		s_unit.sec600_cnt = 0;
+		s_unit.sec600_cnt -= BAT_LEVEL_GET_CYC;
 		ke_msg = ke_msg_alloc( USER_MAIN_CYC_BATTERY, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
@@ -264,18 +279,20 @@ void codeptr app_evt_usr_2(void)
 	s_unit.sec30_cnt++;
 	if( s_unit.sec30_cnt >= CALC_RESULT_WR_CYC ){		// 30秒
 		if(apnea_data_max == true && snore_data_max == true && snore_data_max == true && acl_data_max == true && photo_data_max == true)
-			{ // 無呼吸判定、いびき判定、首の向き、フォトセンサの値が３つ(0～10、10～20、20～30)入っていれば保存
-				s_unit.sec30_cnt -= CALC_RESULT_WR_CYC;
-				
-				ke_msg = ke_msg_alloc( USER_MAIN_CYC_CALC_RESULT, USER_MAIN_ID, USER_MAIN_ID, 0 );
-				ke_msg_send(ke_msg);
-				
-				// フラグを戻す
-				apnea_data_max = false;
-				snore_data_max = false;
-				acl_data_max = false;
-				photo_data_max = false;
-			}
+		{ // 無呼吸判定、いびき判定、首の向き、フォトセンサの値が３つ(0～10、10～20、20～30)入っていれば保存
+			s_unit.sec30_cnt -= CALC_RESULT_WR_CYC;
+			
+			ke_msg = ke_msg_alloc( USER_MAIN_CYC_CALC_RESULT, USER_MAIN_ID, USER_MAIN_ID, 0 );
+			ke_msg_send(ke_msg);
+
+			// フラグを戻す
+			apnea_data_max = false;
+			snore_data_max = false;
+			acl_data_max = false;
+			photo_data_max = false;
+		}else{
+			NO_OPERATION_BREAK_POINT();
+		}
 	}
 	
 #endif
@@ -374,6 +391,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.tick_10ms_new++;
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
+	test_cnt++;
 }
 
 
@@ -457,33 +475,12 @@ void user_main_timer_cyc( void )
 				}
 			}
 			
-			// フォトセンサー
-			if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_CNT)
-			{
-				// 30分間外れていた（閾値を下回っている）
-				evt_act(EVENT_REMOVE_TIMEOUT);
-			}
-			
 			//充電検知
 			bat = drv_i_port_bat_chg_detect();
 			if(bat == ON)
 			{
 				//充電中なら待機モードへ
 				evt_act( EVENT_CHG_PORT_ON );
-			}
-			
-			// 電池残量検知
-			if(s_unit.battery_sts == BAT_LEVEL_STS_MIN)
-			{
-				// 電池残量なしなら待機モードへ
-				evt_act( EVENT_DENCH_LOW );
-			}
-			
-			// センシング時間上限検知
-			if( s_unit.calc_cnt >= EEP_CALC_DATA_NUM || n == 1815)
-			{
-				// 12時間を超えたなら待機モードへ
-				evt_act( EVENT_COMPLETE );
 			}
 #endif
 			s_unit.tick_10ms_new = 0;
@@ -493,7 +490,7 @@ void user_main_timer_cyc( void )
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
 
-		s_unit.tick_10ms = 0;
+		s_unit.tick_10ms -= PERIOD_20MSEC;
 	}
 	// 1秒周期 ※遅れの蓄積は厳禁
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
@@ -576,6 +573,13 @@ static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_ta
 	// 電池残量取得(10分周期)
 	main_set_battery();
 	
+	// 電池残量検知
+	if(s_unit.battery_sts == BAT_LEVEL_STS_MIN)
+	{
+		// 電池残量なしなら待機モードへ
+		evt_act( EVENT_DENCH_LOW );
+	}
+	
 	return (KE_MSG_CONSUMED);
 }
 
@@ -620,6 +624,7 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
+		test_cnt = 0;
 	}
 	
 	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
@@ -1132,13 +1137,15 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.sec30_cnt = 0;
 	s_unit.sec600_cnt = 0;
 	
-	s_unit.sensing_flg = ON;
-
 	apnea_data_max = false;
 	snore_data_max = false;
 	acl_data_max = false;
 	photo_data_max = false;
-
+	
+	test_cnt = 0;
+	
+	s_unit.sensing_flg = ON;
+	
 	// センシング移行時にLEDとバイブ動作
 	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
 	{
@@ -2589,7 +2596,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
 	
-#if 1 // テスト用データ
+#if 0 // テスト用データ
 	static const UH testdata[1815] = {
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -2636,8 +2643,8 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	s_unit.kokyu_cnt = 0;
-//	newstate = get_state();
-	newstate = testdata[m];
+	newstate = get_state();
+//	newstate = testdata[m];
 	
 	bit_shift = s_unit.phase_kokyu * 2;
 	if(newstate == APNEA_ERROR){
@@ -2724,7 +2731,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
 
-#if 1 // テスト用データ
+#if 0 // テスト用データ
 	static const UH testdata[1815] = {
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,1,0,1,0,0,0,1,1,1,0,1,0,0,0,1,0,0,
@@ -2779,8 +2786,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
-//	newstate = calc_snore_get();
-	newstate = testdata[n];
+	newstate = calc_snore_get();
+//	newstate = testdata[n];
 	
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
@@ -2805,7 +2812,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
 					{// 抑制開始時間経過（センシング開始から20分)
-//						set_vib(set_vib_mode(vib_str));
+						set_vib(set_vib_mode(vib_str));
 					}
 				}
 			} else {
