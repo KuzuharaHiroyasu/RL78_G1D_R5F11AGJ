@@ -845,6 +845,7 @@ void user_system_init( void )
 	R_INTC_Create();
 	R_IT_Create();
 	R_RTC_Create();
+	R_WDT_Create();
 }
 
 /************************************************************************/

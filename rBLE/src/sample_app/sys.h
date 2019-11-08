@@ -194,6 +194,7 @@
 #define		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 #endif
 
+#define		wdt_refresh()	{		R_WDT_Restart();}
 
 /************************************************************/
 /* 型定義													*/
