@@ -2522,6 +2522,9 @@ void main_vuart_rcv_device_set( void )
 		vib_str = s_unit.alarm.info.dat.suppress_str;
 		//抑制動作最大継続時間
 		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
+		
+		//バイブ動作（バイブ確認のため[保存]タップ時に暫定で動作させる）
+		set_vib(set_vib_mode(vib_str));
 #endif
 	}
 }

@@ -10,17 +10,25 @@
 #include	"vibration.h"
 
 // グローバル変数
-B			vib_orbit = 0;
+B			vib_orbit_value = 0;							// バイブ周回値
+B			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;	// バイブ周回設定値
+
 VIB_MODE	vib_mode = VIB_MODE_INITIAL;
+VIB_MODE	vib_last_mode = VIB_MODE_INITIAL;
 
 // プロトタイプ宣言
+STATIC void set_vib_orbit(VIB_MODE mode);
 STATIC void vib_on(void);
 STATIC void vib_off(void);
 STATIC void vib_mode_weak(UH vib_timer);
 STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
+STATIC void vib_mode_during_three(UH vib_timer);
+STATIC void vib_mode_strength_three(UH vib_timer);
+
 STATIC void vib_mode_standby(UH vib_timer);
 STATIC void vib_mode_sensing(UH vib_timer);
+STATIC void vib_interval(UH vib_timer);
 
 /************************************************************************/
 /* 関数     : vib_start													*/
@@ -35,7 +43,7 @@ STATIC void vib_mode_sensing(UH vib_timer);
 /************************************************************************/
 void vib_start(UH vib_timer)
 { // メインループ処理内でコール
-	if(vib_orbit < VIB_ORBIT)
+	if(vib_orbit_value < set_vib_orbit_value)
 	{
 		switch (vib_mode)
 		{
@@ -51,8 +59,14 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_DURING: // 中
 				vib_mode_during(vib_timer);
 				break;
+			case VIB_MODE_DURING_THREE: // 中 × 3
+				vib_mode_during_three(vib_timer);
+				break;
 			case VIB_MODE_STRENGTH: // 強
 				vib_mode_strength(vib_timer);
+				break;
+			case VIB_MODE_STRENGTH_THREE: // 強 × 3
+				vib_mode_strength_three(vib_timer);
 				break;
 			case VIB_MODE_STANDBY: // 待機モード移行時
 				vib_mode_standby(vib_timer);
@@ -60,12 +74,16 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_SENSING: // センシングモード移行時
 				vib_mode_sensing(vib_timer);
 				break;
+			case VIB_MODE_INTERVAL: // バイブのセット間インターバル
+				vib_interval(vib_timer);
+				break;
 			default:
 				break;
 		}
 	}else if(vib_mode != VIB_MODE_INITIAL)
 	{
 		vib_mode = VIB_MODE_INITIAL;
+		vib_last_mode = VIB_MODE_INITIAL;
 		set_vib_flg( false );
 	}
 }
@@ -86,9 +104,12 @@ void set_vib(VIB_MODE mode)
 	// ON
 	// 10msecタイマーリセット
 	reset_vib_timer();
+
+	// 周回値設定
+	set_vib_orbit(mode);
 	
 	// 周回リセット
-	vib_orbit = 0;
+	vib_orbit_value = 0;
 	
 	// パターン
 	vib_mode = mode;
@@ -113,6 +134,7 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 	
 	switch(yokusei_str)
 	{
+/*
 		case 0: //弱
 			mode = VIB_MODE_WEAK;
 			break;
@@ -122,10 +144,47 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 		case 2: //強
 			mode = VIB_MODE_STRENGTH;
 			break;
+*/
+		// テスト対応
+		case 0: //中
+			mode = VIB_MODE_DURING;
+			break;
+		case 1: //中 × 3
+			mode = VIB_MODE_DURING_THREE;
+			break;
+		case 2: //強 × 3
+			mode = VIB_MODE_STRENGTH_THREE;
+			break;
+
 		default:
 			break;
 	}
 	return mode;
+}
+
+/************************************************************************/
+/* 関数     : set_vib_orbit												*/
+/* 関数名   : バイブレーションの周回設定								*/
+/* 引数     : mode:バイブパターン										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.11.12 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void set_vib_orbit(VIB_MODE mode)
+{
+	switch(mode)
+	{
+		case VIB_MODE_DURING_THREE:
+		case VIB_MODE_STRENGTH_THREE:
+			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
+			break;
+		default:
+			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;
+			break;
+	}
 }
 
 /************************************************************************/
@@ -181,7 +240,7 @@ STATIC void vib_mode_weak(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit += 1;
+		vib_orbit_value += 1;
 		reset_vib_timer();
 	} if( 5 <= vib_timer )
 	{
@@ -213,7 +272,7 @@ STATIC void vib_mode_during(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit += 1;
+		vib_orbit_value += 1;
 		reset_vib_timer();
 	} if( 13 <= vib_timer )
 	{
@@ -245,12 +304,88 @@ STATIC void vib_mode_strength(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit += 1;
+		vib_orbit_value += 1;
 		reset_vib_timer();
 	} if( 19 <= vib_timer )
 	{
 		VIB_ENA = 0;
 	} if( 17 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_mode_during_three										*/
+/* 関数名   : バイブレーション中×３制御								*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_mode_during_three(UH vib_timer)
+{
+	
+	
+	if(	20 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_DURING_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 11 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_mode_strength_three									*/
+/* 関数名   : バイブレーション強×３制御								*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_mode_strength_three(UH vib_timer)
+{
+	if(	30 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_STRENGTH_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 29 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 27 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -277,7 +412,7 @@ STATIC void vib_mode_standby(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit = 3;
+		vib_orbit_value = set_vib_orbit_value;
 		reset_vib_timer();
 	} else
 	{
@@ -303,7 +438,7 @@ STATIC void vib_mode_sensing(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit = 3;
+		vib_orbit_value = set_vib_orbit_value;
 		reset_vib_timer();
 	} else
 	{
@@ -311,3 +446,24 @@ STATIC void vib_mode_sensing(UH vib_timer)
 		VIB_ENA = 1;
 	}
 }
+
+/************************************************************************/
+/* 関数     : vib_interval												*/
+/* 関数名   : バイブのセット間インターバル								*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.11.12 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_interval(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_mode = vib_last_mode;	// バイブモードを戻す
+		reset_vib_timer();
+	}
+}
+
