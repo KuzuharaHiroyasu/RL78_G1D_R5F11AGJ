@@ -501,6 +501,7 @@ typedef enum{
 	VUART_CMD_TYPE_DATA_CALC,						// 機器データ
 	VUART_CMD_TYPE_DATA_FIN,						// データ取得完了通知
 	VUART_CMD_TYPE_DEVICE_SET,						// デバイス設定変更
+	VUART_CMD_TYPE_VIB_CONFIRM,						// バイブ動作確認
 	VUART_CMD_TYPE_MAX								// 最大値					
 }VUART_CMD_TYPE;
 
@@ -530,6 +531,7 @@ typedef struct{
 #define	VUART_CMD_VERSION		0xC3
 #define	VUART_CMD_DEVICE_INFO	0xC5
 #define	VUART_CMD_DEVICE_SET	0xC6
+#define	VUART_CMD_VIB_CONFIRM	0xC7
 #define	VUART_CMD_INVALID		0xFF	// コマンド無し特殊処理
 
 
@@ -552,6 +554,7 @@ typedef struct{
 #define	VUART_CMD_LEN_VERSION		1
 #define	VUART_CMD_LEN_DEVICE_INFO	1
 #define	VUART_CMD_LEN_DEVICE_SET	5
+#define	VUART_CMD_LEN_VIB_CONFIRM	2
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 

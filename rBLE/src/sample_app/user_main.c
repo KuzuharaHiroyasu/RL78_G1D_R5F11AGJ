@@ -97,6 +97,7 @@ void main_vuart_rcv_data_calc( void );
 void main_vuart_rcv_data_end( void );
 void main_vuart_rcv_date( void );
 void main_vuart_rcv_device_set( void );
+void main_vuart_rcv_vib_confirm( void );
 
 // ACL、フォト関連
 STATIC void main_acl_init(void);
@@ -2083,7 +2084,7 @@ STATIC void main_vuart_proc(void)
 #endif
 
 /************************************************************************/
-/* 関数     : ds_set_vuart_data											*/
+/* 関数     : main_vuart_send											*/
 /* 関数名   : VUART通信データセット										*/
 /* 引数     : VUART通信データ格納ポインタ								*/
 /*          : データ長													*/
@@ -2108,7 +2109,7 @@ STATIC void main_vuart_send( UB *p_data, UB len )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_set_mode									*/
+/* 関数     : main_vuart_set_mode										*/
 /* 関数名   : VUART通信データセット										*/
 /* 引数     : VUART通信データ格納ポインタ								*/
 /*          : データ長													*/
@@ -2522,9 +2523,42 @@ void main_vuart_rcv_device_set( void )
 		vib_str = s_unit.alarm.info.dat.suppress_str;
 		//抑制動作最大継続時間
 		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
-		
-		//バイブ動作（バイブ確認のため[保存]タップ時に暫定で動作させる）
-		set_vib(set_vib_mode(vib_str));
+#endif
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_rcv_vib_confirm								*/
+/* 関数名   : VUART受信(バイブ動作確認)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.11.18  oneA 葛原 弘安				初版作成		*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(バイブ動作確認)											*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_rcv_vib_confirm( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	UB vib_str_conf;
+	
+	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
+		result = VUART_DATA_RESULT_NG;
+	}else{
+		vib_str_conf = s_ds.vuart.input.rcv_data[1];
+	}
+	
+	tx[0] = VUART_CMD_TYPE_VIB_CONFIRM;
+	tx[1] = result;
+	main_vuart_send( &tx[0], 2 );
+	
+	if(result == VUART_DATA_RESULT_OK)
+	{
+#if FUNC_DEBUG_LOG != ON
+		set_vib(set_vib_mode(vib_str_conf));
 #endif
 	}
 }
