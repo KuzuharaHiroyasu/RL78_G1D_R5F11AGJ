@@ -127,7 +127,7 @@ STATIC DS s_ds;
 static bool vib_flg = false;
 static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
-static UB act_mode = ACT_MODE_NORMAL;
+static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_str = VIB_MODE_DURING;
 static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
@@ -2629,11 +2629,11 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	bit_shift = s_unit.phase_kokyu * 2;
 	if(newstate == APNEA_ERROR){
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
-		if(act_mode != ACT_MODE_MONITOR)
-		{//モニタリングモードでないならバイブレーション動作
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
+		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
 			{// 抑制開始時間経過（センシング開始から20分)
-//				set_vib(set_vib_mode(vib_str));
+				set_vib(set_vib_mode(vib_str));
 			}
 		}
 	}else{
@@ -2763,8 +2763,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 		s_unit.suppress_cont_time_cnt++;
-		if(act_mode != ACT_MODE_MONITOR)
-		{//モニタリングモードでない
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE || act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
+		{//抑制モード（いびき）か抑制モード（いびき + 無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_cont_time_cnt <= suppress_max_cnt)
 			{//抑制動作最大時間以下
 				if(suppress_max_cnt_over_flg == OFF)

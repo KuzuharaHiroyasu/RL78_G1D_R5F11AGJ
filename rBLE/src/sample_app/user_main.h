@@ -143,8 +143,10 @@ typedef enum{
 #define BODY_DIRECTION_BIT					2	// 使用bit数
 
 // 動作モード
-#define ACT_MODE_NORMAL						0	// 通常動作モード
-#define ACT_MODE_MONITOR					1	// モニタリングモード
+#define ACT_MODE_SUPPRESS_SNORE				0	// 抑制モード（いびき）
+#define ACT_MODE_SUPPRESS_SNORE_APNEA		1	// 抑制モード（いびき + 無呼吸）
+#define ACT_MODE_MONITOR					2	// モニタリングモード
+#define ACT_MODE_SUPPRESS_APNEA				3	// 抑制モード（無呼吸）
 
 // 抑制最大連続時間
 #define SET_MAX_SUPPRESS_CONT_5_MIN			0	// 5分
