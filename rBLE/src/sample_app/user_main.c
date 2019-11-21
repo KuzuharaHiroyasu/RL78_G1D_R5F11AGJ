@@ -2676,7 +2676,11 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	}else{
 		// 継続無呼吸検知の終了処理(最大値を更新)
 		if(s_unit.cont_mukokyu_detect_cnt_current > s_unit.cont_mukokyu_detect_cnt_max){
-			s_unit.cont_mukokyu_detect_cnt_max = s_unit.cont_mukokyu_detect_cnt_current;
+			// 5分未満は保存する（５分以上はアプリ側で[不明]状態とするため）(5分 = 30回)
+			if(s_unit.cont_mukokyu_detect_cnt_current < MUKOKYU_DETECT_CNT_MAX)
+			{
+				s_unit.cont_mukokyu_detect_cnt_max = s_unit.cont_mukokyu_detect_cnt_current;
+			}
 		}
 		s_unit.cont_mukokyu_detect_cnt_current = 0;
 		

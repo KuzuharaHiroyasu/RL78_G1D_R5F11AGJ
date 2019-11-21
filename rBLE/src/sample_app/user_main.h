@@ -200,6 +200,8 @@ typedef enum{
 
 #define		MEAS_SIZE_SENSOR_DATA		10
 
+// 最大無呼吸時間の上限検知数
+#define		MUKOKYU_DETECT_CNT_MAX		30
 
 // 演算結果書き込みタイミング
 #define		CALC_RESULT_WR_CYC			30			// 30秒
