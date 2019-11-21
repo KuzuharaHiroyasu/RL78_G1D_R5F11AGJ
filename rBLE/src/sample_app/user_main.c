@@ -1099,6 +1099,20 @@ STATIC void user_main_mode_sensing_before( void )
 	// 日時情報書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DATE;
 	eep_write( wr_adrs, (UB*)&s_unit.date, EEP_DATE_SIZE, ON );
+	
+	s_unit.device_set_info = 0;
+	// 動作モード保存
+	s_unit.device_set_info = s_unit.alarm.info.dat.act_mode;
+	// バイブレーションの強さ保存
+	s_unit.device_set_info |= s_unit.alarm.info.dat.suppress_str << 2;
+	// いびき検出感度保存
+	s_unit.device_set_info |= s_unit.alarm.info.dat.ibiki_sens << 4;
+	// 無呼吸検出感度保存
+	// 現在検出感度の設定なし
+	
+	// デバイス設定書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_INFO;
+	eep_write( wr_adrs, &s_unit.device_set_info, EEP_DEVICE_SET_INFO_SIZE, ON );
 
 	s_unit.calc_cnt = 0;
 	s_unit.ibiki_detect_cnt = 0;
@@ -1442,6 +1456,9 @@ STATIC void user_main_mode_get(void)
 		// 最高無呼吸時間読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MAX_MUKOKYU_TIME;
 		eep_read( rd_adrs, (UB*)&s_unit.max_mukokyu_sec, EEP_MAX_MUKOKYU_TIME_SIZE );
+		// デバイス設定情報読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_INFO;
+		eep_read( rd_adrs, &s_unit.device_set_info, EEP_DEVICE_SET_INFO_SIZE );
 		
 		s_unit.get_mode_seq = 2;
 	}else if( 2 == s_unit.get_mode_seq ){
@@ -1463,8 +1480,9 @@ STATIC void user_main_mode_get(void)
 		tx[15] = (( s_unit.mukokyu_time & 0xff00 ) >> 8 );
 		tx[16] =  ( s_unit.max_mukokyu_sec & 0x00ff );
 		tx[17] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
+		tx[18] = s_unit.device_set_info;
 		
-		main_vuart_send( &tx[0], 18 );
+		main_vuart_send( &tx[0], 19 );
 		s_unit.get_mode_seq = 3;
 	}else if( 3 == s_unit.get_mode_seq ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){

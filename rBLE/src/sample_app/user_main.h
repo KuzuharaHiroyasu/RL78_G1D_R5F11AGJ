@@ -380,6 +380,7 @@ typedef struct{
 	UH ibiki_time;			// いびき時間
 	UH mukokyu_time;		// 無呼吸時間
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
+	UB device_set_info;		// 測定時のデバイス設定
 	UH cont_mukokyu_detect_cnt_max;		// 継続無呼吸検知数(最大値保存用)
 	UH cont_mukokyu_detect_cnt_current;	// 継続無呼吸検知数(現在値)
 	
