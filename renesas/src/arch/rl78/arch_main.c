@@ -223,6 +223,8 @@ typedef void (* RESET_FUNC )( void );
 void arch_main_ent(void)
 {
    struct bd_addr public_addr;     /* Public Device Address */
+	uint8_t cali;
+	uint8_t get_cali;
 
     /* Disable parity error resets */
     RPECTL = 0x80;
@@ -285,6 +287,11 @@ void arch_main_ent(void)
     /* init dataflash driver */
     dataflash_init();
 
+	cali = 10;
+//	test_set_calibration(&cali);
+	
+	test_get_calibration(&get_cali);
+	
     /* get device address                                                       */
     /*  - If device address is registered in DataFlash, get from DataFlash.     */
     /*  - If device address is not registered in DataFlash, get from CodeFlash. */

@@ -88,6 +88,7 @@ _EEL_CNST __far const eel_u08 eel_descriptor[EEL_VAR_NO+2] =
   (eel_u08)(EEL_VAR_NO),      /* variable count   */  \
   (eel_u08)(BD_ADDR_LEN),     /* id=1: EEL_ID_BDA */  \
   (eel_u08)(BD_ADDR_LEN),     /* id=2: EEL_ID_REMOTE_BD_ADDR */  \
+  (eel_u08)(1),     /* id=3: EEL_ID_CALIBRATION */  \
   (eel_u08)(0x00),            /* zero terminator  */  \
 };
 

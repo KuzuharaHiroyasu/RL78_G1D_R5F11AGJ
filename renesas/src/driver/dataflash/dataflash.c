@@ -828,3 +828,36 @@ _DFL_CODE void flash_get_bda(struct bd_addr* bda)
         *bda = testadr;
     }
 }
+
+_DFL_CODE void test_set_calibration(uint8_t* cali)
+{
+	int a;
+	if(dataflash_start(DF_MODE_ENFORCED) == DF_OK)
+    {
+		if(dataflash_rw(DF_MODE_ENFORCED, DF_WRITE, EEL_ID_CALIBRATION, cali) == DF_OK)
+		{
+			a = 2;
+		}else{
+			a = 0;
+		}
+    	dataflash_stop(DF_MODE_ENFORCED);
+    }
+	a = 5;
+}
+
+_DFL_CODE void test_get_calibration(uint8_t* cali)
+{
+	int a;
+    if(dataflash_start(DF_MODE_ENFORCED) == DF_OK)
+    {
+		if(dataflash_rw(DF_MODE_ENFORCED, DF_READ, EEL_ID_CALIBRATION, cali) == DF_OK)
+		{
+			a = 2;
+		}else{
+			a = 0;
+		}
+    	dataflash_stop(DF_MODE_ENFORCED);
+    }
+	a = 5;
+}
+

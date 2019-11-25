@@ -222,4 +222,6 @@ bool dataflash_is_stopped(void);
  */
 void flash_get_bda(struct bd_addr* bda);
 
+void test_set_calibration(uint8_t* cali);
+void test_get_calibration(uint8_t* cali);
 #endif /* DATAFLASH_H */

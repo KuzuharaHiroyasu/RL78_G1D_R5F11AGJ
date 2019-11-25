@@ -42,6 +42,7 @@ enum
 {
     EEL_ID_BDA = 0x1,
     EEL_ID_REMOTE_BDA,
+	EEL_ID_CALIBRATION,
     EEL_ID_END
 };
 
