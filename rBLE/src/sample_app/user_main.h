@@ -431,6 +431,7 @@ typedef struct{
 	UB pow_sw_last;							// 電源ボタン状態(前回)
 	
 	UH data_end_timeout;		// VUART_CMD_DATA_ENDの応答タイムアウト
+	UH get_mode_timeout;		// getmode時の送信中エラータイムアウト
 	
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
@@ -629,8 +630,8 @@ typedef struct{
 // 抑制開始カウント
 #define SUPPRESS_START_CNT				120		// センシング開始20分間は抑制しない 20min = 1200sec = 10 × 120
 
-// データ取得完了通知タイムアウト
-#define DATA_END_TIME_OUT				5
+#define DATA_END_TIME_OUT				250		// データ取得完了通知タイムアウト 20ms * 250 = 5000ms = 5秒
+#define GET_MODE_TIME_OUT				250		// getmode時の送信中エラータイムアウト	20ms * 250 = 5000ms = 5秒
 
 /******************/
 /*  外部参照宣言  */

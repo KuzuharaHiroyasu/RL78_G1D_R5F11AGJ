@@ -80,7 +80,7 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 // モード				INITAL				IDLE_COM			SENSING			GET					PRG_G1D			SELF_CHECK		MOVE				NON
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW(短)		*/	{ evt_non,			evt_non,			evt_bat_check,	evt_idle_com,		evt_non,		evt_non,		evt_non,			evt_non },
-/*電源SW押下(長)	*/	{ evt_non,			evt_sensing_chg,	evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW押下(長)	*/	{ evt_non,			evt_sensing_chg,	evt_idle_com,	evt_idle_com,		evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートON	*/	{ evt_idle_com,		evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電池残量低下		*/	{ evt_non,			evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },

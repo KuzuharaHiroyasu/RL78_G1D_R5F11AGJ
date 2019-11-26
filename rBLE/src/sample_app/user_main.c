@@ -227,10 +227,6 @@ void codeptr app_evt_usr_2(void)
 	}
 	
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
-		if( SYSTEM_MODE_GET == s_unit.system_mode ){
-			// データ取得モード時にタイマーアップ
-			s_unit.data_end_timeout++;
-		}
 		return;
 	}
 	
@@ -1430,9 +1426,20 @@ STATIC void user_main_mode_get(void)
 	UW rd_adrs;
 	CALC calc_eep;				// 演算後データ
 	
+	if(s_unit.get_mode_timeout > GET_MODE_TIME_OUT)
+	{
+		// 5秒間送信中状態ならタイムアウト
+		evt_act( EVENT_TIME_OUT );
+		return;
+	}
+	
 	// 送信中の場合はウェイト
 	if( ON == s_ds.vuart.input.send_status ){
+		// タイムアウト
+		s_unit.get_mode_timeout++;
 		return;
+	} else {
+		s_unit.get_mode_timeout = 0;
 	}
 	
 	if( 0 == s_unit.get_mode_seq ){
@@ -1535,6 +1542,7 @@ STATIC void user_main_mode_get(void)
 			s_unit.get_mode_seq = 7;
 		#endif
 	}else if( 6 == s_unit.get_mode_seq ){
+		s_unit.data_end_timeout++;
 		if(s_unit.data_end_timeout >= DATA_END_TIME_OUT)
 		{
 			// タイムアウト
@@ -1945,7 +1953,7 @@ STATIC SYSTEM_MODE evt_remove( int evt)
 STATIC SYSTEM_MODE evt_time_out( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
-	
+	s_ds.vuart.input.send_status = OFF;
 	return system_mode;
 }
 
@@ -1988,34 +1996,12 @@ STATIC void main_mode_chg( void )
 	}
 	
 	if( SYSTEM_MODE_SELF_CHECK == s_unit.system_mode ){
-		if( ON == s_unit.self_check.com_flg ){
-			{
-				UB tx[VUART_DATA_SIZE_MAX] = {0};
-				
-				// OK応答
-				tx[0] = VUART_CMD_MODE_CHG;
-				tx[1] = 0x00;
-				
-				s_ds.vuart.input.send_status = OFF;
-				main_vuart_send( &tx[0], 2 );
-				
-			}
-		}
+		s_ds.vuart.input.send_status = OFF;
 	}
 
 	if( SYSTEM_MODE_GET == s_unit.system_mode ){
-		{
-			UB tx[VUART_DATA_SIZE_MAX] = {0};
-			
-			// OK応答
-			tx[0] = VUART_CMD_MODE_CHG;
-			tx[1] = 0x00;
-			
-			s_ds.vuart.input.send_status = OFF;
-			main_vuart_send( &tx[0], 2 );
-			
-			s_unit.get_mode_seq = 0;
-		}
+		s_ds.vuart.input.send_status = OFF;
+		s_unit.get_mode_seq = 0;
 	}
 }
 
@@ -2174,6 +2160,10 @@ STATIC void main_vuart_rcv_mode_chg( void )
 	
 	if( 3 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_GET_DATA );
+		if( TRUE == ret){
+			// データ取得タイムアウト初期化
+			s_unit.get_mode_timeout = 0;
+		} 
 	}else if( 4 == s_ds.vuart.input.rcv_data[1] ){
 		main_vuart_set_mode();		// RD8001暫定：デバッグ用データ設定(SETコマンド_最終必要？)
 	}else if( 5 == s_ds.vuart.input.rcv_data[1] ){
