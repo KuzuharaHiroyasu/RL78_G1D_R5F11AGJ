@@ -1146,13 +1146,7 @@ STATIC void user_main_mode_sensing_before( void )
 	photo_data_max = false;
 	s_unit.sensing_flg = ON;
 	
-	// センシング移行時にLEDとバイブ動作
-	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
-	{
-		set_led( LED_PATT_GREEN_LIGHTING );
-	} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
-		set_led( LED_PATT_GREEN_BLINK );
-	}
+	// センシング移行時にバイブ動作
 	set_vib(VIB_MODE_SENSING);
 	
 	/* BLEを無効化(電力消費量低減の為) */
@@ -1699,10 +1693,7 @@ STATIC UB evt_act( EVENT_NUM evt )
 		return FALSE;
 	}
 	
-	if(EVENT_POW_SW_SHORT != evt)
-	{
-		main_chg_system_mode( system_mode );
-	}
+	main_chg_system_mode( system_mode );
 	
 	return TRUE;
 }
@@ -1839,7 +1830,7 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 		set_led( LED_PATT_GREEN_BLINK );
 	}
 	bat_check_flg = true;
-	return s_unit.system_mode;
+	return SYSTEM_MODE_NON;
 }
 
 #if 0
