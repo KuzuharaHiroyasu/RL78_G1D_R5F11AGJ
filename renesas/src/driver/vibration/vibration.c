@@ -25,6 +25,7 @@ STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
 STATIC void vib_mode_during_three(UH vib_timer);
 STATIC void vib_mode_strength_three(UH vib_timer);
+STATIC void vib_gradually_stronger(UH vib_timer);
 
 STATIC void vib_mode_standby(UH vib_timer);
 STATIC void vib_mode_sensing(UH vib_timer);
@@ -67,6 +68,9 @@ void vib_start(UH vib_timer)
 				break;
 			case VIB_MODE_STRENGTH_THREE: // 強 × 3
 				vib_mode_strength_three(vib_timer);
+				break;
+			case VIB_MODE_GRADUALLY_STRONGER_THREE: // 徐々に強く× 3
+				vib_gradually_stronger(vib_timer);
 				break;
 			case VIB_MODE_STANDBY: // 待機モード移行時
 				vib_mode_standby(vib_timer);
@@ -134,28 +138,18 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 	
 	switch(yokusei_str)
 	{
-/*
-		case 0: //弱
-			mode = VIB_MODE_WEAK;
-			break;
-		case 1: //中
+		case VIB_SET_MODE_WEAK: //中
 			mode = VIB_MODE_DURING;
 			break;
-		case 2: //強
-			mode = VIB_MODE_STRENGTH;
-			break;
-*/
-		// テスト対応
-		case 0: //中
-			mode = VIB_MODE_DURING;
-			break;
-		case 1: //中 × 3
+		case VIB_SET_MODE_DURING: //中 × 3
 			mode = VIB_MODE_DURING_THREE;
 			break;
-		case 2: //強 × 3
+		case VIB_SET_MODE_STRENGTH: //強 × 3
 			mode = VIB_MODE_STRENGTH_THREE;
 			break;
-
+		case VIB_SET_MODE_GRADUALLY_STRONGER: //徐々に強く × 3
+			mode = VIB_MODE_GRADUALLY_STRONGER_THREE;
+			break;
 		default:
 			break;
 	}
@@ -179,6 +173,7 @@ STATIC void set_vib_orbit(VIB_MODE mode)
 	{
 		case VIB_MODE_DURING_THREE:
 		case VIB_MODE_STRENGTH_THREE:
+		case VIB_SET_MODE_GRADUALLY_STRONGER:
 			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
 			break;
 		default:
@@ -393,6 +388,22 @@ STATIC void vib_mode_strength_three(UH vib_timer)
 		VIB_CTL = 1;
 		VIB_ENA = 1;
 	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_gradually_stronger									*/
+/* 関数名   : バイブレーション徐々に強く×３制御						*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.11.29 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_gradually_stronger(UH vib_timer)
+{
+	
 }
 
 /************************************************************************/
