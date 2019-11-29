@@ -1118,7 +1118,7 @@ static void app_gap_connect_comp(RBLE_GAP_EVENT *event)
         case APP_CONNECT_SLAVE:
             CHECK_OK(RBLE_VUART_Server_Enable(app.conhdl, app_vuart_server_callback));
 			// BLE接続時通る
-			set_led(LED_PATT_YELLOW_ON);
+			set_led(LED_PATT_GREEN_ON);
         	// RD8001対応：送信ステータス初期化
 	    	ds_set_vuart_send_status( OFF );
             break;
@@ -1176,7 +1176,7 @@ static void app_gap_disconnect_comp(RBLE_GAP_EVENT *event)
         app_gap_broadcast_enable(APP_ADV_NORMAL_CYCLE);
         CHECK_OK(RBLE_VUART_Server_Disable());
         app.key_state = APP_KEY_NONE;
-		set_led(LED_PATT_YELLOW_OFF);
+		set_led(LED_PATT_GREEN_OFF);
     	// RD8001対応：送信ステータス初期化
     	ds_set_vuart_send_status( OFF );
         break;

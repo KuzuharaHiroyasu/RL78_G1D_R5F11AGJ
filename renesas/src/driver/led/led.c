@@ -19,8 +19,6 @@ STATIC void led_green_lighting(UW led_timer);
 STATIC void led_green_blink(UW led_timer);
 STATIC void led_green_blink_low_batt(UW led_timer);
 STATIC void led_green_blink_sensing(UW led_timer);
-STATIC void led_yellow_lighting(UW led_timer);
-STATIC void led_yellow_blink(UW led_timer);
 
 /************************************************************************/
 /* 関数     : led_start													*/
@@ -39,12 +37,6 @@ void led_start(UW led_timer)
 	{
 		switch(pattern)
 		{
-			case LED_PATT_ON:
-				led_on();
-				break;
-			case LED_PATT_OFF:
-				led_off();
-				break;
 			case LED_PATT_GREEN_ON:
 				led_green_on();
 				break;
@@ -62,26 +54,14 @@ void led_start(UW led_timer)
 				break;
 			case LED_PATT_GREEN_BLINK_SENSING:
 				led_green_blink_sensing(led_timer);
-				break;			
-			case LED_PATT_YELLOW_ON:
-				led_yellow_on();
-				break;
-			case LED_PATT_YELLOW_OFF:
-				led_yellow_off();
-				break;
-			case LED_PATT_YELLOW_LIGHTING:
-				led_yellow_lighting(led_timer);
-				break;
-			case LED_PATT_YELLOW_BLINK:
-				led_yellow_blink(led_timer);
 				break;
 			default:
 				break;
 		}
-	} else if(pattern != LED_PATT_INITIAL && pattern != LED_PATT_YELLOW_ON)
-	{// 10秒超えている かつ 黄色点灯以外が設定されていたら初期値に戻してLEDをOFFにしておく
+	} else if(pattern != LED_PATT_INITIAL && pattern != LED_PATT_GREEN_ON)
+	{// 10秒超えている かつ 緑色点灯以外が設定されていたら初期値に戻してLEDをOFFにしておく
 		pattern = LED_PATT_INITIAL;
-		led_off();
+		led_green_off();
 	}
 }
 
@@ -106,40 +86,6 @@ void set_led(LED_PATT patt)
 	
 	blink_timer = 0;
 	led_orbit_timer = 0;
-}
-
-/************************************************************************/
-/* 関数     : led_on													*/
-/* 関数名   : LED1, 2点灯												*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-void led_on(void)
-{
-	LED_GREEN = LED_ON;
-	LED_YELLOW = LED_ON;
-}
-
-/************************************************************************/
-/* 関数     : led_off													*/
-/* 関数名   : LED1, 2消灯												*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-void led_off(void)
-{
-	LED_GREEN = LED_OFF;
-	LED_YELLOW = LED_OFF;
 }
 
 /************************************************************************/
@@ -292,94 +238,3 @@ STATIC void led_green_blink_sensing(UW led_timer)
 	}
 	blink_timer++;
 }
-
-/************************************************************************/
-/* 関数     : led_yellow_on												*/
-/* 関数名   : LED2点灯													*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-void led_yellow_on(void)
-{
-	LED_YELLOW = LED_ON;
-}
-
-/************************************************************************/
-/* 関数     : led_yellow_off											*/
-/* 関数名   : LED2消灯													*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-void led_yellow_off(void)
-{
-	LED_YELLOW = LED_OFF;
-}
-
-/************************************************************************/
-/* 関数     : led_yellow_lighting										*/
-/* 関数名   : LED2点灯（タイマー）										*/
-/* 引数     : led_timer:LEDタイマー										*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-STATIC void led_yellow_lighting(UW led_timer)
-{
-	if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
-	{
-		LED_YELLOW = LED_ON;
-		pattern = LED_PATT_LIGHT_UP;
-	}
-}
-
-/************************************************************************/
-/* 関数     : led_yellow_blink											*/
-/* 関数名   : LED2点滅（タイマー）										*/
-/* 引数     : led_timer:LEDタイマー										*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-STATIC void led_yellow_blink(UW led_timer)
-{
-	if( blink_timer <= LED_TIMER_1SEC )
-	{
-		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_OFF)
-		{
-			LED_YELLOW = LED_ON;
-		}
-	} else if( blink_timer <= LED_TIMER_2SEC ){
-		if(read1_sfr( LED_PORT, LED_YELLOW_BIT) == LED_ON)
-		{
-			LED_YELLOW = LED_OFF;
-		}
-	}
-	blink_timer++;
-	
-	if( LED_TIMER_2SEC < blink_timer )
-	{
-		blink_timer = 0;
-	}
-}
-
-
-
-
-
-

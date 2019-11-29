@@ -454,6 +454,13 @@ void user_main_timer_cyc( void )
 					s_unit.meas.info.dat.photoref_val = main_photo_read();
 					
 					acl_photo_sens_read_flg = ON;
+					
+					if( bat_check_flg != true )
+					{
+						set_led( LED_PATT_GREEN_BLINK_SENSING );
+					} else {
+						bat_check_flg = false;
+					}
 				}
 				
 				// センサー値取得5秒後にリセット
@@ -602,12 +609,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		
 		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
-		if( bat_check_flg != true )
-		{
-			set_led( LED_PATT_GREEN_BLINK_SENSING );
-		} else {
-			bat_check_flg = false;
-		}
 	}
 
 	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
@@ -936,7 +937,7 @@ STATIC void sw_proc(void)
 		if(s_unit.system_mode == SYSTEM_MODE_SENSING && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
 			sw_on_flg = ON;
 			s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
-			led_on();
+			led_green_on();
 			s_unit.sw_time_cnt = 0;
 		}
 	}else{
@@ -1076,7 +1077,7 @@ STATIC void user_main_mode_sensing_before( void )
 	rtc_counter_value_t rtc_val;
 	
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
-	led_yellow_off();
+	led_green_off();
 	
 	// 日時情報取得
 	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
@@ -1172,7 +1173,7 @@ STATIC void user_main_mode_sensing_after( void )
 	UW wr_adrs = 0;
 	UB wr_data[3] = {0};
 	
-	set_led(LED_PATT_OFF);
+	set_led(LED_PATT_GREEN_OFF);
 	
 	/* BLEを無効→有効化(APIリファレンスマニュアルの通り、電源ON後にResetする) */
 	RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWUP_DDCON );
