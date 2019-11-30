@@ -618,8 +618,8 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		ke_msg_send(ke_msg);
 	}
 	
-	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );		
-	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );		
+	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );
+	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -2682,7 +2682,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.mukokyu_state_flg = OFF;
 	}
 	
-	
 	s_unit.phase_kokyu++;
 	if(s_unit.phase_kokyu >= SEC_PHASE_NUM){
 		s_unit.phase_kokyu = SEC_PHASE_0_10;
@@ -2764,7 +2763,6 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	newstate = calc_snore_get();
 	
-	
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
 		s_unit.suppress_max_time_interval_cnt++;
@@ -2780,8 +2778,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 		s_unit.suppress_cont_time_cnt++;
-		if(act_mode == ACT_MODE_SUPPRESS_SNORE || act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
-		{//抑制モード（いびき）か抑制モード（いびき + 無呼吸）ならバイブレーション動作
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
+		{//抑制モード（いびき + 無呼吸）か抑制モード（いびき）ならバイブレーション動作
 			if(s_unit.suppress_cont_time_cnt <= suppress_max_cnt)
 			{//抑制動作最大時間以下
 				if(suppress_max_cnt_over_flg == OFF)
