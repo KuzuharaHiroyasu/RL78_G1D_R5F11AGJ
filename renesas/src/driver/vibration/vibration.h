@@ -45,5 +45,6 @@ typedef enum{
 extern void vib_start(UH vib_timer);
 extern void set_vib(VIB_MODE mode);
 extern VIB_MODE set_vib_mode(UB yokusei_str);
+extern void set_vib_level(B level);
 
 #endif // __VIBRATION_INC__

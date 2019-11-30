@@ -12,6 +12,7 @@
 // グローバル変数
 B			vib_orbit_value = 0;							// バイブ周回値
 B			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;	// バイブ周回設定値
+B			vib_gradually_stronger_level = 0;				// 徐々に強く設定時のバイブレベル
 
 VIB_MODE	vib_mode = VIB_MODE_INITIAL;
 VIB_MODE	vib_last_mode = VIB_MODE_INITIAL;
@@ -25,7 +26,7 @@ STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
 STATIC void vib_mode_during_three(UH vib_timer);
 STATIC void vib_mode_strength_three(UH vib_timer);
-STATIC void vib_gradually_stronger(UH vib_timer);
+STATIC void vib_mode_gradually_stronger(UH vib_timer);
 
 STATIC void vib_mode_standby(UH vib_timer);
 STATIC void vib_mode_sensing(UH vib_timer);
@@ -70,7 +71,7 @@ void vib_start(UH vib_timer)
 				vib_mode_strength_three(vib_timer);
 				break;
 			case VIB_MODE_GRADUALLY_STRONGER_THREE: // 徐々に強く× 3
-				vib_gradually_stronger(vib_timer);
+				vib_mode_gradually_stronger(vib_timer);
 				break;
 			case VIB_MODE_STANDBY: // 待機モード移行時
 				vib_mode_standby(vib_timer);
@@ -391,7 +392,7 @@ STATIC void vib_mode_strength_three(UH vib_timer)
 }
 
 /************************************************************************/
-/* 関数     : vib_gradually_stronger									*/
+/* 関数     : vib_mode_gradually_stronger								*/
 /* 関数名   : バイブレーション徐々に強く×３制御						*/
 /* 引数     : vib_timer:バイブタイマー									*/
 /* 戻り値   : なし														*/
@@ -401,9 +402,25 @@ STATIC void vib_mode_strength_three(UH vib_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void vib_gradually_stronger(UH vib_timer)
+STATIC void vib_mode_gradually_stronger(UH vib_timer)
 {
 	
+}
+
+/************************************************************************/
+/* 関数     : set_vib_level												*/
+/* 関数名   : バイブレーション徐々に強く×３のレベル設定				*/
+/* 引数     : level:バイブレベル										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.11.30 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_vib_level(B vib_level)
+{
+	vib_gradually_stronger_level = vib_level;
 }
 
 /************************************************************************/

@@ -144,6 +144,8 @@ static bool apnea_data_max = false;
 static bool snore_data_max = false;
 static bool acl_data_max = false;
 static bool photo_data_max = false;
+static B	vib_level = 0;
+
 /********************/
 /*     定数定義     */
 /********************/
@@ -1145,6 +1147,8 @@ STATIC void user_main_mode_sensing_before( void )
 	snore_data_max = false;
 	acl_data_max = false;
 	photo_data_max = false;
+	vib_level = 0;
+	
 	s_unit.sensing_flg = ON;
 	
 	// センシング移行時にバイブ動作
@@ -2632,12 +2636,21 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
-			{// 抑制開始時間経過（センシング開始から20分)
+			{// 抑制開始時間経過（センシング開始から20分）
 				set_vib(set_vib_mode(vib_str));
+				if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+				{
+					vib_level++;
+					set_vib_level(vib_level);
+				}
 			}
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
+		if(act_mode == ACT_MODE_SUPPRESS_APNEA)
+		{// 抑制モード（無呼吸）の場合
+			vib_level = 0;
+		}
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
@@ -2774,8 +2787,13 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				if(suppress_max_cnt_over_flg == OFF)
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
-					{// 抑制開始時間経過（センシング開始から20分)
+					{// 抑制開始時間経過（センシング開始から20分）
 						set_vib(set_vib_mode(vib_str));
+						if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+						{
+							vib_level++;
+							set_vib_level(vib_level);
+						}
 					}
 				}
 			} else {
@@ -2786,6 +2804,20 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
 		s_unit.suppress_cont_time_cnt = 0;	// 初期化
+		if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+		{
+			if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
+			{// 抑制モード（いびき + 無呼吸）の場合
+				if( ((s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask) == 0x00 )
+				{// 無呼吸判定チェック
+					// 無呼吸判定もされていない場合バイブレベルを初期化
+					vib_level = 0;
+				}
+			} else if(act_mode == ACT_MODE_SUPPRESS_SNORE)
+			{// 抑制モード（いびき）の場合
+				vib_level = 0;
+			}
+		}
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
