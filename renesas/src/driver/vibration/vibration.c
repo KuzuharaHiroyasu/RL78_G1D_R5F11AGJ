@@ -32,6 +32,11 @@ STATIC void vib_mode_standby(UH vib_timer);
 STATIC void vib_mode_sensing(UH vib_timer);
 STATIC void vib_interval(UH vib_timer);
 
+STATIC void vib_level_1(UH vib_timer);
+STATIC void vib_level_2(UH vib_timer);
+STATIC void vib_level_3(UH vib_timer);
+STATIC void vib_level_4(UH vib_timer);
+
 /************************************************************************/
 /* 関数     : vib_start													*/
 /* 関数名   : バイブレーション開始										*/
@@ -328,8 +333,6 @@ STATIC void vib_mode_strength(UH vib_timer)
 /************************************************************************/
 STATIC void vib_mode_during_three(UH vib_timer)
 {
-	
-	
 	if(	20 <= vib_timer )
 	{
 //		VIB_CTL = 0; // 保険
@@ -404,7 +407,23 @@ STATIC void vib_mode_strength_three(UH vib_timer)
 /************************************************************************/
 STATIC void vib_mode_gradually_stronger(UH vib_timer)
 {
-	
+	switch(vib_gradually_stronger_level)
+	{
+		case VIB_LEVEL_1:
+			vib_level_1(vib_timer);
+			break;
+		case VIB_LEVEL_2:
+			vib_level_2(vib_timer);
+			break;
+		case VIB_LEVEL_3:
+			vib_level_3(vib_timer);
+			break;
+		case VIB_LEVEL_4:
+			vib_level_4(vib_timer);
+			break;
+		default:
+			break;
+	}
 }
 
 /************************************************************************/
@@ -495,3 +514,150 @@ STATIC void vib_interval(UH vib_timer)
 	}
 }
 
+/************************************************************************/
+/* 関数     : vib_level_1												*/
+/* 関数名   : バイブレーション徐々に強く_レベル１						*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_level_1(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_DURING_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 11 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_level_2												*/
+/* 関数名   : バイブレーション徐々に強く_レベル２						*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_level_2(UH vib_timer)
+{
+	if(	28 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_DURING_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 21 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 19 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_level_3												*/
+/* 関数名   : バイブレーション徐々に強く_レベル３						*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_level_3(UH vib_timer)
+{
+	if(	30 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_STRENGTH_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 29 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 27 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+/************************************************************************/
+/* 関数     : vib_level_4												*/
+/* 関数名   : バイブレーション徐々に強く_レベル４						*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_level_4(UH vib_timer)
+{
+	if(	38 <= vib_timer )
+	{
+//		VIB_CTL = 0; // 保険
+//		VIB_ENA = 0;
+		vib_orbit_value += 1;
+		if(!(vib_orbit_value % VIB_ONE_SET))
+		{
+			vib_last_mode = VIB_MODE_STRENGTH_THREE;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} if( 37 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} if( 35 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}

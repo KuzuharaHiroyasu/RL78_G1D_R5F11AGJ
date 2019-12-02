@@ -39,6 +39,14 @@ typedef enum{
 	VIB_MODE_INITIAL
 }VIB_MODE;
 
+typedef enum{
+	VIB_LEVEL_1 = 0,
+	VIB_LEVEL_2,
+	VIB_LEVEL_3,
+	VIB_LEVEL_4,
+	VIB_LEVEL_MAX
+}VIB_LEVEL;
+
 /******************/
 /*  äOïîéQè∆êÈåæ  */
 /******************/
