@@ -1147,7 +1147,10 @@ STATIC void user_main_mode_sensing_before( void )
 	snore_data_max = false;
 	acl_data_max = false;
 	photo_data_max = false;
+	
+	// バイブレベル初期化
 	vib_level = 0;
+	set_vib_level(vib_level);
 	
 	s_unit.sensing_flg = ON;
 	
@@ -2562,7 +2565,11 @@ void main_vuart_rcv_vib_confirm( void )
 	if(result == VUART_DATA_RESULT_OK)
 	{
 #if FUNC_DEBUG_LOG != ON
-		set_vib(set_vib_mode(vib_str_conf));
+		// バイブレベル初期化
+		vib_level = 0;
+		set_vib_level(vib_level);
+		
+		set_vib_confirm(set_vib_mode(vib_str_conf));
 #endif
 	}
 }

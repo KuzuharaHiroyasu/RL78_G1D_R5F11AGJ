@@ -17,6 +17,8 @@ B			vib_gradually_stronger_level = 0;				// 徐々に強く設定時のバイブレベル
 VIB_MODE	vib_mode = VIB_MODE_INITIAL;
 VIB_MODE	vib_last_mode = VIB_MODE_INITIAL;
 
+bool		confirm_flg = false;
+
 // プロトタイプ宣言
 STATIC void set_vib_orbit(VIB_MODE mode);
 STATIC void vib_on(void);
@@ -31,6 +33,8 @@ STATIC void vib_mode_gradually_stronger(UH vib_timer);
 STATIC void vib_mode_standby(UH vib_timer);
 STATIC void vib_mode_sensing(UH vib_timer);
 STATIC void vib_interval(UH vib_timer);
+STATIC void vib_interval_level(UH vib_timer);
+STATIC void vib_level_up_confirm(void);
 
 STATIC void vib_level_1(UH vib_timer);
 STATIC void vib_level_2(UH vib_timer);
@@ -87,6 +91,9 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_INTERVAL: // バイブのセット間インターバル
 				vib_interval(vib_timer);
 				break;
+			case VIB_MODE_INTERVAL_LEVEL: // バイブのレベル間のインターバル
+				vib_interval_level(vib_timer);
+				break;
 			default:
 				break;
 		}
@@ -94,6 +101,8 @@ void vib_start(UH vib_timer)
 	{
 		vib_mode = VIB_MODE_INITIAL;
 		vib_last_mode = VIB_MODE_INITIAL;
+		confirm_flg = false;
+		vib_gradually_stronger_level = 0;
 		set_vib_flg( false );
 	}
 }
@@ -141,6 +150,37 @@ void set_vib(VIB_MODE mode)
 	vib_mode = mode;
 	
 	set_vib_flg( true );
+}
+
+/************************************************************************/
+/* 関数     : set_vib_confirm											*/
+/* 関数名   : バイブレーション設定(確認用)								*/
+/* 引数     : mode:バイブパターン										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_vib_confirm(VIB_MODE mode)
+{ //バイブレーション確認用
+	// ON
+	// 10msecタイマーリセット
+	reset_vib_timer();
+
+	// 周回値設定
+	set_vib_orbit(mode);
+	
+	// 周回リセット
+	vib_orbit_value = 0;
+	
+	// パターン
+	vib_mode = mode;
+	
+	set_vib_flg( true );
+	
+	confirm_flg = true;
 }
 
 /************************************************************************/
@@ -195,7 +235,7 @@ STATIC void set_vib_orbit(VIB_MODE mode)
 	{
 		case VIB_MODE_DURING_THREE:
 		case VIB_MODE_STRENGTH_THREE:
-		case VIB_SET_MODE_GRADUALLY_STRONGER:
+		case VIB_MODE_GRADUALLY_STRONGER_THREE:
 			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
 			break;
 		default:
@@ -438,6 +478,7 @@ STATIC void vib_mode_gradually_stronger(UH vib_timer)
 			vib_level_4(vib_timer);
 			break;
 		default:
+			vib_level_4(vib_timer);
 			break;
 	}
 }
@@ -475,7 +516,7 @@ STATIC void vib_mode_standby(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit_value = set_vib_orbit_value;
+		vib_orbit_value = VIB_STOP_ORBIT;
 		reset_vib_timer();
 	} else
 	{
@@ -501,7 +542,7 @@ STATIC void vib_mode_sensing(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit_value = set_vib_orbit_value;
+		vib_orbit_value = VIB_STOP_ORBIT;
 		reset_vib_timer();
 	} else
 	{
@@ -531,6 +572,52 @@ STATIC void vib_interval(UH vib_timer)
 }
 
 /************************************************************************/
+/* 関数     : vib_interval_level										*/
+/* 関数名   : バイブのレベル間のインターバル							*/
+/* 引数     : vib_timer:バイブタイマー									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_interval_level(UH vib_timer)
+{
+	if(	40 <= vib_timer )
+	{
+		vib_mode = vib_last_mode;	// バイブモードを戻す
+		reset_vib_timer();
+	}
+}
+
+/************************************************************************/
+/* 関数     : vib_level_up_confirm										*/
+/* 関数名   : バイブ確認のレベルアップ									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+STATIC void vib_level_up_confirm(void)
+{
+	vib_last_mode = VIB_MODE_GRADUALLY_STRONGER_THREE;
+	if(confirm_flg == true && vib_orbit_value >= set_vib_orbit_value && (vib_gradually_stronger_level+1) < VIB_LEVEL_MAX)
+	{
+		// 次のレベルへ
+		vib_gradually_stronger_level++;
+		vib_orbit_value = 0;
+		vib_mode = VIB_MODE_INTERVAL_LEVEL;
+	}else{
+		// 終了
+		vib_mode = VIB_MODE_INTERVAL;
+	}
+}
+
+/************************************************************************/
 /* 関数     : vib_level_1												*/
 /* 関数名   : バイブレーション徐々に強く_レベル１						*/
 /* 引数     : vib_timer:バイブタイマー									*/
@@ -550,8 +637,7 @@ STATIC void vib_level_1(UH vib_timer)
 		vib_orbit_value += 1;
 		if(!(vib_orbit_value % VIB_ONE_SET))
 		{
-			vib_last_mode = VIB_MODE_DURING_THREE;
-			vib_mode = VIB_MODE_INTERVAL;
+			vib_level_up_confirm();
 		}
 		reset_vib_timer();
 	} if( 13 <= vib_timer )
@@ -587,8 +673,7 @@ STATIC void vib_level_2(UH vib_timer)
 		vib_orbit_value += 1;
 		if(!(vib_orbit_value % VIB_ONE_SET))
 		{
-			vib_last_mode = VIB_MODE_DURING_THREE;
-			vib_mode = VIB_MODE_INTERVAL;
+			vib_level_up_confirm();
 		}
 		reset_vib_timer();
 	} if( 21 <= vib_timer )
@@ -624,8 +709,7 @@ STATIC void vib_level_3(UH vib_timer)
 		vib_orbit_value += 1;
 		if(!(vib_orbit_value % VIB_ONE_SET))
 		{
-			vib_last_mode = VIB_MODE_STRENGTH_THREE;
-			vib_mode = VIB_MODE_INTERVAL;
+			vib_level_up_confirm();
 		}
 		reset_vib_timer();
 	} if( 29 <= vib_timer )
@@ -661,8 +745,7 @@ STATIC void vib_level_4(UH vib_timer)
 		vib_orbit_value += 1;
 		if(!(vib_orbit_value % VIB_ONE_SET))
 		{
-			vib_last_mode = VIB_MODE_STRENGTH_THREE;
-			vib_mode = VIB_MODE_INTERVAL;
+			vib_level_up_confirm();
 		}
 		reset_vib_timer();
 	} if( 37 <= vib_timer )
