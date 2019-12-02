@@ -121,6 +121,7 @@ void vib_start(UH vib_timer)
 void vib_stop(void)
 {
 	vib_orbit_value = VIB_STOP_ORBIT;
+	vib_off();
 }
 
 /************************************************************************/
