@@ -18,6 +18,7 @@
 #define	VIB_ONE_SET					3					// 1セット3回
 #define VIB_THREE_ORBIT_ONE_SET		(VIB_ONE_SET * 1)	// バイブ周回 3 × 1
 #define VIB_THREE_ORBIT_THREE_SET	(VIB_ONE_SET * 3)	// バイブ周回 3 × 3
+#define VIB_STOP_ORBIT				(VIB_THREE_ORBIT_THREE_SET + 1)
 
 #define VIB_SET_MODE_WEAK					0
 #define VIB_SET_MODE_DURING					1
@@ -51,6 +52,7 @@ typedef enum{
 /*  外部参照宣言  */
 /******************/
 extern void vib_start(UH vib_timer);
+extern void vib_stop(void);
 extern void set_vib(VIB_MODE mode);
 extern VIB_MODE set_vib_mode(UB yokusei_str);
 extern void set_vib_level(B level);
