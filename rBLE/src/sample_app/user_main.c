@@ -3106,6 +3106,19 @@ STATIC void user_main_eep_read_pow_on(void)
 	
 	// 警告機能
 	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
+	
+	// 設定反映
+	// 動作モード設定
+	act_mode = s_unit.alarm.info.dat.act_mode;
+	// いびき感度設定
+	set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
+	// 抑制強度設定
+	vib_str = s_unit.alarm.info.dat.suppress_str;
+	// 抑制動作最大継続時間
+	set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
+	// 抑制開始設定時間
+	suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
+	
 	// RD8001暫：範囲チェック入れる
 }
 
