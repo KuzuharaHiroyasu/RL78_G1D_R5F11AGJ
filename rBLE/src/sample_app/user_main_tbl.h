@@ -61,6 +61,7 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DATA_FIN,			VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// データ取得完了通知
 	{	VUART_CMD_DEVICE_SET,		VUART_CMD_LEN_DEVICE_SET,	main_vuart_rcv_device_set		},	// デバイス設定変更
 	{	VUART_CMD_TYPE_VIB_CONFIRM, VUART_CMD_LEN_VIB_CONFIRM,	main_vuart_rcv_vib_confirm		},	// バイブ動作確認
+	{	VUART_CMD_TYPE_VIB_STOP,	VUART_CMD_LEN_VIB_STOP,		main_vuart_rcv_vib_stop			},	// バイブ動作停止
 };
 
 /* モード別処理 */

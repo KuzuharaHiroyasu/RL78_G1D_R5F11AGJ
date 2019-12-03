@@ -98,6 +98,7 @@ void main_vuart_rcv_data_end( void );
 void main_vuart_rcv_date( void );
 void main_vuart_rcv_device_set( void );
 void main_vuart_rcv_vib_confirm( void );
+void main_vuart_rcv_vib_stop( void );
 
 // ACL、フォト関連
 STATIC void main_acl_init(void);
@@ -2576,6 +2577,39 @@ void main_vuart_rcv_vib_confirm( void )
 		set_vib_level(vib_level);
 		
 		set_vib_confirm(set_vib_mode(vib_str_conf));
+#endif
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_rcv_vib_stop									*/
+/* 関数名   : VUART受信(バイブ動作停止)									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2019.12.03  oneA 葛原 弘安				初版作成		*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(バイブ動作停止)											*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_rcv_vib_stop( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
+		result = VUART_DATA_RESULT_NG;
+	}
+	
+	tx[0] = VUART_CMD_TYPE_VIB_STOP;
+	tx[1] = result;
+	main_vuart_send( &tx[0], 2 );
+	
+	if(result == VUART_DATA_RESULT_OK)
+	{
+#if FUNC_DEBUG_LOG != ON
+		vib_stop();
 #endif
 	}
 }
