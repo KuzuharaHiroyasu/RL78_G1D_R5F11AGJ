@@ -1121,6 +1121,7 @@ static void app_gap_connect_comp(RBLE_GAP_EVENT *event)
 			set_led(LED_PATT_GREEN_ON);
         	// RD8001対応：送信ステータス初期化
 	    	ds_set_vuart_send_status( OFF );
+        	set_ble_isconnect(true);
             break;
 
         default:
@@ -1179,6 +1180,7 @@ static void app_gap_disconnect_comp(RBLE_GAP_EVENT *event)
 		set_led(LED_PATT_GREEN_OFF);
     	// RD8001対応：送信ステータス初期化
     	ds_set_vuart_send_status( OFF );
+    	set_ble_isconnect(false);
         break;
 
     default:

@@ -474,7 +474,7 @@ typedef struct{
 	
 	// 
 	UB ble_state;			// BLE管理状態
-	
+	bool ble_isconnect;		// BLE接続状態
 }T_UNIT;
 
 // 取り外しタイムアウト時の保存用
@@ -655,5 +655,6 @@ extern void set_vib_flg( bool flg );
 extern void main_set_battery( void );
 extern void set_ble_state(UB state);
 extern UB get_ble_state(void);
-
+extern void set_ble_isconnect(bool connect);
+extern bool get_ble_isconnect(void);
 #endif // __MAIN_USR_INC__

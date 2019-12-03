@@ -888,7 +888,8 @@ void user_main_init( void )
 	
 	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
 	set_ble_state(BLE_STATE_INITIAL);
-
+	set_ble_isconnect(false);
+	
 #if FUNC_DEBUG_PORT == ON
 	//空きポートによる計測用設定(スリープなど)
     write1_sfr(PM1,  5, PORT_OUTPUT);
@@ -1078,9 +1079,6 @@ STATIC void user_main_mode_sensing_before( void )
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
 	
-	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
-	led_green_off();
-	
 	// 日時情報取得
 	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
 		err_info( ERR_ID_MAIN );
@@ -1160,6 +1158,11 @@ STATIC void user_main_mode_sensing_before( void )
 	/* BLEを無効化(電力消費量低減の為) */
 	set_ble_state(BLE_STATE_ON); // BLE初期化完了時がわからないため、ここで状態更新する(これでOFF処理ができるようになる)
 	RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWDOWN );
+	
+	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
+	led_green_off();
+	set_ble_isconnect(false);
+	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
@@ -1829,15 +1832,18 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 /************************************************************************/
 STATIC SYSTEM_MODE evt_bat_check( int evt)
 {
-	main_set_battery();
-	// LED制御
-	if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+	if(get_ble_isconnect() != true)
 	{
-		set_led( LED_PATT_GREEN_LIGHTING );
-	} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
-		set_led( LED_PATT_GREEN_BLINK );
+		main_set_battery();
+		// LED制御
+		if( s_unit.battery_sts == BAT_LEVEL_STS_HIGH || s_unit.battery_sts == BAT_LEVEL_STS_MAX )
+		{
+			set_led( LED_PATT_GREEN_LIGHTING );
+		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
+			set_led( LED_PATT_GREEN_BLINK );
+		}
+		bat_check_flg = true;
 	}
-	bat_check_flg = true;
 	return SYSTEM_MODE_NON;
 }
 
@@ -3398,4 +3404,36 @@ void set_ble_state(UB state)
 UB get_ble_state(void)
 {
 	return s_unit.ble_state;
+}
+
+/************************************************************************/
+/* 関数     : set_ble_isconnect											*/
+/* 関数名   : BLE接続状態設定											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.12.03 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_ble_isconnect(bool connect)
+{
+	s_unit.ble_isconnect = connect;
+}
+
+/************************************************************************/
+/* 関数     : get_ble_isconnect											*/
+/* 関数名   : BLE接続状態取得											*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2019.12.03 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+bool get_ble_isconnect(void)
+{
+	return s_unit.ble_isconnect;
 }
