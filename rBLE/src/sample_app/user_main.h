@@ -315,10 +315,10 @@ typedef struct{
 	union{
 		UB	byte[EEP_ALARM_SIZE];
 		struct{
-			UB	act_mode;		// 動作モード
-			UB	ibiki_sens;		// いびき感度
-			UB	suppress_str;	// 抑制強度
-			UB	suppress_max_time;	// 抑制動作最大継続時間
+			UB	act_mode;				// 動作モード
+			UB	ibiki_sens;				// いびき感度
+			UB	suppress_str;			// 抑制強度
+			UB	suppress_max_time;		// 抑制動作最大継続時間
 			UB	suppress_start_time;	// 抑制開始設定時間
 		}dat;
 	}info;
@@ -570,9 +570,22 @@ typedef struct{
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
 // 送信データ長 ※コマンド部含む
-#define	VUART_SND_LEN_INFO			3
-#define	VUART_SND_LEN_VERSION		6
-#define	VUART_SND_LEN_DEVICE_INFO	16
+#define	VUART_SND_LEN_MODE_CHG			2
+#define	VUART_SND_LEN_SET_CHG			2
+#define	VUART_SND_LEN_DATE_SET			2
+#define	VUART_SND_LEN_INFO				3
+#define	VUART_SND_LEN_DATA_NEXT			1
+#define	VUART_SND_LEN_DATA_END			1
+#define	VUART_SND_LEN_DATA_FRAME		20
+#define	VUART_SND_LEN_DATA_CALC			9
+
+#define	VUART_SND_LEN_PRG_G1D_VER		4
+
+#define	VUART_SND_LEN_VERSION			6
+#define	VUART_SND_LEN_DEVICE_INFO		16
+#define	VUART_SND_LEN_DEVICE_SET		2
+#define	VUART_SND_LEN_VIB_CONFIRM		2
+#define	VUART_SND_LEN_VIB_STOP			2
 
 
 #define VUART_DATA_SIZE_MAX				20

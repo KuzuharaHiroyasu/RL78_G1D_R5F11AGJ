@@ -213,7 +213,7 @@ void codeptr app_evt_usr_2(void)
 				tx[1] = version_product_tbl[1];
 				tx[2] = version_product_tbl[2];
 				tx[3] = version_product_tbl[3];
-				main_vuart_send( &tx[0], 4 );
+				main_vuart_send( &tx[0], VUART_SND_LEN_PRG_G1D_VER );
 			}
 		}
 	}
@@ -1320,7 +1320,7 @@ STATIC void user_main_mode_get_before( void )
 	   ( s_unit.frame_num_work.cnt == 0 )){
 		//データなし時は完了
 		tx[0] = 0xE1;		// END
-		main_vuart_send( &tx[0], 1 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DATA_END );
 #if FUNC_DEBUG_FIN_NON == OFF
 		s_unit.get_mode_seq = 6;
 #else
@@ -1505,7 +1505,7 @@ STATIC void user_main_mode_get(void)
 		tx[18] = s_unit.device_set_info;
 		tx[19] = s_unit.suppress_start_time;
 		
-		main_vuart_send( &tx[0], 20 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DATA_FRAME );
 		s_unit.get_mode_seq = 3;
 	}else if( 3 == s_unit.get_mode_seq ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){
@@ -1529,7 +1529,7 @@ STATIC void user_main_mode_get(void)
 			tx[6] = calc_eep.info.dat.photoref[0];
 			tx[7] = calc_eep.info.dat.photoref[1];
 			tx[8] = calc_eep.info.dat.photoref[2];
-			main_vuart_send( &tx[0], 9 );
+			main_vuart_send( &tx[0], VUART_SND_LEN_DATA_CALC );
 			s_unit.get_mode_calc_cnt++;
 		}
 	}else if( 4 == s_unit.get_mode_seq ){
@@ -1541,12 +1541,12 @@ STATIC void user_main_mode_get(void)
 		}else{
 			//継続
 			tx[0] = VUART_CMD_DATA_NEXT;		// NEXT
-			main_vuart_send( &tx[0], 1 );
+			main_vuart_send( &tx[0], VUART_SND_LEN_DATA_NEXT );
 			user_main_mode_get_frame_before();
 		}
 	}else if( 5 == s_unit.get_mode_seq ){
 		tx[0] = VUART_CMD_DATA_END;				// END
-		main_vuart_send( &tx[0], 1 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DATA_END );
 		
 		// タイムアウトタイマー初期化
 		s_unit.data_end_timeout = 0;
@@ -2147,10 +2147,10 @@ void main_vuart_set_mode( void )
 	
 	
 	// OK応答
-	tx[0] = VUART_CMD_MODE_CHG;
+	tx[0] = VUART_CMD_SET_CHG;
 	tx[1] = 0x00;
 	
-	main_vuart_send( &tx[0], 2 );
+	main_vuart_send( &tx[0], VUART_SND_LEN_SET_CHG );
 
 	s_unit.calc_cnt = 0;
 }
@@ -2197,12 +2197,12 @@ STATIC void main_vuart_rcv_mode_chg( void )
 		// NG応答
 		tx[0] = VUART_CMD_MODE_CHG;
 		tx[1] = VUART_DATA_RESULT_NG;
-		main_vuart_send( &tx[0], 2 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_MODE_CHG );
 	}else{
 		// OK応答
 		tx[0] = VUART_CMD_MODE_CHG;
 		tx[1] = VUART_DATA_RESULT_OK;
-		main_vuart_send( &tx[0], 2 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_MODE_CHG );
 	}
 }
 
@@ -2500,7 +2500,7 @@ void main_vuart_rcv_date( void )
 //	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		tx[0] = VUART_CMD_DATE_SET;
 		tx[1] = VUART_DATA_RESULT_OK;
-		main_vuart_send( &tx[0], 2 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DATE_SET );
 //	}
 }
 
@@ -2535,7 +2535,7 @@ void main_vuart_rcv_device_set( void )
 	
 	tx[0] = VUART_CMD_DEVICE_SET;
 	tx[1] = result;
-	main_vuart_send( &tx[0], 2 );
+	main_vuart_send( &tx[0], VUART_SND_LEN_DEVICE_SET );
 	
 	if(result == VUART_DATA_RESULT_OK)
 	{
@@ -2544,9 +2544,9 @@ void main_vuart_rcv_device_set( void )
 		act_mode = s_unit.alarm.info.dat.act_mode;
 		// いびき感度設定
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
-		//抑制強度設定
+		// 抑制強度設定
 		vib_str = s_unit.alarm.info.dat.suppress_str;
-		//抑制動作最大継続時間
+		// 抑制動作最大継続時間
 		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 		// 抑制開始設定時間
 		suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
@@ -2580,7 +2580,7 @@ void main_vuart_rcv_vib_confirm( void )
 	
 	tx[0] = VUART_CMD_TYPE_VIB_CONFIRM;
 	tx[1] = result;
-	main_vuart_send( &tx[0], 2 );
+	main_vuart_send( &tx[0], VUART_SND_LEN_VIB_CONFIRM );
 	
 	if(result == VUART_DATA_RESULT_OK)
 	{
@@ -2617,7 +2617,7 @@ void main_vuart_rcv_vib_stop( void )
 	
 	tx[0] = VUART_CMD_TYPE_VIB_STOP;
 	tx[1] = result;
-	main_vuart_send( &tx[0], 2 );
+	main_vuart_send( &tx[0], VUART_SND_LEN_VIB_STOP );
 	
 	if(result == VUART_DATA_RESULT_OK)
 	{
