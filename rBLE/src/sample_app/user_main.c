@@ -131,7 +131,7 @@ static bool bat_check_flg = false;
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_str = VIB_MODE_DURING;
 static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
-static UB suppress_start_time = 20;
+static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
 #else
@@ -2695,7 +2695,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
-			if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
+			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
 				set_vib(set_vib_mode(vib_str));
 				if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
@@ -2844,7 +2844,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 			{//抑制動作最大時間以下
 				if(suppress_max_cnt_over_flg == OFF)
 				{//抑制動作最大時間オーバー時以外
-					if(s_unit.suppress_start_cnt >= SUPPRESS_START_CNT)
+					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 					{// 抑制開始時間経過（センシング開始から20分）
 						set_vib(set_vib_mode(vib_str));
 						if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)

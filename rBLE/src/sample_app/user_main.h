@@ -645,8 +645,9 @@ typedef struct{
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
 #define PHOTO_SENSOR_REMOVE_CNT			180		// 10秒毎なので 6 * 30 = 180 (30分)
 
-// 抑制開始カウント
-#define SUPPRESS_START_CNT				120		// センシング開始20分間は抑制しない 20min = 1200sec = 10 × 120
+// 抑制開始カウント(デフォルト)
+#define SUPPRESS_START_CNT				20		// センシング開始20分間は抑制しない 20min
+//#define SUPPRESS_START_CNT				120		// センシング開始20分間は抑制しない 20min = 1200sec = 10 × 120
 
 #define DATA_END_TIME_OUT				250		// データ取得完了通知タイムアウト 20ms * 250 = 5000ms = 5秒
 #define GET_MODE_TIME_OUT				250		// getmode時の送信中エラータイムアウト	20ms * 250 = 5000ms = 5秒
