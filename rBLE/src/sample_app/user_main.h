@@ -319,6 +319,7 @@ typedef struct{
 			UB	ibiki_sens;		// いびき感度
 			UB	suppress_str;	// 抑制強度
 			UB	suppress_max_time;	// 抑制動作最大継続時間
+			UB	suppress_start_time;	// 抑制開始設定時間
 		}dat;
 	}info;
 }ALARM;
@@ -383,6 +384,7 @@ typedef struct{
 	UH mukokyu_time;		// 無呼吸時間
 	UH max_mukokyu_sec;		// 最大無呼吸[秒]
 	UB device_set_info;		// 測定時のデバイス設定
+	UB suppress_start_time;	// 抑制開始設定時間
 	UH cont_mukokyu_detect_cnt_max;		// 継続無呼吸検知数(最大値保存用)
 	UH cont_mukokyu_detect_cnt_current;	// 継続無呼吸検知数(現在値)
 	
@@ -561,7 +563,7 @@ typedef struct{
 
 #define	VUART_CMD_LEN_VERSION		1
 #define	VUART_CMD_LEN_DEVICE_INFO	1
-#define	VUART_CMD_LEN_DEVICE_SET	5
+#define	VUART_CMD_LEN_DEVICE_SET	6
 #define	VUART_CMD_LEN_VIB_CONFIRM	2
 #define	VUART_CMD_LEN_VIB_STOP		1
 

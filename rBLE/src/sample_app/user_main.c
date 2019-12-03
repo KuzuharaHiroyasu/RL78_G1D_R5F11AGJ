@@ -131,6 +131,7 @@ static bool bat_check_flg = false;
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_str = VIB_MODE_DURING;
 static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
+static UB suppress_start_time = 20;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
 #else
@@ -1111,7 +1112,12 @@ STATIC void user_main_mode_sensing_before( void )
 	// デバイス設定書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_INFO;
 	eep_write( wr_adrs, &s_unit.device_set_info, EEP_DEVICE_SET_INFO_SIZE, ON );
-
+	
+	s_unit.suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
+	// 抑制開始設定時間書き込み
+	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_SUPPRESS_START_TIME;
+	eep_write( wr_adrs, &s_unit.suppress_start_time, EEP_DEVICE_SET_SUPPRESS_START_TIME_SIZE, ON );
+	
 	s_unit.calc_cnt = 0;
 	s_unit.ibiki_detect_cnt = 0;
 	s_unit.mukokyu_detect_cnt = 0;
@@ -1472,6 +1478,9 @@ STATIC void user_main_mode_get(void)
 		// デバイス設定情報読み出し
 		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_INFO;
 		eep_read( rd_adrs, &s_unit.device_set_info, EEP_DEVICE_SET_INFO_SIZE );
+		// 抑制開始設定時間読み出し
+		rd_adrs = ( s_unit.frame_num_work.read * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_SUPPRESS_START_TIME;
+		eep_read( rd_adrs, &s_unit.suppress_start_time, EEP_DEVICE_SET_SUPPRESS_START_TIME_SIZE );
 		
 		s_unit.get_mode_seq = 2;
 	}else if( 2 == s_unit.get_mode_seq ){
@@ -1494,8 +1503,9 @@ STATIC void user_main_mode_get(void)
 		tx[16] =  ( s_unit.max_mukokyu_sec & 0x00ff );
 		tx[17] = (( s_unit.max_mukokyu_sec & 0xff00 ) >> 8 );
 		tx[18] = s_unit.device_set_info;
+		tx[19] = s_unit.suppress_start_time;
 		
-		main_vuart_send( &tx[0], 19 );
+		main_vuart_send( &tx[0], 20 );
 		s_unit.get_mode_seq = 3;
 	}else if( 3 == s_unit.get_mode_seq ){
 		if( s_unit.calc_cnt <= s_unit.get_mode_calc_cnt ){
@@ -2518,6 +2528,7 @@ void main_vuart_rcv_device_set( void )
 		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[2];
 		s_unit.alarm.info.dat.suppress_str = s_ds.vuart.input.rcv_data[3];
 		s_unit.alarm.info.dat.suppress_max_time = s_ds.vuart.input.rcv_data[4];
+		s_unit.alarm.info.dat.suppress_start_time = s_ds.vuart.input.rcv_data[5];
 		
 		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
 	}
@@ -2537,6 +2548,8 @@ void main_vuart_rcv_device_set( void )
 		vib_str = s_unit.alarm.info.dat.suppress_str;
 		//抑制動作最大継続時間
 		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
+		// 抑制開始設定時間
+		suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
 #endif
 	}
 }
