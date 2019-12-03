@@ -317,7 +317,7 @@ typedef struct{
 		struct{
 			UB	act_mode;				// 動作モード
 			UB	ibiki_sens;				// いびき感度
-			UB	suppress_str;			// 抑制強度
+			UB	suppress_power;			// 抑制強度
 			UB	suppress_max_time;		// 抑制動作最大継続時間
 			UB	suppress_start_time;	// 抑制開始設定時間
 		}dat;

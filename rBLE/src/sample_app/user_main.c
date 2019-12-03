@@ -129,7 +129,7 @@ static bool vib_flg = false;
 static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
-static UB vib_str = VIB_MODE_DURING;
+static UB vib_power = VIB_MODE_DURING;
 static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
@@ -1103,7 +1103,7 @@ STATIC void user_main_mode_sensing_before( void )
 	// 動作モード保存
 	s_unit.device_set_info = s_unit.alarm.info.dat.act_mode;
 	// バイブレーションの強さ保存
-	s_unit.device_set_info |= s_unit.alarm.info.dat.suppress_str << 2;
+	s_unit.device_set_info |= s_unit.alarm.info.dat.suppress_power << 2;
 	// いびき検出感度保存
 	s_unit.device_set_info |= s_unit.alarm.info.dat.ibiki_sens << 4;
 	// 無呼吸検出感度保存
@@ -2526,7 +2526,7 @@ void main_vuart_rcv_device_set( void )
 	}else{
 		s_unit.alarm.info.dat.act_mode = s_ds.vuart.input.rcv_data[1];
 		s_unit.alarm.info.dat.ibiki_sens = s_ds.vuart.input.rcv_data[2];
-		s_unit.alarm.info.dat.suppress_str = s_ds.vuart.input.rcv_data[3];
+		s_unit.alarm.info.dat.suppress_power = s_ds.vuart.input.rcv_data[3];
 		s_unit.alarm.info.dat.suppress_max_time = s_ds.vuart.input.rcv_data[4];
 		s_unit.alarm.info.dat.suppress_start_time = s_ds.vuart.input.rcv_data[5];
 		
@@ -2545,7 +2545,7 @@ void main_vuart_rcv_device_set( void )
 		// いびき感度設定
 		set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 		// 抑制強度設定
-		vib_str = s_unit.alarm.info.dat.suppress_str;
+		vib_power = s_unit.alarm.info.dat.suppress_power;
 		// 抑制動作最大継続時間
 		set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 		// 抑制開始設定時間
@@ -2570,12 +2570,12 @@ void main_vuart_rcv_vib_confirm( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
-	UB vib_str_conf;
+	UB vib_power_conf;
 	
 	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		result = VUART_DATA_RESULT_NG;
 	}else{
-		vib_str_conf = s_ds.vuart.input.rcv_data[1];
+		vib_power_conf = s_ds.vuart.input.rcv_data[1];
 	}
 	
 	tx[0] = VUART_CMD_TYPE_VIB_CONFIRM;
@@ -2589,7 +2589,7 @@ void main_vuart_rcv_vib_confirm( void )
 		vib_level = 0;
 		set_vib_level(vib_level);
 		
-		set_vib_confirm(set_vib_mode(vib_str_conf));
+		set_vib_confirm(set_vib_mode(vib_power_conf));
 #endif
 	}
 }
@@ -2697,8 +2697,8 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
-				set_vib(set_vib_mode(vib_str));
-				if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+				set_vib(set_vib_mode(vib_power));
+				if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
 				{
 					vib_level++;
 					set_vib_level(vib_level);
@@ -2846,8 +2846,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 					{// 抑制開始時間経過（センシング開始から20分）
-						set_vib(set_vib_mode(vib_str));
-						if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+						set_vib(set_vib_mode(vib_power));
+						if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
 						{
 							vib_level++;
 							set_vib_level(vib_level);
@@ -2862,7 +2862,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
 		s_unit.suppress_cont_time_cnt = 0;	// 初期化
-		if(vib_str == VIB_MODE_GRADUALLY_STRONGER_THREE)
+		if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
 		{
 			if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
 			{// 抑制モード（いびき + 無呼吸）の場合
@@ -3113,7 +3113,7 @@ STATIC void user_main_eep_read_pow_on(void)
 	// いびき感度設定
 	set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 	// 抑制強度設定
-	vib_str = s_unit.alarm.info.dat.suppress_str;
+	vib_power = s_unit.alarm.info.dat.suppress_power;
 	// 抑制動作最大継続時間
 	set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 	// 抑制開始設定時間
