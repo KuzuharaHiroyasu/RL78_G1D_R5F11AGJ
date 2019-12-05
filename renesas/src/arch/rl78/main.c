@@ -63,6 +63,7 @@
 
 #include "pktmon.h"
 
+#include "r_cg_wdt.h"
 
 #define MIRROR_FUNC_OFFSET_ADDR     0x400
 #define ACCESS_TABLE_ADDR           0x0A800
@@ -367,6 +368,8 @@ _MAINCODE void main( void )
         {
             // schedule the BLE stack
             rwble_schedule();
+        	
+            R_WDT_Restart();
         }
     }
     else
