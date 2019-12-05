@@ -2578,7 +2578,7 @@ void main_vuart_rcv_vib_confirm( void )
 		vib_power_conf = s_ds.vuart.input.rcv_data[1];
 	}
 	
-	tx[0] = VUART_CMD_TYPE_VIB_CONFIRM;
+	tx[0] = VUART_CMD_VIB_CONFIRM;
 	tx[1] = result;
 	main_vuart_send( &tx[0], VUART_SND_LEN_VIB_CONFIRM );
 	
@@ -2615,7 +2615,7 @@ void main_vuart_rcv_vib_stop( void )
 		result = VUART_DATA_RESULT_NG;
 	}
 	
-	tx[0] = VUART_CMD_TYPE_VIB_STOP;
+	tx[0] = VUART_CMD_VIB_STOP;
 	tx[1] = result;
 	main_vuart_send( &tx[0], VUART_SND_LEN_VIB_STOP );
 	
