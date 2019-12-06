@@ -2698,7 +2698,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
 				set_vib(set_vib_mode(vib_power));
-				if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
+				if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 				{
 					vib_level++;
 					set_vib_level(vib_level);
@@ -2847,7 +2847,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 					{// 抑制開始時間経過（センシング開始から20分）
 						set_vib(set_vib_mode(vib_power));
-						if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
+						if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 						{
 							vib_level++;
 							set_vib_level(vib_level);
@@ -2862,7 +2862,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
 		s_unit.suppress_cont_time_cnt = 0;	// 初期化
-		if(vib_power == VIB_MODE_GRADUALLY_STRONGER_THREE)
+		if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 		{
 			if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
 			{// 抑制モード（いびき + 無呼吸）の場合
