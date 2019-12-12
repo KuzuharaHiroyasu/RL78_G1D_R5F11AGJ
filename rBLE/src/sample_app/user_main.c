@@ -32,14 +32,15 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 #if FUNC_DEBUG_LOG != ON
-static void set_suppress_cnt_time(UB suppress_max_time);
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static void set_suppress_cnt_time(UB suppress_max_time);
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_mode( void );
 STATIC void user_main_mode_common( void );
 STATIC void main_vuart_proc(void);
+static void set_suppress_cnt_time(UB suppress_max_time);
 #else
 STATIC void make_send_data(char* pBuff);
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
@@ -126,7 +127,6 @@ STATIC T_UNIT_SAVE s_unit_save;
 STATIC DS s_ds;
 
 static bool vib_flg = false;
-static bool bat_check_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_power = VIB_MODE_DURING;
@@ -134,6 +134,11 @@ static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
+static bool bat_check_flg = false;
+static bool apnea_data_max = false;
+static bool snore_data_max = false;
+static bool acl_data_max = false;
+static bool photo_data_max = false;
 #else
 static UB sw_on_flg = OFF;
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
@@ -142,10 +147,6 @@ static UB apnea_state;
 #endif
 #endif
 
-static bool apnea_data_max = false;
-static bool snore_data_max = false;
-static bool acl_data_max = false;
-static bool photo_data_max = false;
 static B	vib_level = 0;
 
 /********************/
@@ -201,7 +202,6 @@ void codeptr app_evt_usr_2(void)
 	// 秒タイマーカウントダウン
 	DEC_MIN( s_unit.timer_sec ,0 );
 	
-#if 1
 	// RD8001暫定：G1Dダウンロード_デバッグ用バージョン送信
 	if( ON == s_unit.prg_g1d_send_ver_flg ){
 		DEC_MIN( s_unit.prg_g1d_send_ver_sec ,0 );
@@ -217,7 +217,6 @@ void codeptr app_evt_usr_2(void)
 			}
 		}
 	}
-#endif
 	
 	// G1Dダウンロード_応答を返してからアップデートを開始するための待ちに入る
 	if( ON == s_unit.prg_g1d_update_wait_flg ){
@@ -948,7 +947,7 @@ STATIC void sw_proc(void)
 	}else{
 		sw_on_flg = OFF;
 		s_unit.sw_time_cnt = 0;
-		led_off();
+		led_green_off();
 	}
 #else
 	if( ON == pow_sw ){		// ON処理
@@ -1148,10 +1147,12 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.sec30_cnt = 0;
 	s_unit.sec600_cnt = 0;
 	
+#if FUNC_DEBUG_LOG != ON
 	apnea_data_max = false;
 	snore_data_max = false;
 	acl_data_max = false;
 	photo_data_max = false;
+#endif
 	
 	// バイブレベル初期化
 	vib_level = 0;
@@ -1853,7 +1854,9 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
 			set_led( LED_PATT_GREEN_BLINK );
 		}
+#if FUNC_DEBUG_LOG != ON
 		bat_check_flg = true;
+#endif
 	}
 	return SYSTEM_MODE_NON;
 }
@@ -2570,12 +2573,16 @@ void main_vuart_rcv_vib_confirm( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
+#if FUNC_DEBUG_LOG != ON
 	UB vib_power_conf;
+#endif
 	
 	if( s_unit.system_mode != SYSTEM_MODE_IDLE_COM ){
 		result = VUART_DATA_RESULT_NG;
 	}else{
+#if FUNC_DEBUG_LOG != ON
 		vib_power_conf = s_ds.vuart.input.rcv_data[1];
+#endif
 	}
 	
 	tx[0] = VUART_CMD_VIB_CONFIRM;
@@ -2980,7 +2987,9 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 	s_unit.phase_body_direct++;
 	if(s_unit.phase_body_direct >= SEC_PHASE_NUM){
 		s_unit.phase_body_direct = SEC_PHASE_0_10;
+#if FUNC_DEBUG_LOG != ON
 		acl_data_max = true;
+#endif
 	}
 
 	return (KE_MSG_CONSUMED);
@@ -3006,7 +3015,9 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 	s_unit.phase_photoref++;
 	if(s_unit.phase_photoref >= SEC_PHASE_NUM){
 		s_unit.phase_photoref = SEC_PHASE_0_10;
+#if FUNC_DEBUG_LOG != ON
 		photo_data_max = true;
+#endif
 	}
 	
 	// 装着判定
@@ -3103,10 +3114,11 @@ STATIC void user_main_eep_read_pow_on(void)
 		eep_write( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num.cnt, 1, ON );
 	}
 	
-	
+
+#if FUNC_DEBUG_LOG != ON
 	// 警告機能
 	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
-	
+
 	// 設定反映
 	// 動作モード設定
 	act_mode = s_unit.alarm.info.dat.act_mode;
@@ -3118,6 +3130,7 @@ STATIC void user_main_eep_read_pow_on(void)
 	set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 	// 抑制開始設定時間
 	suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
+#endif
 	
 	// RD8001暫：範囲チェック入れる
 }
