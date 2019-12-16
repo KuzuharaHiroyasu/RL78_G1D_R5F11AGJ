@@ -147,7 +147,7 @@ static UB apnea_state;
 #endif
 #endif
 
-static B	vib_level = 0;
+static B	vib_level = VIB_LEVEL_1;
 
 /********************/
 /*     定数定義     */
@@ -1155,7 +1155,7 @@ STATIC void user_main_mode_sensing_before( void )
 #endif
 	
 	// バイブレベル初期化
-	vib_level = 0;
+	vib_level = VIB_LEVEL_1;
 	set_vib_level(vib_level);
 	
 	s_unit.sensing_flg = ON;
@@ -2593,7 +2593,7 @@ void main_vuart_rcv_vib_confirm( void )
 	{
 #if FUNC_DEBUG_LOG != ON
 		// バイブレベル初期化
-		vib_level = 0;
+		vib_level = VIB_LEVEL_1;
 		set_vib_level(vib_level);
 		
 		set_vib_confirm(set_vib_mode(vib_power_conf));
@@ -2704,19 +2704,19 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
-				set_vib(set_vib_mode(vib_power));
 				if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 				{
-					vib_level++;
 					set_vib_level(vib_level);
+					vib_level++;
 				}
+				set_vib(set_vib_mode(vib_power));
 			}
 		}
 	}else{
 		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
 		if(act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{// 抑制モード（無呼吸）の場合
-			vib_level = 0;
+			vib_level = VIB_LEVEL_1;
 		}
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
@@ -2829,6 +2829,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	newstate = calc_snore_get();
+	newstate = SNORE_ON;
 	
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
@@ -2853,12 +2854,12 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 					{// 抑制開始時間経過（センシング開始から20分）
-						set_vib(set_vib_mode(vib_power));
 						if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 						{
-							vib_level++;
 							set_vib_level(vib_level);
+							vib_level++;
 						}
+						set_vib(set_vib_mode(vib_power));
 					}
 				}
 			} else {
@@ -2876,11 +2877,11 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 				if( ((s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask) == 0x00 )
 				{// 無呼吸判定チェック
 					// 無呼吸判定もされていない場合バイブレベルを初期化
-					vib_level = 0;
+					vib_level = VIB_LEVEL_1;
 				}
 			} else if(act_mode == ACT_MODE_SUPPRESS_SNORE)
 			{// 抑制モード（いびき）の場合
-				vib_level = 0;
+				vib_level = VIB_LEVEL_1;
 			}
 		}
 	}
