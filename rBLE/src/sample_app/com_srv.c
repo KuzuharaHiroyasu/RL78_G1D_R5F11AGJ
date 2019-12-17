@@ -30,9 +30,13 @@ void com_srv_rcv( UB* rx_data, UB len );
 /*     内部変数     */
 /********************/
 #if FUNC_DEBUG_LOG == ON
-STATIC UB s_drv_cpu_com_snd_status;							/* CPU間通信ドライバ(物理レベル)の送信ステータス */
+STATIC UB s_drv_cpu_com_snd_status;							/* シリアル通信ドライバ(物理レベル)の送信ステータス */
 																/* DRV_CPU_COM_STATUS_CAN_SEND		送信可能状態 */
 																/* DRV_CPU_COM_STATUS_SENDING		送信中 */
+
+STATIC UB s_drv_cpu_com_rcv_status;							/* シリアル通信ドライバ(物理レベル)の受信ステータス */
+																/* DRV_CPU_COM_STATUS_CAN_RCV		受信可能状態 */
+																/* DRV_CPU_COM_STATUS_RECEIVING		受信中 */
 #endif
 
 /********************/
@@ -65,6 +69,7 @@ void com_srv_init( void )
 	
 	// 変数の初期化
 	s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_CAN_SEND;
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_CAN_RCV;
 #endif
 }
 
@@ -82,6 +87,7 @@ void com_srv_init( void )
 void com_srv_read_comp( void )
 {
 #if FUNC_DEBUG_LOG == ON
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_CAN_RCV;
 #endif
 }
 
@@ -184,7 +190,10 @@ void com_srv_send( UB* tx_data, UB len )
 void com_srv_rcv( UB* rx_data, UB len )
 {
 #if FUNC_DEBUG_LOG == ON
-	serial_read( rx_data, len );
+	if(s_drv_cpu_com_rcv_status == DRV_CPU_COM_STATUS_CAN_RCV){
+		s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVING;
+		serial_read( rx_data, len );
+	}
 #endif
 }
 
