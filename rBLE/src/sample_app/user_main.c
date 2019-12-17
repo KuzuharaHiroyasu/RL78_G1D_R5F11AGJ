@@ -400,6 +400,9 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	char dbg_rx_data[50] = {0};
+	int dbg_rx_len = 0;
+	
 #if FUNC_DEBUG_LOG != ON
 	UB bat;
 #else
@@ -485,6 +488,18 @@ void user_main_timer_cyc( void )
 			s_unit.tick_10ms_new = 0;
 		}
 	}
+	
+	// シリアルデータ受信
+	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+		com_srv_rcv(dbg_rx_data, dbg_rx_len);
+		if(dbg_rx_len != 0)
+		{
+			NO_OPERATION_BREAK_POINT();
+		}else{
+			NO_OPERATION_BREAK_POINT();
+		}
+	}
+	
 	// 20ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);

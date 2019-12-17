@@ -19,6 +19,7 @@ void com_srv_log_title( void );
 void com_srv_cyc( void );
 //STATIC void com_srv_command( UB data );
 void com_srv_send( UB* tx_data, UB len );
+void com_srv_rcv( UB* rx_data, UB len );
 
 /********************/
 /*     内部定数     */
@@ -165,6 +166,25 @@ void com_srv_send( UB* tx_data, UB len )
 		s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_SENDING;
 		serial_write( tx_data, len );
 	}
+#endif
+}
+
+/************************************************************************/
+/* 関数     : com_srv_rcv                                               */
+/* 関数名   : 受信処理					                                */
+/* 引数     : rx_data		受信バッファ								*/
+/*          : len			受信長										*/
+/* 戻り値   : なし                                                      */
+/* 変更履歴 : 2019.12.17  oneA 葛原 弘安	     初版作成	            */
+/************************************************************************/
+/* 機能 : 受信処理									                    */
+/************************************************************************/
+/* 注意事項 : なし                                                      */
+/************************************************************************/
+void com_srv_rcv( UB* rx_data, UB len )
+{
+#if FUNC_DEBUG_LOG == ON
+	serial_read( rx_data, len );
 #endif
 }
 

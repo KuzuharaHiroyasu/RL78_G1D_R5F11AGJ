@@ -40,6 +40,7 @@ extern void com_srv_init( void );
 extern void com_srv_log_title( void );
 extern void com_srv_cyc( void );
 extern void com_srv_send( UB* tx_data, UB len );
+extern void com_srv_rcv( UB* rx_data, UB len );
 extern void com_srv_puts( const B* pMsg);
 extern void com_srv_read_comp( void );
 extern void com_srv_write_comp( void );
