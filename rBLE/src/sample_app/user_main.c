@@ -2829,7 +2829,6 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	newstate = calc_snore_get();
-	newstate = SNORE_ON;
 	
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
