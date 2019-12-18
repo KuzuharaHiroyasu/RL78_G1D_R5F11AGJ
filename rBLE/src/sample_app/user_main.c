@@ -148,6 +148,8 @@ static UB apnea_state;
 #endif
 
 static B	vib_level = VIB_LEVEL_1;
+static bool vib_startflg = false;
+static UB vib_start_limit_cnt = 0;
 
 /********************/
 /*     定数定義     */
@@ -443,6 +445,18 @@ void user_main_timer_cyc( void )
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
 			user_main_calc_data_set_kyokyu_ibiki();
+			
+			if(vib_startflg == true)
+			{
+				if( (s_unit.meas.info.dat.ibiki_val < BREATH_VALLEY) || ( VIB_START_LIMIT <= vib_start_limit_cnt) )
+				{
+					vib_startflg = false;
+					vib_start_limit_cnt = 0;
+					set_vib(set_vib_mode(vib_power));
+				}else{
+					vib_start_limit_cnt++;
+				}
+			}
 			
 			s_unit.acl_timing+=1;
 			
@@ -1170,6 +1184,8 @@ STATIC void user_main_mode_sensing_before( void )
 	// BLEのLEDを消灯(暫定)→本来はセンシング移行時BLE切断で消灯する
 	led_green_off();
 	set_ble_isconnect(false);
+	
+	vib_start_limit_cnt = 0;
 	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -2858,7 +2874,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 							set_vib_level(vib_level);
 							vib_level++;
 						}
-						set_vib(set_vib_mode(vib_power));
+						vib_startflg = true;
+//						set_vib(set_vib_mode(vib_power));
 					}
 				}
 			} else {
