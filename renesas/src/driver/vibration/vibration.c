@@ -64,19 +64,19 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_OFF:	// OFF(単純動作)
 				vib_off();
 				break;
-			case VIB_MODE_WEAK:	// 未使用（初版：弱）
-				vib_mode_weak(vib_timer);
-				break;
-			case VIB_MODE_DURING: // 弱（初版：中）
+			case VIB_MODE_WEAK:	// 弱（強さ：中で１セット）
 				vib_mode_during(vib_timer);
 				break;
-			case VIB_MODE_DURING_THREE: // 中
+			case VIB_MODE_DURING: // 中（強さ：中で２セット）
+				vib_mode_during(vib_timer);
+				break;
+			case VIB_MODE_DURING_THREE: // 未使用
 				vib_mode_during_three(vib_timer);
 				break;
-			case VIB_MODE_STRENGTH: // 未使用（初版：強）
-				vib_mode_strength(vib_timer);
+			case VIB_MODE_STRENGTH: // 強（強さ：中で３セット）
+				vib_mode_during(vib_timer);
 				break;
-			case VIB_MODE_STRENGTH_THREE: // 強
+			case VIB_MODE_STRENGTH_THREE: // 未使用
 				vib_mode_strength_three(vib_timer);
 				break;
 			case VIB_MODE_GRADUALLY_STRONGER: // 徐々に強く
@@ -202,13 +202,13 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 	switch(yokusei_str)
 	{
 		case VIB_SET_MODE_WEAK: // 弱
-			mode = VIB_MODE_DURING;
+			mode = VIB_MODE_WEAK;
 			break;
 		case VIB_SET_MODE_DURING: //中
-			mode = VIB_MODE_DURING_THREE;
+			mode = VIB_MODE_DURING;
 			break;
 		case VIB_SET_MODE_STRENGTH: //強
-			mode = VIB_MODE_STRENGTH_THREE;
+			mode = VIB_MODE_STRENGTH;
 			break;
 		case VIB_SET_MODE_GRADUALLY_STRONGER: //徐々に強く
 			mode = VIB_MODE_GRADUALLY_STRONGER;
@@ -235,6 +235,15 @@ STATIC void set_vib_orbit(VIB_MODE mode)
 {
 	switch(mode)
 	{
+		case VIB_MODE_WEAK:
+			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;
+			break;
+		case VIB_MODE_DURING:
+			set_vib_orbit_value = VIB_THREE_ORBIT_TWO_SET;
+			break;
+		case VIB_MODE_STRENGTH:
+			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
+			break;
 		case VIB_MODE_DURING_THREE:
 		case VIB_MODE_STRENGTH_THREE:
 			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
