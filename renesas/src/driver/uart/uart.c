@@ -573,19 +573,24 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
  */
 _UARTCODE void serial_read(uint8_t *bufptr, const uint16_t size)
 {
-    #if SERIAL_U_DIV_2WIRE
-    /* store the argument parameter */
-    rx_addr = (uint16_t)bufptr;
-    rx_size = size;
-    rx_ptr = bufptr;
-    #endif
+	uint8_t BEF = read_sfr(UART_RXD_SSR_L);
+	
+	if((BEF & 0x20) == 0x20)
+	{
+	    #if SERIAL_U_DIV_2WIRE
+	    /* store the argument parameter */
+	    rx_addr = (uint16_t)bufptr;
+	    rx_size = size;
+	    rx_ptr = bufptr;
+	    #endif
 
-    /* start DMA0 */
-#if 1
-    uart_dma_rx((uint16_t)bufptr, size);
-#else
-	*bufptr = RXD0;
-#endif
+	    /* start DMA0 */
+	#if 0
+	    uart_dma_rx((uint16_t)bufptr, size);
+	#else
+		*bufptr = RXD0;
+	#endif
+	}
 }
 
 /**

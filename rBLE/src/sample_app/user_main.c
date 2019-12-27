@@ -400,7 +400,7 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
-	char dbg_rx_data[50] = {0};
+	char dbg_rx_data[1] = {0};
 	int dbg_rx_len = 0;
 	
 #if FUNC_DEBUG_LOG != ON
@@ -490,11 +490,12 @@ void user_main_timer_cyc( void )
 	}
 	
 	// シリアルデータ受信
-	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_10MSEC){
 		com_srv_rcv(dbg_rx_data, dbg_rx_len);
-		if(dbg_rx_len != 0)
+		if(dbg_rx_data[0] != 0)
 		{
-			NO_OPERATION_BREAK_POINT();
+			set_vib(VIB_MODE_SENSING);
+			dbg_rx_data[0] = 0;
 		}else{
 			NO_OPERATION_BREAK_POINT();
 		}

@@ -191,7 +191,7 @@ void com_srv_rcv( UB* rx_data, UB len )
 {
 #if FUNC_DEBUG_LOG == ON
 	if(s_drv_cpu_com_rcv_status == DRV_CPU_COM_STATUS_CAN_RCV){
-		s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVING;
+//		s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVING;
 		serial_read( rx_data, len );
 	}
 #endif
