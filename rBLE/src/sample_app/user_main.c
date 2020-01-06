@@ -145,6 +145,7 @@ static UB sw_on_flg = OFF;
 static UB snore_state;
 static UB apnea_state;
 #endif
+void set_serial_command(char* dbg_rx_data);
 #endif
 
 static B	vib_level = VIB_LEVEL_1;
@@ -494,8 +495,8 @@ void user_main_timer_cyc( void )
 		com_srv_rcv(dbg_rx_data, dbg_rx_len);
 		if(dbg_rx_data[0] != 0)
 		{
-			set_vib(VIB_MODE_SENSING);
-			dbg_rx_data[0] = 0;
+			set_serial_command(dbg_rx_data);
+			memset(dbg_rx_data, 0, sizeof(dbg_rx_data));
 		}else{
 			NO_OPERATION_BREAK_POINT();
 		}
@@ -3528,3 +3529,42 @@ bool get_ble_isconnect(void)
 {
 	return s_unit.ble_isconnect;
 }
+
+/************************************************************************/
+/* 関数     : set_serial_command										*/
+/* 関数名   : シリアルコマンド設定										*/
+/* 引数     : dbg_rx_data:受信データ（コマン）							*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2020.01.06 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_serial_command(char* dbg_rx_data)
+{
+	switch(dbg_rx_data[0])
+	{
+		case 1:	// モード変更
+			break;
+		case 2: // いびき検出感度変更
+			break;
+		case 3:	// いびき抑制の連続時間
+			break;
+		case 4:	// バイブ抑制開始時間変更
+			break;
+		case 5:	// バイブ(弱)
+			break;
+		case 6:	// バイブ(中)
+			break;
+		case 7:	// バイブ(強)
+			break;
+		case 8:	// バイブ(徐々に強く)
+			break;
+		default:
+			break;
+	}
+}
+
+
+

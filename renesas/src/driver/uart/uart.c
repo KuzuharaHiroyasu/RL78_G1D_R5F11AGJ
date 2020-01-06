@@ -255,6 +255,7 @@ enum
 #define UART_CALLBACK_VOID(cb)        SERIAL_CALLBACK_VOID(cb)
 #define UART_CALLBACK_BOOL(cb)        SERIAL_CALLBACK_BOOL(cb)
 
+#define SSR_BEF                       0x20
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -573,9 +574,9 @@ _UARTCODE void serial_init(SERIAL_EVENT_PARAM *param)
  */
 _UARTCODE void serial_read(uint8_t *bufptr, const uint16_t size)
 {
-	uint8_t BEF = read_sfr(UART_RXD_SSR_L);
+	uint8_t rxd_ssr = read_sfr(UART_RXD_SSR_L);
 	
-	if((BEF & 0x20) == 0x20)
+	if((rxd_ssr & SSR_BEF) == SSR_BEF)
 	{
 	    #if SERIAL_U_DIV_2WIRE
 	    /* store the argument parameter */
@@ -589,7 +590,10 @@ _UARTCODE void serial_read(uint8_t *bufptr, const uint16_t size)
 	    uart_dma_rx((uint16_t)bufptr, size);
 	#else
 		*bufptr = RXD0;
+//		UART_CALLBACK_VOID(uart_callback.rx_callback);
 	#endif
+	}else{
+		*bufptr = 0;
 	}
 }
 
