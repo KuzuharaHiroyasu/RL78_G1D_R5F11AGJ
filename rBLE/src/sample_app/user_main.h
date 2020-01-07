@@ -226,7 +226,8 @@ typedef enum{
 	SEC_PHASE_NUM,
 }SEC_PHASE;
 
-
+#define	BREATH_VALLEY					100		// 呼吸の谷間と判断するAD値
+#define	VIB_START_LIMIT					20		// バイブの開始待ちリミット（50ms * 20 = 1000ms(1秒)間、呼吸の谷間が判定されなかった場合バイブ開始）
 
 
 #define	OK_NOW_UPDATING					0		//更新未了
