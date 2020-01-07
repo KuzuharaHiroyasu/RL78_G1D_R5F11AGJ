@@ -652,6 +652,8 @@ typedef struct{
 #define DATA_END_TIME_OUT				250		// データ取得完了通知タイムアウト 20ms * 250 = 5000ms = 5秒
 #define GET_MODE_TIME_OUT				250		// getmode時の送信中エラータイムアウト	20ms * 250 = 5000ms = 5秒
 
+#define RX_DATA_LEN						10 		// シリアル受信データ長
+
 /******************/
 /*  外部参照宣言  */
 /******************/

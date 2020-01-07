@@ -20,6 +20,7 @@ void com_srv_cyc( void );
 //STATIC void com_srv_command( UB data );
 void com_srv_send( UB* tx_data, UB len );
 void com_srv_rcv( UB* rx_data, UB len );
+UB com_get_read_status(void);
 
 /********************/
 /*     内部定数     */
@@ -61,16 +62,55 @@ void com_srv_init( void )
 	// プラットフォーム関連の設定
 	SERIAL_EVENT_PARAM call_back = {0};
 	
-	call_back.rx_callback = &com_srv_read_comp;
+	call_back.rx_callback = &com_srv_isread;
 	call_back.tx_callback = &com_srv_write_comp;
 	call_back.err_callback = &com_srv_error_comp;
+	call_back.rx_first_byte_callback = &com_srv_first_data;
+	call_back.rx_cmp_callback = &com_srv_read_comp;
 	
 	serial_init( &call_back );
 	
 	// 変数の初期化
 	s_drv_cpu_com_snd_status = DRV_CPU_COM_STATUS_CAN_SEND;
-	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_CAN_RCV;
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_NOT_RCV;
 #endif
+}
+
+/************************************************************************/
+/* 関数     : com_srv_isread											*/
+/* 関数名   : 読み出し中(プラットフォーム)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.01.07 oneA 葛原 弘安		初版作成					*/
+/************************************************************************/
+/* 機能 : 読み出し中(プラットフォーム)									*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void com_srv_isread( void )
+{
+#if FUNC_DEBUG_LOG == ON
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_NOT_RCV;
+#endif
+}
+
+/************************************************************************/
+/* 関数     : com_srv_first_data										*/
+/* 関数名   : 最初のデータ読み出し(プラットフォーム)					*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.01.07 oneA 葛原 弘安		初版作成					*/
+/************************************************************************/
+/* 機能 : 最初のデータ読み出し(プラットフォーム)						*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+bool com_srv_first_data( void )
+{
+#if FUNC_DEBUG_LOG == ON
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVING;
+#endif
+	return true;
 }
 
 /************************************************************************/
@@ -84,11 +124,12 @@ void com_srv_init( void )
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-void com_srv_read_comp( void )
+bool com_srv_read_comp( void )
 {
 #if FUNC_DEBUG_LOG == ON
-	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_CAN_RCV;
+	s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVE_COMP;
 #endif
+	return true;
 }
 
 /************************************************************************/
@@ -190,10 +231,27 @@ void com_srv_send( UB* tx_data, UB len )
 void com_srv_rcv( UB* rx_data, UB len )
 {
 #if FUNC_DEBUG_LOG == ON
-	if(s_drv_cpu_com_rcv_status == DRV_CPU_COM_STATUS_CAN_RCV){
-//		s_drv_cpu_com_rcv_status = DRV_CPU_COM_STATUS_RECEIVING;
-		serial_read( rx_data, len );
-	}
+	serial_read( rx_data, len );
+#endif
+}
+
+/************************************************************************/
+/* 関数     : com_get_read_status                                       */
+/* 関数名   : 受信ステータス取得		                                */
+/* 引数     : なし														*/
+/* 戻り値   : 受信ステータス                                            */
+/* 変更履歴 : 2019.12.17  oneA 葛原 弘安	     初版作成	            */
+/************************************************************************/
+/* 機能 : 受信処理									                    */
+/************************************************************************/
+/* 注意事項 : なし                                                      */
+/************************************************************************/
+UB com_get_read_status(void)
+{
+#if FUNC_DEBUG_LOG == ON
+	return s_drv_cpu_com_rcv_status;
+#else
+	return 0;
 #endif
 }
 

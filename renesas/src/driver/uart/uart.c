@@ -257,6 +257,8 @@ enum
 
 #define SSR_BEF                       0x20
 
+#define END_RCV_DATA                  99
+
 /*
  * GLOBAL VARIABLE DEFINITIONS
  ****************************************************************************************
@@ -588,12 +590,16 @@ _UARTCODE void serial_read(uint8_t *bufptr, const uint16_t size)
 	    /* start DMA0 */
 	#if 0
 	    uart_dma_rx((uint16_t)bufptr, size);
-	#else
-		*bufptr = RXD0;
-//		UART_CALLBACK_VOID(uart_callback.rx_callback);
 	#endif
+		*bufptr = RXD0;
+		if(*bufptr == END_RCV_DATA)
+		{
+			UART_CALLBACK_VOID(uart_callback.rx_cmp_callback);
+		}else{
+			UART_CALLBACK_VOID(uart_callback.rx_first_byte_callback);
+		}
 	}else{
-		*bufptr = 0;
+		UART_CALLBACK_VOID(uart_callback.rx_callback);
 	}
 }
 

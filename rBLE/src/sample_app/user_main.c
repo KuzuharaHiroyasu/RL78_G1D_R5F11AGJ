@@ -146,6 +146,8 @@ static UB snore_state;
 static UB apnea_state;
 #endif
 void set_serial_command(char* dbg_rx_data);
+char dbg_rx_data[RX_DATA_LEN] = {0};
+int i = 0;
 #endif
 
 static B	vib_level = VIB_LEVEL_1;
@@ -400,13 +402,12 @@ void user_main_timer_10ms_set( void )
 /* 注意事項 :なし														*/
 /************************************************************************/
 void user_main_timer_cyc( void )
-{
-	char dbg_rx_data[1] = {0};
-	int dbg_rx_len = 0;
-	
+{	
 #if FUNC_DEBUG_LOG != ON
 	UB bat;
 #else
+	char dbg_rcv_data = 0;
+	
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 		sw_proc();				// SW検知処理
 	}
@@ -418,7 +419,7 @@ void user_main_timer_cyc( void )
 #if FUNC_DEBUG_LOG == ON
 			char dbg_tx_data[50] = {0};
 			int dbg_len;
-			
+	
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
@@ -492,16 +493,23 @@ void user_main_timer_cyc( void )
 	
 	// シリアルデータ受信
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_10MSEC){
-		com_srv_rcv(dbg_rx_data, dbg_rx_len);
-		if(dbg_rx_data[0] != 0)
+		com_srv_rcv(&dbg_rcv_data, 0);
+
+		if(com_get_read_status() == DRV_CPU_COM_STATUS_RECEIVING)
 		{
+			dbg_rx_data[i] = dbg_rcv_data;
+			i++;
+		}else if(com_get_read_status() == DRV_CPU_COM_STATUS_RECEIVE_COMP)
+		{
+			dbg_rx_data[i] = dbg_rcv_data;
+			
 			set_serial_command(dbg_rx_data);
+			i = 0;
 			memset(dbg_rx_data, 0, sizeof(dbg_rx_data));
-		}else{
 			NO_OPERATION_BREAK_POINT();
 		}
 	}
-	
+			
 	// 20ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
@@ -3533,7 +3541,7 @@ bool get_ble_isconnect(void)
 /************************************************************************/
 /* 関数     : set_serial_command										*/
 /* 関数名   : シリアルコマンド設定										*/
-/* 引数     : dbg_rx_data:受信データ（コマン）							*/
+/* 引数     : dbg_rx_data:受信データ（コマンド）						*/
 /* 戻り値   : なし														*/
 /* 変更履歴	: 2020.01.06 oneA 葛原 弘安	初版作成						*/
 /************************************************************************/
@@ -3565,6 +3573,4 @@ void set_serial_command(char* dbg_rx_data)
 			break;
 	}
 }
-
-
 

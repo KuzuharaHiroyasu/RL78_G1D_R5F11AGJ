@@ -133,8 +133,10 @@ typedef enum{
 #define DRV_CPU_COM_STATUS_CAN_SEND		(0)			/* 送信可能状態 */
 #define DRV_CPU_COM_STATUS_SENDING		(1)			/* 送信中 */
 /* 受信ステータス */
-#define DRV_CPU_COM_STATUS_CAN_RCV		(0)			/* 受信可能状態 */
+#define DRV_CPU_COM_STATUS_NOT_RCV		(0)			/* 受信なし */
+//#define DRV_CPU_COM_STATUS_CAN_RCV		(1)			/* 受信可能状態 */
 #define DRV_CPU_COM_STATUS_RECEIVING	(1)			/* 受信中 */
+#define DRV_CPU_COM_STATUS_RECEIVE_COMP	(2)			/* 受信完了 */
 
 /* H1D起動待ち ※無くても動くが念の為に入れておく */
 #define DRV_CPU_COM_H1D_WAKEUP_WAIT		WAIT_50US();WAIT_10US();WAIT_5US();WAIT_1US();	//66us(65us+83.3333ns×7クロック)

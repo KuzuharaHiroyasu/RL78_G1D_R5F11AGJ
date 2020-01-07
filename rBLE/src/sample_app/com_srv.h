@@ -42,10 +42,12 @@ extern void com_srv_cyc( void );
 extern void com_srv_send( UB* tx_data, UB len );
 extern void com_srv_rcv( UB* rx_data, UB len );
 extern void com_srv_puts( const B* pMsg);
-extern void com_srv_read_comp( void );
+extern bool com_srv_read_comp( void );
 extern void com_srv_write_comp( void );
 extern void com_srv_error_comp( void );
-
+extern void com_srv_isread( void );
+extern bool com_srv_first_data( void );
+extern UB com_get_read_status(void);
 
 /******************/
 /* ä÷êîÉ}ÉNÉçíËã` */
