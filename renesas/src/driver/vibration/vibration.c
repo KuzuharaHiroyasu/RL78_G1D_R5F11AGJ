@@ -10,8 +10,8 @@
 #include	"vibration.h"
 
 // グローバル変数
-B			vib_orbit_value = 0;							// バイブ周回値
-B			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;	// バイブ周回設定値
+B			vib_repeat_value = 0;							// バイブ周回値
+B			set_vib_repeat_value = VIB_REPEAT_ONE;			// バイブ周回設定値
 B			vib_gradually_stronger_level = VIB_LEVEL_1;		// 徐々に強く設定時のバイブレベル
 
 VIB_MODE	vib_mode = VIB_MODE_INITIAL;
@@ -20,14 +20,14 @@ VIB_MODE	vib_last_mode = VIB_MODE_INITIAL;
 bool		confirm_flg = false;
 
 // プロトタイプ宣言
-STATIC void set_vib_orbit(VIB_MODE mode);
+STATIC void set_vib_repeat(VIB_MODE mode);
 STATIC void vib_on(void);
 STATIC void vib_off(void);
 STATIC void vib_mode_weak(UH vib_timer);
 STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
-STATIC void vib_mode_during_three(UH vib_timer);
-STATIC void vib_mode_strength_three(UH vib_timer);
+STATIC void vib_mode_during_repeat(UH vib_timer);
+STATIC void vib_mode_strength_repeat(UH vib_timer);
 STATIC void vib_mode_gradually_stronger(UH vib_timer);
 
 STATIC void vib_mode_standby(UH vib_timer);
@@ -54,7 +54,7 @@ STATIC void vib_level_4(UH vib_timer);
 /************************************************************************/
 void vib_start(UH vib_timer)
 { // メインループ処理内でコール
-	if(vib_orbit_value < set_vib_orbit_value)
+	if(vib_repeat_value < set_vib_repeat_value)
 	{
 		switch (vib_mode)
 		{
@@ -64,20 +64,20 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_OFF:	// OFF(単純動作)
 				vib_off();
 				break;
-			case VIB_MODE_WEAK:	// 未使用（初版：弱）
-				vib_mode_weak(vib_timer);
+			case VIB_MODE_WEAK:	// 弱（強さ：中で１セット）
+				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_DURING: // 弱（初版：中）
-				vib_mode_during(vib_timer);
+			case VIB_MODE_DURING: // 中（強さ：中で２セット）
+				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_DURING_THREE: // 中
-				vib_mode_during_three(vib_timer);
+			case VIB_MODE_DURING_REPEAT: // 未使用
+				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_STRENGTH: // 未使用（初版：強）
-				vib_mode_strength(vib_timer);
+			case VIB_MODE_STRENGTH: // 強（強さ：中で３セット）
+				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_STRENGTH_THREE: // 強
-				vib_mode_strength_three(vib_timer);
+			case VIB_MODE_STRENGTH_REPEAT: // 未使用
+				vib_mode_strength_repeat(vib_timer);
 				break;
 			case VIB_MODE_GRADUALLY_STRONGER: // 徐々に強く
 				vib_mode_gradually_stronger(vib_timer);
@@ -120,7 +120,7 @@ void vib_start(UH vib_timer)
 /************************************************************************/
 void vib_stop(void)
 {
-	vib_orbit_value = VIB_STOP_ORBIT;
+	vib_repeat_value = VIB_STOP_REPEAT;
 	vib_off();
 }
 
@@ -142,10 +142,10 @@ void set_vib(VIB_MODE mode)
 	reset_vib_timer();
 
 	// 周回値設定
-	set_vib_orbit(mode);
+	set_vib_repeat(mode);
 	
 	// 周回リセット
-	vib_orbit_value = 0;
+	vib_repeat_value = 0;
 	
 	// パターン
 	vib_mode = mode;
@@ -171,10 +171,10 @@ void set_vib_confirm(VIB_MODE mode)
 	reset_vib_timer();
 
 	// 周回値設定
-	set_vib_orbit(mode);
+	set_vib_repeat(mode);
 	
 	// 周回リセット
-	vib_orbit_value = 0;
+	vib_repeat_value = 0;
 	
 	// パターン
 	vib_mode = mode;
@@ -202,13 +202,13 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 	switch(yokusei_str)
 	{
 		case VIB_SET_MODE_WEAK: // 弱
-			mode = VIB_MODE_DURING;
+			mode = VIB_MODE_WEAK;
 			break;
 		case VIB_SET_MODE_DURING: //中
-			mode = VIB_MODE_DURING_THREE;
+			mode = VIB_MODE_DURING;
 			break;
 		case VIB_SET_MODE_STRENGTH: //強
-			mode = VIB_MODE_STRENGTH_THREE;
+			mode = VIB_MODE_STRENGTH;
 			break;
 		case VIB_SET_MODE_GRADUALLY_STRONGER: //徐々に強く
 			mode = VIB_MODE_GRADUALLY_STRONGER;
@@ -221,7 +221,7 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 }
 
 /************************************************************************/
-/* 関数     : set_vib_orbit												*/
+/* 関数     : set_vib_repeat												*/
 /* 関数名   : バイブレーションの周回設定								*/
 /* 引数     : mode:バイブパターン										*/
 /* 戻り値   : なし														*/
@@ -231,31 +231,40 @@ VIB_MODE set_vib_mode(UB yokusei_str)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void set_vib_orbit(VIB_MODE mode)
+STATIC void set_vib_repeat(VIB_MODE mode)
 {
 	switch(mode)
 	{
-		case VIB_MODE_DURING_THREE:
-		case VIB_MODE_STRENGTH_THREE:
-			set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
+		case VIB_MODE_WEAK:
+			set_vib_repeat_value = VIB_REPEAT_ONE;
+			break;
+		case VIB_MODE_DURING:
+			set_vib_repeat_value = VIB_REPEAT_TWO;
+			break;
+		case VIB_MODE_STRENGTH:
+			set_vib_repeat_value = VIB_REPEAT_THREE;
+			break;
+		case VIB_MODE_DURING_REPEAT:
+		case VIB_MODE_STRENGTH_REPEAT:
+			set_vib_repeat_value = VIB_REPEAT_THREE;
 			break;
 		case VIB_MODE_GRADUALLY_STRONGER:
 			if(vib_gradually_stronger_level < VIB_LEVEL_5)
 			{
 				// レベル1～4は1セット
-				set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;
+				set_vib_repeat_value = VIB_REPEAT_ONE;
 			}else if(vib_gradually_stronger_level < VIB_LEVEL_9)
 			{
 				// レベル5～8は2セット
-				set_vib_orbit_value = VIB_THREE_ORBIT_TWO_SET;
+				set_vib_repeat_value = VIB_REPEAT_TWO;
 			}else if(VIB_LEVEL_9 <= vib_gradually_stronger_level)
 			{
 				// レベル9～は3セット
-				set_vib_orbit_value = VIB_THREE_ORBIT_THREE_SET;
+				set_vib_repeat_value = VIB_REPEAT_THREE;
 			}
 			break;
 		default:
-			set_vib_orbit_value = VIB_THREE_ORBIT_ONE_SET;
+			set_vib_repeat_value = VIB_REPEAT_ONE;
 			break;
 	}
 }
@@ -313,7 +322,7 @@ STATIC void vib_mode_weak(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
+		vib_repeat_value += 1;
 		reset_vib_timer();
 	} if( 5 <= vib_timer )
 	{
@@ -345,7 +354,7 @@ STATIC void vib_mode_during(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
+		vib_repeat_value += 1;
 		reset_vib_timer();
 	} if( 13 <= vib_timer )
 	{
@@ -377,7 +386,7 @@ STATIC void vib_mode_strength(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
+		vib_repeat_value += 1;
 		reset_vib_timer();
 	} if( 19 <= vib_timer )
 	{
@@ -393,8 +402,8 @@ STATIC void vib_mode_strength(UH vib_timer)
 }
 
 /************************************************************************/
-/* 関数     : vib_mode_during_three										*/
-/* 関数名   : バイブレーション中×３制御								*/
+/* 関数     : vib_mode_during_repeat									*/
+/* 関数名   : バイブレーション中繰り返し制御							*/
 /* 引数     : vib_timer:バイブタイマー									*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
@@ -403,14 +412,14 @@ STATIC void vib_mode_strength(UH vib_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void vib_mode_during_three(UH vib_timer)
+STATIC void vib_mode_during_repeat(UH vib_timer)
 {
 	if(	20 <= vib_timer )
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_last_mode = vib_mode;
 			vib_mode = VIB_MODE_INTERVAL;
@@ -430,8 +439,8 @@ STATIC void vib_mode_during_three(UH vib_timer)
 }
 
 /************************************************************************/
-/* 関数     : vib_mode_strength_three									*/
-/* 関数名   : バイブレーション強×３制御								*/
+/* 関数     : vib_mode_strength_repeat									*/
+/* 関数名   : バイブレーション強繰り返し制御							*/
 /* 引数     : vib_timer:バイブタイマー									*/
 /* 戻り値   : なし														*/
 /* 変更履歴 : 2019.07.24 oneA 葛原 弘安	初版作成						*/
@@ -440,14 +449,14 @@ STATIC void vib_mode_during_three(UH vib_timer)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void vib_mode_strength_three(UH vib_timer)
+STATIC void vib_mode_strength_repeat(UH vib_timer)
 {
 	if(	30 <= vib_timer )
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_last_mode = vib_mode;
 			vib_mode = VIB_MODE_INTERVAL;
@@ -540,7 +549,7 @@ STATIC void vib_mode_standby(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit_value = VIB_STOP_ORBIT;
+		vib_repeat_value = VIB_STOP_REPEAT;
 		reset_vib_timer();
 	} else
 	{
@@ -566,7 +575,7 @@ STATIC void vib_mode_sensing(UH vib_timer)
 	{
 		VIB_CTL = 0;
 		VIB_ENA = 0;
-		vib_orbit_value = VIB_STOP_ORBIT;
+		vib_repeat_value = VIB_STOP_REPEAT;
 		reset_vib_timer();
 	} else
 	{
@@ -629,11 +638,11 @@ STATIC void vib_interval_level(UH vib_timer)
 STATIC void vib_level_up_confirm(void)
 {
 	vib_last_mode = vib_mode;
-	if(confirm_flg == true && vib_orbit_value >= set_vib_orbit_value && (vib_gradually_stronger_level+1) < VIB_LEVEL_MAX)
+	if(confirm_flg == true && vib_repeat_value >= set_vib_repeat_value && (vib_gradually_stronger_level+1) < VIB_LEVEL_MAX)
 	{
 		// 次のレベルへ
 		vib_gradually_stronger_level++;
-		vib_orbit_value = 0;
+		vib_repeat_value = 0;
 		vib_mode = VIB_MODE_INTERVAL_LEVEL;
 	}else{
 		// 終了
@@ -658,8 +667,8 @@ STATIC void vib_level_1(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_level_up_confirm();
 		}
@@ -694,8 +703,8 @@ STATIC void vib_level_2(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_level_up_confirm();
 		}
@@ -730,8 +739,8 @@ STATIC void vib_level_3(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_level_up_confirm();
 		}
@@ -766,8 +775,8 @@ STATIC void vib_level_4(UH vib_timer)
 	{
 //		VIB_CTL = 0; // 保険
 //		VIB_ENA = 0;
-		vib_orbit_value += 1;
-		if(!(vib_orbit_value % VIB_ONE_SET))
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
 		{
 			vib_level_up_confirm();
 		}

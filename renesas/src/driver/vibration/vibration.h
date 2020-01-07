@@ -19,10 +19,10 @@
 #define	VIB_ONE_SET					3					// 1セット3回
 
 // バイブ1セットの繰り返し数
-#define VIB_THREE_ORBIT_ONE_SET		(VIB_ONE_SET * 1)	// バイブ周回 3 × 1
-#define VIB_THREE_ORBIT_TWO_SET		(VIB_ONE_SET * 2)	// バイブ周回 3 × 2
-#define VIB_THREE_ORBIT_THREE_SET	(VIB_ONE_SET * 3)	// バイブ周回 3 × 3
-#define VIB_STOP_ORBIT				(VIB_THREE_ORBIT_THREE_SET + 1)
+#define VIB_REPEAT_ONE		(VIB_ONE_SET * 1)	// バイブ周回 3 × 1
+#define VIB_REPEAT_TWO		(VIB_ONE_SET * 2)	// バイブ周回 3 × 2
+#define VIB_REPEAT_THREE	(VIB_ONE_SET * 3)	// バイブ周回 3 × 3
+#define VIB_STOP_REPEAT		(VIB_REPEAT_THREE + 1)
 
 // バイブ設定値
 #define VIB_SET_MODE_WEAK					0
@@ -36,9 +36,9 @@ typedef enum{
 	VIB_MODE_OFF,						// OFF(単純動作)
 	VIB_MODE_WEAK,						// 弱
 	VIB_MODE_DURING,					// 中
-	VIB_MODE_DURING_THREE,				// 中 × 3
+	VIB_MODE_DURING_REPEAT,				// 中(繰り返し)
 	VIB_MODE_STRENGTH,					// 強
-	VIB_MODE_STRENGTH_THREE,			// 強 × 3
+	VIB_MODE_STRENGTH_REPEAT,			// 強(繰り返し)
 	VIB_MODE_GRADUALLY_STRONGER,		// 徐々に強く
 	VIB_MODE_STANDBY,					// 待機モード移行時
 	VIB_MODE_SENSING,					// センシングモード移行時
