@@ -3543,22 +3543,41 @@ void set_serial_command(char dbg_rx_data)
 {
 	switch(dbg_rx_data)
 	{
-		case 1:	// モード変更
+		case RCV_COM_MODE_MONITORING:			// モニタリングモード
 			break;
-		case 2: // いびき検出感度変更
+		case RCV_COM_MODE_SUPPRESS_SNORE:		// 抑制モード（いびき）
 			break;
-		case 3:	// いびき抑制の連続時間
+		case RCV_COM_MODE_SUPPRESS_APNEA:		// 抑制モード（無呼吸）
 			break;
-		case 4:	// バイブ抑制開始時間変更
+		case RCV_COM_MODE_SUPPRESS_SNORE_APNEA:	// 抑制モード（いびき＋無呼吸）
+			break;		
+		case RCV_COM_SNORE_SENS_WEAK: 			// いびき検出感度（弱）
 			break;
-		case 5:	// バイブ(弱)
+		case RCV_COM_SNORE_SENS_MED:			// いびき検出感度（中）
 			break;
-		case 6:	// バイブ(中)
+		case RCV_COM_SNORE_SENS_STRONG: 		// いびき検出感度（強）
 			break;
-		case 7:	// バイブ(強)
+		case RCV_COM_VIB_WEAK:					// バイブの強さ(弱)
+			set_vib(VIB_MODE_WEAK);
 			break;
-		case 8:	// バイブ(徐々に強く)
+		case RCV_COM_VIB_MED:					// バイブの強さ(中)
+			set_vib(VIB_MODE_DURING);
 			break;
+		case RCV_COM_VIB_STRONG:				// バイブの強さ(強)
+			set_vib(VIB_MODE_STRENGTH);
+			break;
+		case RCV_COM_VIB_GRAD:					// バイブの強さ(徐々に強く)
+			set_vib(VIB_MODE_GRADUALLY_STRONGER);
+			break;
+		case RCV_COM_SNORE_SUPPRESS_TIME_FIVE:	// いびき抑制の連続時間（5分）
+			break;
+		case RCV_COM_SNORE_SUPPRESS_TIME_TEN:	// いびき抑制の連続時間（10分）
+			break;
+		case RCV_COM_SNORE_SUPPRESS_TIME_NON:	// いびき抑制の連続時間（設定しない）
+			break;
+		case RCV_COM_SUPPRESS_START_TIME:		// バイブ抑制開始時間変更
+			break;
+
 		default:
 			break;
 	}
