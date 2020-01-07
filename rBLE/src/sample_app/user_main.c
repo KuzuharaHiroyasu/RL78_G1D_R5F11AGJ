@@ -145,9 +145,7 @@ static UB sw_on_flg = OFF;
 static UB snore_state;
 static UB apnea_state;
 #endif
-void set_serial_command(char* dbg_rx_data);
-char dbg_rx_data[RX_DATA_LEN] = {0};
-int i = 0;
+void set_serial_command(char dbg_rx_data);
 #endif
 
 static B	vib_level = VIB_LEVEL_1;
@@ -495,17 +493,9 @@ void user_main_timer_cyc( void )
 	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_10MSEC){
 		com_srv_rcv(&dbg_rcv_data, 0);
 
-		if(com_get_read_status() == DRV_CPU_COM_STATUS_RECEIVING)
+		if(com_get_read_status() == DRV_CPU_COM_STATUS_RECEIVE_COMP)
 		{
-			dbg_rx_data[i] = dbg_rcv_data;
-			i++;
-		}else if(com_get_read_status() == DRV_CPU_COM_STATUS_RECEIVE_COMP)
-		{
-			dbg_rx_data[i] = dbg_rcv_data;
-			
-			set_serial_command(dbg_rx_data);
-			i = 0;
-			memset(dbg_rx_data, 0, sizeof(dbg_rx_data));
+			set_serial_command(dbg_rcv_data);
 			NO_OPERATION_BREAK_POINT();
 		}
 	}
@@ -3549,9 +3539,9 @@ bool get_ble_isconnect(void)
 /************************************************************************/
 /* íçà”éñçÄ : Ç»Çµ														*/
 /************************************************************************/
-void set_serial_command(char* dbg_rx_data)
+void set_serial_command(char dbg_rx_data)
 {
-	switch(dbg_rx_data[0])
+	switch(dbg_rx_data)
 	{
 		case 1:	// ÉÇÅ[ÉhïœçX
 			break;

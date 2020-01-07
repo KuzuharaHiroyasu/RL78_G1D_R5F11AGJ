@@ -592,12 +592,7 @@ _UARTCODE void serial_read(uint8_t *bufptr, const uint16_t size)
 	    uart_dma_rx((uint16_t)bufptr, size);
 	#endif
 		*bufptr = RXD0;
-		if(*bufptr == END_RCV_DATA)
-		{
-			UART_CALLBACK_VOID(uart_callback.rx_cmp_callback);
-		}else{
-			UART_CALLBACK_VOID(uart_callback.rx_first_byte_callback);
-		}
+		UART_CALLBACK_VOID(uart_callback.rx_cmp_callback);
 	}else{
 		UART_CALLBACK_VOID(uart_callback.rx_callback);
 	}
