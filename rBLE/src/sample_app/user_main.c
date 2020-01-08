@@ -35,20 +35,17 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static void set_suppress_cnt_time(UB suppress_max_time);
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 STATIC void user_main_mode( void );
 STATIC void user_main_mode_common( void );
 STATIC void main_vuart_proc(void);
-static void set_suppress_cnt_time(UB suppress_max_time);
 #else
 STATIC void make_send_data(char* pBuff);
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
+STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 static UB main_calc_kokyu( void);
 static UB main_calc_ibiki( void);
-STATIC void user_main_calc_data_set_kyokyu_ibiki( void );
 #endif
-#endif
+static void set_suppress_cnt_time(UB suppress_max_time);
 
 STATIC void user_main_mode_inital(void);
 STATIC void user_main_mode_idle_com(void);
@@ -127,10 +124,11 @@ STATIC T_UNIT_SAVE s_unit_save;
 STATIC DS s_ds;
 
 static bool vib_flg = false;
-#if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_power = VIB_MODE_DURING;
 static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
+
+#if FUNC_DEBUG_LOG != ON
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
@@ -140,11 +138,10 @@ static bool snore_data_max = false;
 static bool acl_data_max = false;
 static bool photo_data_max = false;
 #else
+static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB sw_on_flg = OFF;
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
 static UB snore_state;
 static UB apnea_state;
-#endif
 void set_serial_command(char dbg_rx_data);
 #endif
 
@@ -422,10 +419,23 @@ void user_main_timer_cyc( void )
 	
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+			
+			if(vib_startflg == true)
+			{
+				if( (s_unit.meas.info.dat.ibiki_val < BREATH_VALLEY) || ( VIB_START_LIMIT <= vib_start_limit_cnt) )
+				{
+					vib_startflg = false;
+					vib_start_limit_cnt = 0;
+					set_vib(set_vib_mode(vib_power));
+				}else{
+					vib_start_limit_cnt++;
+				}
+			}
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 	// 波形&結果確認
 			user_main_calc_data_set_kyokyu_ibiki();
 #else
+			user_main_calc_data_set_kyokyu_ibiki();
 	//通常デバッグ版
 			s_unit.acl_timing+=1;
 			if(s_unit.acl_timing >= ACL_TIMING_VAL){
@@ -654,7 +664,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 #else
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
 STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 {
 	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
@@ -679,12 +688,25 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		snore_state = 99;
 	}
 	
+	if(apnea_state == APNEA_ERROR)
+	{
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
+		{
+			set_vib(set_vib_mode(vib_power));
+		}
+	}else if(snore_state == SNORE_ON)
+	{
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
+		{
+			vib_startflg = true;
+		}
+	}
+	
 	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );		
 	INC_MAX_INI( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX - 1, 0 );		
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
-#endif
 #endif
 
 #if FUNC_DEBUG_LOG == ON
@@ -2792,14 +2814,12 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	return (KE_MSG_CONSUMED);
 }
 #else
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
 //デバッグ版演算処理
 static UB main_calc_kokyu( void)
 {
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	return get_state();
 }
-#endif
 #endif
 
 /************************************************************************/
@@ -2965,14 +2985,12 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	return (KE_MSG_CONSUMED);
 }
 #else
-#if FUNC_DEBUG_WAVEFORM_LOG == ON
 static UB main_calc_ibiki( void)
 {
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
 	return calc_snore_get();
 }
-#endif
 #endif
 
 /************************************************************************/
@@ -3148,8 +3166,6 @@ STATIC void user_main_eep_read_pow_on(void)
 		eep_write( EEP_ADRS_TOP_SETTING + 2, &s_unit.frame_num.cnt, 1, ON );
 	}
 	
-
-#if FUNC_DEBUG_LOG != ON
 	// 警告機能
 	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
 
@@ -3164,7 +3180,6 @@ STATIC void user_main_eep_read_pow_on(void)
 	set_suppress_cnt_time(s_unit.alarm.info.dat.suppress_max_time);
 	// 抑制開始設定時間
 	suppress_start_time = s_unit.alarm.info.dat.suppress_start_time;
-#endif
 	
 	// RD8001暫：範囲チェック入れる
 }
@@ -3446,7 +3461,6 @@ void main_set_battery(void)
 	}
 }
 
-#if FUNC_DEBUG_LOG != ON
 /************************************************************************/
 /* 関数     : set_suppress_cnt_time										*/
 /* 関数名   : 抑制最大連続時間設定										*/
@@ -3476,7 +3490,6 @@ static void set_suppress_cnt_time(UB suppress_max_time)
 		break;
 	}
 }
-#endif
 
 /************************************************************************/
 /* 関数     : set_ble_state												*/
@@ -3561,29 +3574,59 @@ void set_serial_command(char dbg_rx_data)
 	switch(dbg_rx_data)
 	{
 		case RCV_COM_MODE_MONITORING:			// モニタリングモード
+			s_unit.alarm.info.dat.act_mode = ACT_MODE_MONITOR;
+			act_mode = s_unit.alarm.info.dat.act_mode;
 			break;
 		case RCV_COM_MODE_SUPPRESS_SNORE:		// 抑制モード（いびき）
+			s_unit.alarm.info.dat.act_mode = ACT_MODE_SUPPRESS_SNORE;
+			act_mode = s_unit.alarm.info.dat.act_mode;
 			break;
 		case RCV_COM_MODE_SUPPRESS_APNEA:		// 抑制モード（無呼吸）
+			s_unit.alarm.info.dat.act_mode = ACT_MODE_SUPPRESS_APNEA;
+			act_mode = s_unit.alarm.info.dat.act_mode;
 			break;
 		case RCV_COM_MODE_SUPPRESS_SNORE_APNEA:	// 抑制モード（いびき＋無呼吸）
-			break;		
+			s_unit.alarm.info.dat.act_mode = ACT_MODE_SUPPRESS_SNORE_APNEA;
+			act_mode = s_unit.alarm.info.dat.act_mode;
+			break;
 		case RCV_COM_SNORE_SENS_WEAK: 			// いびき検出感度（弱）
+			s_unit.alarm.info.dat.ibiki_sens = 0;
+			set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 			break;
 		case RCV_COM_SNORE_SENS_MED:			// いびき検出感度（中）
+			s_unit.alarm.info.dat.ibiki_sens = 1;
+			set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 			break;
 		case RCV_COM_SNORE_SENS_STRONG: 		// いびき検出感度（強）
+			s_unit.alarm.info.dat.ibiki_sens = 2;
+			set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 			break;
 		case RCV_COM_VIB_WEAK:					// バイブの強さ(弱)
-			set_vib(VIB_MODE_WEAK);
+			s_unit.alarm.info.dat.suppress_power = VIB_MODE_WEAK;
+			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_MED:					// バイブの強さ(中)
-			set_vib(VIB_MODE_DURING);
+			s_unit.alarm.info.dat.suppress_power = VIB_MODE_DURING;
+			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_STRONG:				// バイブの強さ(強)
-			set_vib(VIB_MODE_STRENGTH);
+			s_unit.alarm.info.dat.suppress_power = VIB_MODE_STRENGTH;
+			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_GRAD:					// バイブの強さ(徐々に強く)
+			s_unit.alarm.info.dat.suppress_power = VIB_MODE_GRADUALLY_STRONGER;
+			vib_power = s_unit.alarm.info.dat.suppress_power;
+			break;
+		case RCV_COM_VIB_WEAK_CONF:				// バイブの強さ(弱)[確認]
+			set_vib(VIB_MODE_WEAK);
+			break;
+		case RCV_COM_VIB_MED_CONF:				// バイブの強さ(中)[確認]
+			set_vib(VIB_MODE_DURING);
+			break;
+		case RCV_COM_VIB_STRONG_CONF:			// バイブの強さ(強)[確認]
+			set_vib(VIB_MODE_STRENGTH);
+			break;
+		case RCV_COM_VIB_GRAD_CONF:				// バイブの強さ(徐々に強く)[確認]
 			set_vib(VIB_MODE_GRADUALLY_STRONGER);
 			break;
 		case RCV_COM_SNORE_SUPPRESS_TIME_FIVE:	// いびき抑制の連続時間（5分）
@@ -3598,5 +3641,7 @@ void set_serial_command(char dbg_rx_data)
 		default:
 			break;
 	}
+	// ROMに保存
+	eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
 }
 
