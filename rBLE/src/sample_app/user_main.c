@@ -3618,16 +3618,16 @@ void set_serial_command(char dbg_rx_data)
 			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_WEAK_CONF:				// バイブの強さ(弱)[確認]
-			set_vib(VIB_MODE_WEAK);
+			set_vib_confirm(VIB_MODE_WEAK);
 			break;
 		case RCV_COM_VIB_MED_CONF:				// バイブの強さ(中)[確認]
-			set_vib(VIB_MODE_DURING);
+			set_vib_confirm(VIB_MODE_DURING);
 			break;
 		case RCV_COM_VIB_STRONG_CONF:			// バイブの強さ(強)[確認]
-			set_vib(VIB_MODE_STRENGTH);
+			set_vib_confirm(VIB_MODE_STRENGTH);
 			break;
 		case RCV_COM_VIB_GRAD_CONF:				// バイブの強さ(徐々に強く)[確認]
-			set_vib(VIB_MODE_GRADUALLY_STRONGER);
+			set_vib_confirm(VIB_MODE_GRADUALLY_STRONGER);
 			break;
 		case RCV_COM_SNORE_SUPPRESS_TIME_FIVE:	// いびき抑制の連続時間（5分）
 			break;

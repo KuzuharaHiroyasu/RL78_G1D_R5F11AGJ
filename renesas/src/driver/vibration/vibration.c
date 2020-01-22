@@ -620,6 +620,7 @@ STATIC void vib_interval_level(UH vib_timer)
 	if(	40 <= vib_timer )
 	{
 		vib_mode = vib_last_mode;	// バイブモードを戻す
+		set_vib_repeat(vib_mode);
 		reset_vib_timer();
 	}
 }
