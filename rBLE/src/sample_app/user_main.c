@@ -692,13 +692,13 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	{
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{
-			set_vib(set_vib_mode(vib_power));
+//			set_vib(set_vib_mode(vib_power));
 		}
 	}else if(snore_state == SNORE_ON)
 	{
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
 		{
-			vib_startflg = true;
+//			vib_startflg = true;
 		}
 	}
 	
@@ -3636,6 +3636,9 @@ void set_serial_command(char dbg_rx_data)
 		case RCV_COM_SNORE_SUPPRESS_TIME_NON:	// いびき抑制の連続時間（設定しない）
 			break;
 		case RCV_COM_SUPPRESS_START_TIME:		// バイブ抑制開始時間変更
+			break;
+		case RCV_COM_SUPPRESS_START:			// バイブ動作
+			set_vib(set_vib_mode(vib_power));
 			break;
 
 		default:
