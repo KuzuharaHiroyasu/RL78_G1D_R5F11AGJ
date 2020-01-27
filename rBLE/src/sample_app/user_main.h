@@ -259,7 +259,7 @@ typedef enum{
 
 // 50ms timer
 #if FUNC_DEBUG_LOG == ON
-#define	TIME_20MS_CNT_POW_SW_SHORT_DEBUG		5			/* “dŒ¹SW_’Z(0.25•b) */
+#define	TIME_20MS_CNT_POW_SW_SHORT_DEBUG		40			/* “dŒ¹SW_’Z(0.25•b) */
 #endif
 
 typedef enum program_ver{

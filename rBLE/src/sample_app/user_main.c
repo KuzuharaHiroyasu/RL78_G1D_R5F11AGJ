@@ -950,6 +950,7 @@ STATIC void sw_proc(void)
 			s_unit.system_mode = SYSTEM_MODE_SENSING;
 			led_green_on();
 			s_unit.sw_time_cnt = 0;
+			set_vib(VIB_MODE_SENSING);
 		}
 		
 		if(s_unit.system_mode == SYSTEM_MODE_SENSING && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
@@ -957,6 +958,7 @@ STATIC void sw_proc(void)
 			s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
 			led_green_on();
 			s_unit.sw_time_cnt = 0;
+			set_vib(VIB_MODE_STANDBY);
 		}
 	}else{
 		sw_on_flg = OFF;
