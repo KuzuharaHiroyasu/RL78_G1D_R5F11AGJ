@@ -688,19 +688,6 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		snore_state = 99;
 	}
 	
-	if(apnea_state == APNEA_ERROR)
-	{
-		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
-		{
-//			set_vib(set_vib_mode(vib_power));
-		}
-	}else if(snore_state == SNORE_ON)
-	{
-		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
-		{
-//			vib_startflg = true;
-		}
-	}
 	
 	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );		
 	INC_MAX_INI( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX - 1, 0 );		
@@ -3602,20 +3589,28 @@ void set_serial_command(char dbg_rx_data)
 			set_snore_sens(s_unit.alarm.info.dat.ibiki_sens);
 			break;
 		case RCV_COM_VIB_WEAK:					// バイブの強さ(弱)
-			s_unit.alarm.info.dat.suppress_power = VIB_MODE_WEAK;
+			s_unit.alarm.info.dat.suppress_power = VIB_SET_MODE_WEAK;
 			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_MED:					// バイブの強さ(中)
-			s_unit.alarm.info.dat.suppress_power = VIB_MODE_DURING;
+			s_unit.alarm.info.dat.suppress_power = VIB_SET_MODE_DURING;
 			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_STRONG:				// バイブの強さ(強)
-			s_unit.alarm.info.dat.suppress_power = VIB_MODE_STRENGTH;
+			s_unit.alarm.info.dat.suppress_power = VIB_SET_MODE_STRENGTH;
 			vib_power = s_unit.alarm.info.dat.suppress_power;
 			break;
 		case RCV_COM_VIB_GRAD:					// バイブの強さ(徐々に強く)
-			s_unit.alarm.info.dat.suppress_power = VIB_MODE_GRADUALLY_STRONGER;
+			s_unit.alarm.info.dat.suppress_power = VIB_SET_MODE_GRADUALLY_STRONGER;
 			vib_power = s_unit.alarm.info.dat.suppress_power;
+			break;
+		case RCV_COM_VIB_GRAD_LEVELUP:			// バイブの強さ(徐々に強く)のレベルアップ
+			vib_level++;
+			set_vib_level(vib_level);
+			break;
+		case RCV_COM_VIB_GRAD_LEVEL_INIT:		// バイブの強さ(徐々に強く)のレベルを初期化
+			vib_level = VIB_LEVEL_1;
+			set_vib_level(vib_level);
 			break;
 		case RCV_COM_VIB_WEAK_CONF:				// バイブの強さ(弱)[確認]
 			set_vib_confirm(VIB_MODE_WEAK);
