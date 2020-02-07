@@ -2805,7 +2805,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 #if FUNC_DEBUG_CALC_NON == OFF
 	//演算正規処理
 	int ii;
-	int max = s_unit.ibiki_val[0];
+	int average =0;
 	UB newstate;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
@@ -2836,13 +2836,14 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	};
 #endif
 	
+	// 10秒間の平均値
 	for(ii=0;ii<s_unit.ibiki_cnt;++ii){
-		if(max < s_unit.ibiki_val[ii]){
-			max = s_unit.ibiki_val[ii];
-		}
+		average += s_unit.ibiki_val[ii];
 	}
+	average = average / s_unit.ibiki_cnt;
+	
 	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
-	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( max >> 2 ) & 0xff );
+	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( average >> 2 ) & 0xff );
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
