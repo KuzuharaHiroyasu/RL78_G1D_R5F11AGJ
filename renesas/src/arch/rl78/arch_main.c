@@ -402,8 +402,6 @@ void arch_main_ent(void)
         GLOBAL_INT_RESTORE();
 
         sleep_load_data();
-    	
-    	wdt_refresh();
     }
 }
 
