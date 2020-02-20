@@ -514,6 +514,7 @@ typedef enum{
 	VUART_CMD_TYPE_DEVICE_SET,						// デバイス設定変更
 	VUART_CMD_TYPE_VIB_CONFIRM,						// バイブ動作確認
 	VUART_CMD_TYPE_VIB_STOP,						// バイブ動作停止
+	VUART_CMD_TYPE_POWER_OFF,						// 電源OFF
 	VUART_CMD_TYPE_MAX								// 最大値
 }VUART_CMD_TYPE;
 
@@ -582,7 +583,7 @@ typedef struct{
 #define	VUART_CMD_LEN_VIB_CONFIRM	2
 #define	VUART_CMD_LEN_VIB_STOP		1
 
-#define	VUART_CMD_LEN_DIAG_POWER_OFF	2
+#define	VUART_CMD_LEN_DIAG_POWER_OFF	1
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
@@ -604,7 +605,7 @@ typedef struct{
 #define	VUART_SND_LEN_VIB_CONFIRM		2
 #define	VUART_SND_LEN_VIB_STOP			2
 
-#define VUART_SND_LEN_DIAG_POWER_OFF	1
+#define VUART_SND_LEN_DIAG_POWER_OFF	2
 #define VUART_SND_LEN_DIAG_LED			2
 #define VUART_SND_LEN_DIAG_VIB			2
 #define VUART_SND_LEN_DIAG_MIC			2
