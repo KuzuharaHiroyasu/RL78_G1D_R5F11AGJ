@@ -151,6 +151,9 @@ static B	vib_level = VIB_LEVEL_1;
 static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
 
+// 検査モード
+static bool diagStartFlg = false;
+
 /********************/
 /*     定数定義     */
 /********************/
@@ -386,6 +389,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.tick_10ms_new++;
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
+	s_unit.tick_diag_10ms++;
 }
 
 
@@ -1617,43 +1621,217 @@ STATIC void user_main_mode_prg_g1d(void)
 /************************************************************************/
 STATIC void user_main_mode_self_check( void )
 {
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB read_eep[EEP_ACCESS_ONCE_SIZE];
+	UB diag_acl_data[10];
 	UW now_time = time_get_elapsed_time();
-
+	UH diag_kokyu_val;
+	UH diag_ibiki_val;
+	UH diag_photoref_val;
+	UB  diag_acl_x;
+	UB  diag_acl_y;
+	UB  diag_acl_z;
+	
 	if( 0 == s_unit.self_check.seq ){
+		// LED確認
+		if( diagStartFlg == false )
+		{
+			// LED確認開始
+			tx[0] = VUART_CMD_DIAG_LED;
+			tx[1] = VUART_DIAG_START;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_LED );
+			diagStartFlg = true;
+			s_unit.tick_diag_10ms = 0;
+			// LED点灯
+			led_green_on();
+		}else{
+			if(s_unit.tick_diag_10ms >= DIAG_LED_TIMER)
+			{
+				// LED消灯
+				led_green_off();
+				// LED確認終了
+				tx[0] = VUART_CMD_DIAG_LED;
+				tx[1] = VUART_DIAG_END;
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_LED );
+				diagStartFlg = false;
+				s_unit.self_check.seq = 1;
+			}
+		}
+	}else if( 1 == s_unit.self_check.seq ){
+		// バイブ確認
+		if( diagStartFlg == false )
+		{
+			// バイブ確認開始
+			tx[0] = VUART_CMD_DIAG_VIB;
+			tx[1] = VUART_DIAG_START;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_VIB );
+			diagStartFlg = true;
+			s_unit.tick_diag_10ms = 0;
+			// バイブON
+			vib_on();
+		}else{
+			if(s_unit.tick_diag_10ms >= DIAG_LED_TIMER)
+			{
+				// バイブOFF
+				vib_off();
+				// バイブ確認終了
+				tx[0] = VUART_CMD_DIAG_VIB;
+				tx[1] = VUART_DIAG_END;
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_VIB );
+				diagStartFlg = false;
+				s_unit.self_check.seq = 2;
+			}
+		}
+	}else if( 2 == s_unit.self_check.seq ){
+		// マイク確認
+		if( diagStartFlg == false )
+		{
+			// マイク確認開始
+			tx[0] = VUART_CMD_DIAG_MIC;
+			tx[1] = VUART_DIAG_START;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC );
+			diagStartFlg = true;
+			s_unit.tick_diag_10ms = 0;
+		}else{
+			if(s_unit.tick_diag_10ms <= DIAG_MIC_TIMER)
+			{
+				// 呼吸音取得・送信
+				adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
+				tx[0] = VUART_CMD_DIAG_MIC_VAL;
+				tx[1] = ( diag_kokyu_val & 0x00ff );
+				tx[2] = (( diag_kokyu_val & 0xff00 ) >> 8 );
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
+			}else{
+				// マイク確認終了
+				tx[0] = VUART_CMD_DIAG_MIC;
+				tx[1] = VUART_DIAG_END;
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC );
+				diagStartFlg = false;
+				s_unit.self_check.seq = 3;
+			}
+		}
+	}else if( 3 == s_unit.self_check.seq ){
+		// 加速度センサー確認
+		if( diagStartFlg == false )
+		{
+			// 加速度センサー確認開始
+			tx[0] = VUART_CMD_DIAG_ACL;
+			tx[1] = VUART_DIAG_START;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL );
+			diagStartFlg = true;
+			s_unit.tick_diag_10ms = 0;
+		}else{
+			if(s_unit.tick_diag_10ms <= DIAG_ACL_TIMER)
+			{
+				// INT_SOURCE1		
+				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &diag_acl_data[0], 1 );
+				
+				// 加速度データ取得
+				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &diag_acl_data[0], 6 );
+				diag_acl_x = diag_acl_data[1];
+				diag_acl_y = diag_acl_data[3];
+				diag_acl_z = diag_acl_data[5];
+				
+				// INT_REL読み出し　※割り込み要求クリア
+				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
+				
+				// 加速度データ送信
+				tx[0] = VUART_CMD_DIAG_ACL_VAL;
+				// X
+				tx[1] = ( diag_acl_x & 0x00ff );
+				tx[2] = (( diag_acl_x & 0xff00 ) >> 8 );
+				// Y
+				tx[3] = ( diag_acl_y & 0x00ff );
+				tx[4] = (( diag_acl_y & 0xff00 ) >> 8 );
+				// Z
+				tx[5] = ( diag_acl_z & 0x00ff );
+				tx[6] = (( diag_acl_z & 0xff00 ) >> 8 );
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL_VAL );
+			}else{
+				// 加速度センサー確認終了
+				tx[0] = VUART_CMD_DIAG_ACL;
+				tx[1] = VUART_DIAG_END;
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL );
+				diagStartFlg = false;
+				s_unit.self_check.seq = 4;
+			}
+		}
+	}else if( 4 == s_unit.self_check.seq ){
+		// 装着センサー確認
+		if( diagStartFlg == false )
+		{
+			// 装着センサー確認開始
+			tx[0] = VUART_CMD_DIAG_PHOTO;
+			tx[1] = VUART_DIAG_START;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO );
+			diagStartFlg = true;
+			s_unit.tick_diag_10ms = 0;
+		}else{
+			if(s_unit.tick_diag_10ms <= DIAG_PHOTO_TIMER)
+			{
+				// 装着センサー値取得・送信
+				diag_photoref_val = main_photo_read();
+				tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
+				tx[1] = ( diag_photoref_val & 0x00ff );
+				tx[2] = (( diag_photoref_val & 0xff00 ) >> 8 );
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
+			}else{
+				// 装着センサー確認終了
+				tx[0] = VUART_CMD_DIAG_PHOTO;
+				tx[1] = VUART_DIAG_END;
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO );
+				diagStartFlg = false;
+				s_unit.self_check.seq = 5;
+			}
+		}
+	}else if( 5 == s_unit.self_check.seq ){
+		// EEPROM確認(書き込み)
+		if( diagStartFlg == false )
+		{
+			tx[0] = VUART_CMD_DIAG_EEPROM;
+			tx[1] = VUART_DIAG_START;
+			tx[2] = VUART_DATA_RESULT_OK;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+			diagStartFlg = true;
+		}
 		// 全0書き込み
 		// EEPプログラムモード
 		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
 			s_unit.self_check.eep_cnt = 0;
-			s_unit.self_check.seq = 1;
+			s_unit.self_check.seq = 6;
 		}
-	}else if( 1 == s_unit.self_check.seq ){
-		// 全0読み出し
+	}else if( 6 == s_unit.self_check.seq ){
+		// EEPROM確認(読み出し)
 		// フレーム位置とデータ位置からEEPアドレスを算出
 		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
 		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
-			s_unit.self_check.seq = 2;
+			s_unit.self_check.seq = 7;
 			s_unit.self_check.last_time = now_time;
 		}
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
 			s_unit.self_check.eep_cnt = 0;
-			s_unit.self_check.seq = 3;
+			s_unit.self_check.seq = 8;
 			s_unit.self_check.last_time = now_time;
 		}
-	}else if( 2 == s_unit.self_check.seq ){
-		// 異常表示
-		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_ERR ){
-			s_unit.self_check.seq = 3;
-			s_unit.self_check.last_time = now_time;
-		}
-	}else if( 3 == s_unit.self_check.seq ){
-		// 完了
-		if(( now_time - s_unit.self_check.last_time ) >= TIME_CNT_DISP_SELF_CHECK_FIN ){
-			s_unit.self_check.seq = 4;
-		}
+	}else if( 7 == s_unit.self_check.seq ){
+		// 異常
+		tx[0] = VUART_CMD_DIAG_EEPROM;
+		tx[1] = VUART_DIAG_END;
+		tx[2] = VUART_DATA_RESULT_NG;
+		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+		diagStartFlg = false;
+		s_unit.self_check.seq = 9;
+	}else if( 8 == s_unit.self_check.seq ){
+		// 正常
+		tx[0] = VUART_CMD_DIAG_EEPROM;
+		tx[1] = VUART_DIAG_END;
+		tx[2] = VUART_DATA_RESULT_OK;
+		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+		diagStartFlg = false;
+		s_unit.self_check.seq = 9;
 	}else{
 		// 完了
 		if( ON ==  s_unit.self_check.com_flg ){
