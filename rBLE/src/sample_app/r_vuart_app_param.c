@@ -40,8 +40,8 @@ const RBLE_CREATE_CONNECT_PARAM g_app_default_connection_param[] = {
         {0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12},	/* peer_addr */
         RBLE_ADDR_PUBLIC,                       /* own_addr_type */
         0,                                      /* reserved */
-        0x06,                                   /* con_intv_min: 0x06 * 1.25[ms] = 7.5[ms] */
-        0x06,                                   /* con_intv_max: 0x06 * 1.25[ms] = 7.5[ms] */
+        0x0C80,                                   /* con_intv_min: 0x06 * 1.25[ms] = 7.5[ms] */
+        0x0C80,                                   /* con_intv_max: 0x06 * 1.25[ms] = 7.5[ms] */
         0x00,                                   /* con_latency */
         0x1F4,                                  /* superv_to: 0x1F4 * 10[ms] = 5[s] */
         0x00,                                   /* ce_len_min: 0x0 * 0.625[ms] = 0[ms] */

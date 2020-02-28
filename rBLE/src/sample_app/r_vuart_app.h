@@ -102,6 +102,7 @@ extern BOOL RBLE_App_Init(void);
 extern void R_APP_VUART_Send_Char(const char *chars, uint16_t len);
 extern void R_AT_Parse(uint8_t *str, uint16_t len);
 extern uint8_t get_ble_connect(void);
+extern RBLE_STATUS set_change_ble_status(void);
 
 #ifdef WIN32
 #define EEL_ID_REMOTE_BDA (0x2)

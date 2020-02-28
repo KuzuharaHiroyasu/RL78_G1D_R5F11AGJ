@@ -152,6 +152,7 @@ static B	vib_level = VIB_LEVEL_1;
 static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
 static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
+static bool bleStatusChange = false;
 
 // ŒŸ¸ƒ‚[ƒh
 static bool diagStartFlg = false;
@@ -408,6 +409,7 @@ void user_main_timer_10ms_set( void )
 /************************************************************************/
 void user_main_timer_cyc( void )
 {
+	RBLE_STATUS ret;
 #if FUNC_DEBUG_LOG != ON
 	UB bat;
 #else
@@ -523,6 +525,16 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// ’x‚ê‚ª’~Ï‚µ‚È‚¢—l‚Éˆ—
 		ke_evt_set(KE_EVT_USR_2_BIT);
+	}
+	
+
+	if(get_ble_isconnect() == true && bleStatusChange == false)
+	{
+		ret = set_change_ble_status();
+		bleStatusChange = true;
+	}else if(get_ble_isconnect() == false)
+	{
+		bleStatusChange = false;
 	}
 }
 

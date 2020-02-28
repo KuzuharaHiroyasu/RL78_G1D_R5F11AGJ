@@ -124,6 +124,8 @@
  */
 #define GAP_INIT_CONN_MIN_INTV			0x0018
 #define GAP_INIT_CONN_MAX_INTV			0x0028
+//#define GAP_INIT_CONN_MIN_INTV			0x0C80
+//#define GAP_INIT_CONN_MAX_INTV			0x0C80
 
 /* 
  * Minimum/Maximum connection event length
