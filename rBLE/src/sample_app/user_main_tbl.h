@@ -47,21 +47,22 @@ const B		version_product_tbl[]= {0, 0, 1,16};				/* ソフトウェアバージョン */
 
 /* VUART通信受信データ処理 関数テーブル */
 STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
-	/* コマンド */					/* レングス */				/* 関数  */					/* 応答有無 */
-	{	0x00,						0,							NULL							},	// なし
-	{	VUART_CMD_MODE_CHG,			VUART_CMD_LEN_MODE_CHG,		main_vuart_rcv_mode_chg			},	// 状態変更(G1D)
-	{	VUART_CMD_DATE_SET,			VUART_CMD_LEN_DATE_SET,		main_vuart_rcv_date				},	// 日時設定
-	{	VUART_CMD_INFO,				VUART_CMD_LEN_INFO,			main_vuart_rcv_info				},	// 情報取得
-	{	VUART_CMD_VERSION,			VUART_CMD_LEN_VERSION,		main_vuart_rcv_version			},	// バージョン取得
-	{	VUART_CMD_DEVICE_INFO,		VUART_CMD_LEN_DEVICE_INFO,	main_vuart_rcv_device_info		},	// デバイス状況取得
-	{	VUART_CMD_DATA_NEXT,		VUART_CMD_LEN_DATA_NEXT,	NULL							},	// NEXT[送信専用]
-	{	VUART_CMD_DATA_END,			VUART_CMD_LEN_DATA_END,		main_vuart_rcv_data_end			},	// END[受信はSET時]
-	{	VUART_CMD_DATA_FRAME,		VUART_CMD_LEN_DATA_FRAME,	main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
-	{	VUART_CMD_DATA_CALC,		VUART_CMD_LEN_DATA_CALC,	main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
-	{	VUART_CMD_DATA_FIN,			VUART_CMD_LEN_DATA_FIN,		main_vuart_rcv_data_fin			},	// データ取得完了通知
-	{	VUART_CMD_DEVICE_SET,		VUART_CMD_LEN_DEVICE_SET,	main_vuart_rcv_device_set		},	// デバイス設定変更
-	{	VUART_CMD_VIB_CONFIRM,		VUART_CMD_LEN_VIB_CONFIRM,	main_vuart_rcv_vib_confirm		},	// バイブ動作確認
-	{	VUART_CMD_VIB_STOP,			VUART_CMD_LEN_VIB_STOP,		main_vuart_rcv_vib_stop			},	// バイブ動作停止
+	/* コマンド */					/* レングス */					/* 関数  */					/* 応答有無 */
+	{	0x00,						0,								NULL							},	// なし
+	{	VUART_CMD_MODE_CHG,			VUART_CMD_LEN_MODE_CHG,			main_vuart_rcv_mode_chg			},	// 状態変更(G1D)
+	{	VUART_CMD_DATE_SET,			VUART_CMD_LEN_DATE_SET,			main_vuart_rcv_date				},	// 日時設定
+	{	VUART_CMD_INFO,				VUART_CMD_LEN_INFO,				main_vuart_rcv_info				},	// 情報取得
+	{	VUART_CMD_VERSION,			VUART_CMD_LEN_VERSION,			main_vuart_rcv_version			},	// バージョン取得
+	{	VUART_CMD_DEVICE_INFO,		VUART_CMD_LEN_DEVICE_INFO,		main_vuart_rcv_device_info		},	// デバイス状況取得
+	{	VUART_CMD_DATA_NEXT,		VUART_CMD_LEN_DATA_NEXT,		NULL							},	// NEXT[送信専用]
+	{	VUART_CMD_DATA_END,			VUART_CMD_LEN_DATA_END,			main_vuart_rcv_data_end			},	// END[受信はSET時]
+	{	VUART_CMD_DATA_FRAME,		VUART_CMD_LEN_DATA_FRAME,		main_vuart_rcv_data_frame		},	// 枠情報(日時等)[受信はSET時]
+	{	VUART_CMD_DATA_CALC,		VUART_CMD_LEN_DATA_CALC,		main_vuart_rcv_data_calc		},	// 機器データ[受信はSET時]
+	{	VUART_CMD_DATA_FIN,			VUART_CMD_LEN_DATA_FIN,			main_vuart_rcv_data_fin			},	// データ取得完了通知
+	{	VUART_CMD_DEVICE_SET,		VUART_CMD_LEN_DEVICE_SET,		main_vuart_rcv_device_set		},	// デバイス設定変更
+	{	VUART_CMD_VIB_CONFIRM,		VUART_CMD_LEN_VIB_CONFIRM,		main_vuart_rcv_vib_confirm		},	// バイブ動作確認
+	{	VUART_CMD_VIB_STOP,			VUART_CMD_LEN_VIB_STOP,			main_vuart_rcv_vib_stop			},	// バイブ動作停止
+	{	VUART_CMD_DIAG_POWER_OFF,	VUART_CMD_LEN_DIAG_POWER_OFF,	main_vuart_rcv_power_off		},	// 電源OFF
 };
 
 /* モード別処理 */

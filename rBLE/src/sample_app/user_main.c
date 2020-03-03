@@ -97,6 +97,7 @@ void main_vuart_rcv_date( void );
 void main_vuart_rcv_device_set( void );
 void main_vuart_rcv_vib_confirm( void );
 void main_vuart_rcv_vib_stop( void );
+void main_vuart_rcv_power_off( void );
 
 // ACL、フォト関連
 STATIC void main_acl_init(void);
@@ -2852,6 +2853,40 @@ void main_vuart_rcv_vib_stop( void )
 	{
 #if FUNC_DEBUG_LOG != ON
 		vib_stop();
+#endif
+	}
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_rcv_power_off									*/
+/* 関数名   : VUART受信(電源OFF)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.2.20  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(電源OFF)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_rcv_power_off( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if( s_unit.system_mode != SYSTEM_MODE_SELF_CHECK ){
+		result = VUART_DATA_RESULT_NG;
+	}
+	
+	tx[0] = VUART_CMD_DIAG_POWER_OFF;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_POWER_OFF );
+	
+	if(result == VUART_DATA_RESULT_OK)
+	{
+#if FUNC_DEBUG_LOG != ON
+		// 電源OFF
+		
 #endif
 	}
 }
