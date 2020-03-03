@@ -2886,7 +2886,7 @@ void main_vuart_rcv_power_off( void )
 	{
 #if FUNC_DEBUG_LOG != ON
 		// ìdåπOFF
-		
+		write1_sfr(P1, 4, 0);
 #endif
 	}
 }
