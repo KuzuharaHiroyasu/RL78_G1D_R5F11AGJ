@@ -706,6 +706,11 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	{
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{
+			if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+			{
+				set_vib_level(vib_level);
+				vib_level++;
+			}
 			set_vib(set_vib_mode(vib_power));
 		}
 	}else if(snore_state == SNORE_ON)
@@ -713,7 +718,14 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
 		{
 			vib_startflg = true;
+			if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+			{
+				set_vib_level(vib_level);
+				vib_level++;
+			}
 		}
+	}else if(apnea_state != 99 && snore_state != 99){
+		vib_level = VIB_LEVEL_1;
 	}
 	
 	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );		
@@ -1002,6 +1014,7 @@ STATIC void sw_proc(void)
 			led_green_on();
 			s_unit.sw_time_cnt = 0;
 			set_vib(VIB_MODE_SENSING);
+			vib_level = VIB_LEVEL_1;
 		}
 		
 		if(s_unit.system_mode == SYSTEM_MODE_SENSING && s_unit.sw_time_cnt > TIME_20MS_CNT_POW_SW_SHORT_DEBUG && sw_on_flg == OFF){
