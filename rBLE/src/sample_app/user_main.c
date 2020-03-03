@@ -492,7 +492,10 @@ void user_main_timer_cyc( void )
 					
 					if( bat_check_flg != true )
 					{
-						set_led( LED_PATT_GREEN_BLINK_SENSING );
+						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
+						{// ‘•’…‚µ‚Ä‚¢‚È‚¢‚Æ”»’è‚µ‚½‚çLED“_“”
+							set_led( LED_PATT_GREEN_BLINK_SENSING );
+						}
 					}
 				}
 				
@@ -503,7 +506,10 @@ void user_main_timer_cyc( void )
 					acl_photo_sens_read_flg = OFF;
 					if( bat_check_flg != true )
 					{
-						set_led( LED_PATT_GREEN_BLINK_SENSING );
+						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
+						{// ‘•’…‚µ‚Ä‚¢‚È‚¢‚Æ”»’è‚µ‚½‚çLED“_“”
+							set_led( LED_PATT_GREEN_BLINK_SENSING );
+						}
 					}
 				}
 			}
