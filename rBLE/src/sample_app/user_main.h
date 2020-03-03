@@ -187,7 +187,8 @@ typedef enum{
 #define		MAX_SUPPRESS_CONT_TIME_5_MIN_CNT	30		// 10•b–ˆ 1•ª(6) * 5 = 30‰ñ = 5•ª
 #define		MAX_SUPPRESS_CONT_TIME_10_MIN_CNT	60		// 10•b–ˆ 1•ª(6) * 10 = 60‰ñ = 10•ª
 #define		MAX_SUPPRESS_CONT_TIME_NON_CNT		4320	// 10•b–ˆ 1•ª(6) * 60 * 12 = 4320‰ñ = 720•ª = 12ŽžŠÔ
-#define		SUPPRESS_INTERVAL_CNT				180		// 10•b–ˆ 1•ª(6) * 30 = 180‰ñ = 30•ª
+#define		SUPPRESS_INTERVAL_CNT_5_MIN			30		// 10•b–ˆ 1•ª(6) * 5  = 30‰ñ = 5•ª
+#define		SUPPRESS_INTERVAL_CNT_10_MIN		60		// 10•b–ˆ 1•ª(6) * 10 = 60‰ñ = 10•ª
 
 // ‘ª’èŒÂ”
 #define		MEAS_KOKYU_CNT_MAX			200

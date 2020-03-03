@@ -149,6 +149,7 @@ void set_serial_command(char dbg_rx_data);
 static B	vib_level = VIB_LEVEL_1;
 static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
+static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 
 // 検査モード
 static bool diagStartFlg = false;
@@ -1160,6 +1161,17 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.device_set_info |= s_unit.alarm.info.dat.ibiki_sens << 4;
 	// 無呼吸検出感度保存
 	// 現在検出感度の設定なし
+	
+	// 低減連続時間のインターバル設定
+	if(s_unit.alarm.info.dat.suppress_max_time == MAX_SUPPRESS_CONT_TIME_5_MIN_CNT)
+	{
+		suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_5_MIN;
+	}else if(s_unit.alarm.info.dat.suppress_max_time == MAX_SUPPRESS_CONT_TIME_10_MIN_CNT)
+	{
+		suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
+	}else{
+		suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
+	}
 	
 	// デバイス設定書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_INFO;
@@ -3053,31 +3065,6 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
-
-#if 0 // テスト用データ
-	static const UH testdata[200] = {
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-		   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-		   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-		   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-	};
-#endif
 	
 	// 10秒間の平均値
 	for(ii=0;ii<s_unit.ibiki_cnt;++ii){
@@ -3095,7 +3082,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
 		s_unit.suppress_max_time_interval_cnt++;
-		if( SUPPRESS_INTERVAL_CNT <= s_unit.suppress_max_time_interval_cnt )
+		if( suppressIntervalCnt <= s_unit.suppress_max_time_interval_cnt )
 		{// 抑制動作最大時間オーバー時のインターバル満了
 			suppress_max_cnt_over_flg = OFF;
 			s_unit.suppress_max_time_interval_cnt = 0;
@@ -3106,15 +3093,15 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	bit_shift = s_unit.phase_ibiki * 2;
 	if(newstate == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		s_unit.suppress_cont_time_cnt++;
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
 		{//抑制モード（いびき + 無呼吸）か抑制モード（いびき）ならバイブレーション動作
-			if(s_unit.suppress_cont_time_cnt <= suppress_max_cnt)
+			if((s_unit.suppress_cont_time_cnt + 1) <= suppress_max_cnt)
 			{//抑制動作最大時間以下
 				if(suppress_max_cnt_over_flg == OFF)
 				{//抑制動作最大時間オーバー時以外
 					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 					{// 抑制開始時間経過（センシング開始から20分）
+						s_unit.suppress_cont_time_cnt++;
 						if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 						{
 							set_vib_level(vib_level);
