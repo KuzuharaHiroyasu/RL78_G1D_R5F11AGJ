@@ -488,8 +488,6 @@ void user_main_timer_cyc( void )
 					if( bat_check_flg != true )
 					{
 						set_led( LED_PATT_GREEN_BLINK_SENSING );
-					} else {
-						bat_check_flg = false;
 					}
 				}
 				
@@ -498,6 +496,10 @@ void user_main_timer_cyc( void )
 				{
 					s_unit.acl_timing = 0;
 					acl_photo_sens_read_flg = OFF;
+					if( bat_check_flg != true )
+					{
+						set_led( LED_PATT_GREEN_BLINK_SENSING );
+					}
 				}
 			}
 			
@@ -3418,6 +3420,24 @@ void reset_vib_timer(void)
 void reset_led_timer(void)
 {
 	s_unit.tick_led_20ms_sec = 0;
+}
+
+/************************************************************************/
+/* 関数     : reset_bat_checkflg										*/
+/* 関数名   : 電池チェックフラグOFF										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.01.28 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void reset_bat_checkflg(void)
+{
+#if FUNC_DEBUG_LOG != ON
+	bat_check_flg = false;
+#endif
 }
 
 /************************************************************************/

@@ -40,8 +40,8 @@ const RBLE_CREATE_CONNECT_PARAM g_app_default_connection_param[] = {
         {0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12},	/* peer_addr */
         RBLE_ADDR_PUBLIC,                       /* own_addr_type */
         0,                                      /* reserved */
-        0x0C,                                   /* con_intv_min: 0x0C * 1.25[ms] = 15[ms] */
-        0x0C,                                   /* con_intv_max: 0x0C * 1.25[ms] = 15[ms] */
+        0x06,                                   /* con_intv_min: 0x06 * 1.25[ms] = 7.5[ms] */
+        0x06,                                   /* con_intv_max: 0x06 * 1.25[ms] = 7.5[ms] */
         0x00,                                   /* con_latency */
         0x1F4,                                  /* superv_to: 0x1F4 * 10[ms] = 5[s] */
         0x00,                                   /* ce_len_min: 0x0 * 0.625[ms] = 0[ms] */
@@ -55,8 +55,8 @@ const APP_BROADCAST_ENABLE_PARAM g_app_default_broadcast_param[] = {
         RBLE_GAP_UND_CONNECTABLE,       /* conn_mode */
         {
             {
-                0x20,                                   /* adv_intv_min: 0x20 * 0.625[ms] = 20[ms] */
-                0x30,                                   /* adv_intv_max: 0x30 * 0.625[ms] = 30[ms] */
+                0x5A0,                                  /* adv_intv_min: 0x5A0 * 0.625[ms] =  900[ms] */
+                0x640,                                  /* adv_intv_max: 0x640 * 0.625[ms] = 1000[ms] */
                 RBLE_GAP_ADV_CONN_UNDIR,                /* adv_type */
                 RBLE_ADDR_PUBLIC,                       /* own_addr_type */
                 RBLE_ADDR_PUBLIC,                       /* direct_addr_type */

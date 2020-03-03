@@ -146,6 +146,8 @@ typedef struct {
     at_command_func_t func;
 } at_command_t;
 
+BOOL ble_disconnect = false;
+
 /*******************************************************************************
     Global Variables
 ********************************************************************************/
@@ -233,6 +235,8 @@ const struct ke_state_handler rble_app_state_handler[RBLE_APP_STATE_MAX] =
 const struct ke_state_handler rble_app_default_handler = KE_STATE_HANDLER_NONE;
 ke_state_t rble_app_state[RBLE_APP_IDX_MAX];
 #endif
+
+static void set_ble_disconnect(BOOL state);
 
 /*******************************************************************************
     Function Definitions
@@ -1181,6 +1185,10 @@ static void app_gap_disconnect_comp(RBLE_GAP_EVENT *event)
     	// RD8001対応：送信ステータス初期化
     	ds_set_vuart_send_status( OFF );
     	set_ble_isconnect(false);
+    	
+    	set_ble_state(BLE_STATE_ON); // BLE初期化完了時がわからないため、ここで状態更新する(これでOFF処理ができるようになる)
+    	set_ble_disconnect(true);
+		RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWDOWN );
         break;
 
     default:
@@ -1791,6 +1799,12 @@ static void app_vs_callback(RBLE_VS_EVENT *event)
             break;
         }else if(state == BLE_STATE_ON){    // ON状態ではOFF処理を行う
             set_ble_state(BLE_STATE_OFF);
+        	
+        	if(ble_disconnect == true)
+        	{
+        		set_ble_disconnect(false);
+	        	RBLE_VS_RF_Control( RBLE_VS_RFCNTL_CMD_POWUP_DDCON );
+        	}
             break;
         }else if(state == BLE_STATE_OFF){   // OFF状態ではON処理を行う
             app_gap_reset();
@@ -1863,5 +1877,15 @@ uint8_t get_ble_connect(void)
 	}
 	
 	return ret;
+}
+
+static void set_ble_disconnect(BOOL state)
+{
+	if(state == true)
+	{
+		ble_disconnect = true;
+	}else{
+		ble_disconnect = false;
+	}
 }
 

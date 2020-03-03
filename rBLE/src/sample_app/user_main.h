@@ -700,6 +700,7 @@ extern void user_main_timer_cyc( void );
 extern UW time_get_elapsed_time( void );
 extern void reset_vib_timer( void );
 extern void reset_led_timer( void );
+extern void reset_bat_checkflg( void );
 extern void vib_cyc( void );
 extern void set_vib_flg( bool flg );
 extern void main_set_battery( void );

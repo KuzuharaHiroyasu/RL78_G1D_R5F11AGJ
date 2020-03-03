@@ -38,7 +38,7 @@ const struct ke_state_handler user_main_default_handler = KE_STATE_HANDLER_NONE;
 /* ユーザー定義												*/
 /************************************************************/
 /* バージョン表記の注意事項 */
-const B		version_product_tbl[]= {0, 0, 1,15};				/* ソフトウェアバージョン */
+const B		version_product_tbl[]= {0, 0, 1,16};				/* ソフトウェアバージョン */
 																/* バージョン表記ルール */
 																/* ①メジャーバージョン：[0 ～ 99] */
 																/* ②マイナーバージョン：[0 ～ 9] */
@@ -78,9 +78,9 @@ STATIC MODE_FUNC p_user_main_mode_func[] = {								user_main_mode_inital,			// 
 
 typedef SYSTEM_MODE ( *EVENT_TABLE )( int event );
 STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
-// モード				INITAL				IDLE_COM			SENSING			GET					PRG_G1D			SELF_CHECK		MOVE				NON
+// モード				INITIAL				IDLE_COM			SENSING			GET					PRG_G1D			SELF_CHECK		MOVE				NON
 /*イベントなし		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*電源SW(短)		*/	{ evt_non,			evt_bat_check,		evt_bat_check,	evt_bat_check,		evt_non,		evt_non,		evt_non,			evt_non },
+/*電源SW(短)		*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*電源SW押下(長)	*/	{ evt_non,			evt_sensing_chg,	evt_idle_com,	evt_sensing_chg,	evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートON	*/	{ evt_idle_com,		evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*充電検知ポートOFF	*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },

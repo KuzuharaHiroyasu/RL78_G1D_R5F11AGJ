@@ -62,6 +62,7 @@ void led_start(UW led_timer)
 	{// 10秒超えている かつ 緑色点灯以外が設定されていたら初期値に戻してLEDをOFFにしておく
 		pattern = LED_PATT_INITIAL;
 		led_green_off();
+		reset_bat_checkflg();
 	}
 }
 
