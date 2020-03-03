@@ -131,6 +131,9 @@ static int proc_on(int Pos)
 			break;
 		}else{
 			SnoreCnt_ += 1;
+			if (SnoreCnt_ >= SNORE_PARAM_NORMAL_CNT) {
+				Reset();
+			}			
 		}
 	}
 	
@@ -214,14 +217,14 @@ static void Judge(void)
 	
 	for(ii=0;ii<RIREKI;++ii){
 		if(SnoreTime_[ii] == -1){
-			// SnoreState_ = SNORE_OFF;
+			SnoreState_ = SNORE_OFF;
 			return;
 		}
 	}
 	
 	for(ii=0;ii<RIREKI-1;++ii){
 		if(abs(SnoreTime_[0]-SnoreTime_[ii+1]) > SNORE_PARAM_GOSA){
-			// SnoreState_ = SNORE_OFF;
+			SnoreState_ = SNORE_OFF;
 			return;
 		}
 	}

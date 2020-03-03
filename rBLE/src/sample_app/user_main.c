@@ -1163,10 +1163,10 @@ STATIC void user_main_mode_sensing_before( void )
 	// 現在検出感度の設定なし
 	
 	// 低減連続時間のインターバル設定
-	if(s_unit.alarm.info.dat.suppress_max_time == MAX_SUPPRESS_CONT_TIME_5_MIN_CNT)
+	if(suppress_max_cnt == MAX_SUPPRESS_CONT_TIME_5_MIN_CNT)
 	{
 		suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_5_MIN;
-	}else if(s_unit.alarm.info.dat.suppress_max_time == MAX_SUPPRESS_CONT_TIME_10_MIN_CNT)
+	}else if(suppress_max_cnt == MAX_SUPPRESS_CONT_TIME_10_MIN_CNT)
 	{
 		suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 	}else{
