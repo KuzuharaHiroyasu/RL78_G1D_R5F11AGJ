@@ -426,6 +426,7 @@ typedef struct{
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	UW tick_led_20ms_sec;
+	UH tick_diag_10ms;
 	UW suppress_cont_time_cnt;				// 抑制継続時間用カウント
 	UW suppress_max_time_interval_cnt;		// 抑制最大時間のインターバルカウント
 	UW suppress_start_cnt;					// 抑制開始カウント
@@ -544,6 +545,18 @@ typedef struct{
 #define	VUART_CMD_DEVICE_SET	0xC6
 #define	VUART_CMD_VIB_CONFIRM	0xC7
 #define	VUART_CMD_VIB_STOP		0xC8
+
+#define VUART_CMD_DIAG_POWER_OFF	0xA0
+#define VUART_CMD_DIAG_LED			0xA1
+#define VUART_CMD_DIAG_VIB			0xA2
+#define VUART_CMD_DIAG_MIC			0xA3
+#define VUART_CMD_DIAG_ACL			0xA4
+#define VUART_CMD_DIAG_PHOTO		0xA5
+#define VUART_CMD_DIAG_EEPROM		0xA6
+#define VUART_CMD_DIAG_MIC_VAL		0xA7
+#define VUART_CMD_DIAG_ACL_VAL		0xA8
+#define VUART_CMD_DIAG_PHOTO_VAL	0xA9
+
 #define	VUART_CMD_INVALID		0xFF	// コマンド無し特殊処理
 
 
@@ -569,6 +582,8 @@ typedef struct{
 #define	VUART_CMD_LEN_VIB_CONFIRM	2
 #define	VUART_CMD_LEN_VIB_STOP		1
 
+#define	VUART_CMD_LEN_DIAG_POWER_OFF	2
+
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
 // 送信データ長 ※コマンド部含む
@@ -588,6 +603,17 @@ typedef struct{
 #define	VUART_SND_LEN_DEVICE_SET		2
 #define	VUART_SND_LEN_VIB_CONFIRM		2
 #define	VUART_SND_LEN_VIB_STOP			2
+
+#define VUART_SND_LEN_DIAG_POWER_OFF	1
+#define VUART_SND_LEN_DIAG_LED			2
+#define VUART_SND_LEN_DIAG_VIB			2
+#define VUART_SND_LEN_DIAG_MIC			2
+#define VUART_SND_LEN_DIAG_ACL			2
+#define VUART_SND_LEN_DIAG_PHOTO		2
+#define VUART_SND_LEN_DIAG_EEPROM		3
+#define VUART_SND_LEN_DIAG_MIC_VAL		3
+#define VUART_SND_LEN_DIAG_ACL_VAL		7
+#define VUART_SND_LEN_DIAG_PHOTO_VAL	3
 
 
 #define VUART_DATA_SIZE_MAX				20
@@ -682,6 +708,15 @@ typedef enum{
 	RCV_COM_SUPPRESS_START				= 70,	// バイブ動作
 	RCV_COM_MAX,							// 最大
 }RCV_COMMAND;
+
+// 自己診断（検査モード）
+#define DIAG_LED_TIMER					300		// 10ms * 300 = 3000ms = 3秒
+#define DIAG_VIB_TIMER					300		// 10ms * 300 = 3000ms = 3秒
+#define DIAG_MIC_TIMER					1000	// 10ms * 1000 = 10000ms = 10秒
+#define DIAG_ACL_TIMER					1000	// 10ms * 1000 = 10000ms = 10秒
+#define DIAG_PHOTO_TIMER				1000	// 10ms * 1000 = 10000ms = 10秒
+#define VUART_DIAG_START				0
+#define VUART_DIAG_END					1
 
 /******************/
 /*  外部参照宣言  */

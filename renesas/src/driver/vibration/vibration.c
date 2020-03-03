@@ -21,8 +21,6 @@ bool		confirm_flg = false;
 
 // プロトタイプ宣言
 STATIC void set_vib_repeat(VIB_MODE mode);
-STATIC void vib_on(void);
-STATIC void vib_off(void);
 STATIC void vib_mode_weak(UH vib_timer);
 STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
@@ -280,7 +278,7 @@ STATIC void set_vib_repeat(VIB_MODE mode)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void vib_on(void)
+void vib_on(void)
 { 
 	// ON
 	VIB_CTL = 1;
@@ -298,7 +296,7 @@ STATIC void vib_on(void)
 /************************************************************************/
 /* 注意事項 : なし														*/
 /************************************************************************/
-STATIC void vib_off(void)
+void vib_off(void)
 { 
 	// OFF
 	VIB_CTL = 0;

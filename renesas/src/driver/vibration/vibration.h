@@ -73,5 +73,6 @@ extern void set_vib(VIB_MODE mode);
 extern void set_vib_confirm(VIB_MODE mode);
 extern VIB_MODE set_vib_mode(UB yokusei_str);
 extern void set_vib_level(B level);
-
+extern void vib_on(void);
+extern void vib_off(void);
 #endif // __VIBRATION_INC__
