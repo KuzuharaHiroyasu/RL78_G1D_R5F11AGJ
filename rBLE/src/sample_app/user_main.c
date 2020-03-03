@@ -103,9 +103,9 @@ void main_vuart_rcv_power_off( void );
 STATIC void main_acl_init(void);
 STATIC void main_acl_stop(void);
 STATIC void main_acl_start(void);
+STATIC UH main_photo_read(void);
 #if (FUNC_DEBUG_LOG != ON) || (FUNC_DEBUG_WAVEFORM_LOG != ON)
 STATIC void main_acl_read(void);
-STATIC UH main_photo_read(void);
 #endif
 
 /********************/
@@ -701,7 +701,20 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	{
 		snore_state = 99;
 	}
-	
+
+	if(apnea_state == APNEA_ERROR)
+	{
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
+		{
+			set_vib(set_vib_mode(vib_power));
+		}
+	}else if(snore_state == SNORE_ON)
+	{
+		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
+		{
+			vib_startflg = true;
+		}
+	}
 	
 	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );		
 	INC_MAX_INI( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX - 1, 0 );		
@@ -3557,6 +3570,7 @@ STATIC void main_acl_read(void)
 	// INT_REL読み出し　※割り込み要求クリア
 	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );
 }
+#endif
 
 /************************************************************************/
 /* 関数     : main_photo_read											*/
@@ -3595,7 +3609,6 @@ STATIC UH main_photo_read(void)
 	
 	return ret_photoref_val;
 }
-#endif
 
 /************************************************************************/
 /* 関数     : reset_vib_timer											*/
