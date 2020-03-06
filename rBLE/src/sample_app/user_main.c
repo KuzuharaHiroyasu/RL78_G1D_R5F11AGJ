@@ -2945,6 +2945,10 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 				{
 					set_vib_level(vib_level);
 					vib_level++;
+					if(vib_level > VIB_LEVEL_12)
+					{
+						vib_level = VIB_LEVEL_9;
+					}
 				}
 				set_vib(set_vib_mode(vib_power));
 			}
@@ -3095,6 +3099,10 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 						{
 							set_vib_level(vib_level);
 							vib_level++;
+							if(vib_level > VIB_LEVEL_12)
+							{
+								vib_level = VIB_LEVEL_9;
+							}
 						}
 						vib_startflg = true;
 //						set_vib(set_vib_mode(vib_power));
