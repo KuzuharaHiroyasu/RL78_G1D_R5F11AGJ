@@ -31,6 +31,8 @@ static UB	SnoreCnt_; // ON連続回数, OFF連続回数 兼用
 static B	SnoreTime_[RIREKI];
 static UB	SnoreState_;		// いびき
 static UH	snore_sens = SNORE_PARAM_THRE_DURING;	// いびき感度
+static UB	snoreJudgeOnFlg_;	// いびき判定ONフラグ
+static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -51,6 +53,8 @@ void calc_snore_init(void)
 	SnoreFlg_ = OFF;
 	SnoreCnt_ = 0;
 	SnoreState_ = SNORE_OFF;
+	snoreJudgeOnFlg_ = OFF;
+	judgeSkipFlg_ = OFF;
 	for(ii=0;ii<RIREKI;++ii){
 		SnoreTime_[ii] = -1;
 	}
@@ -101,6 +105,13 @@ void calc_snore_proc(const UH *pData)
 			return;
 		}
 	}
+	
+	if(snoreJudgeOnFlg_ == OFF)
+	{
+		SnoreState_ = SNORE_OFF;
+	}
+	judgeSkipFlg_ = OFF;
+	snoreJudgeOnFlg_ = OFF;
 }
 
 /************************************************************************/
@@ -127,10 +138,16 @@ static int proc_on(int Pos)
 			SnoreFlg_ = OFF;
 			pos = ii;
 			Save();
-			Judge();
+			if(judgeSkipFlg_ == OFF)
+			{
+				Judge();
+			}
 			break;
 		}else{
 			SnoreCnt_ += 1;
+			if (SnoreCnt_ >= SNORE_PARAM_NORMAL_CNT) {
+				Reset();
+			}			
 		}
 	}
 	
@@ -189,6 +206,19 @@ static void Save(void)
 {
 	int ii;
 	
+	if(SnoreState_ == SNORE_ON)
+	{
+		// いびき中のノイズや体動時の擦れ音などは判定しない
+		for(ii=0;ii<RIREKI-1;++ii){
+			if(abs(SnoreCnt_-SnoreTime_[ii]) > SNORE_PARAM_GOSA){
+				judgeSkipFlg_ = ON;
+				SnoreCnt_ = 0;
+				return;
+			}
+		}
+		judgeSkipFlg_ = OFF;
+	}
+	
 	for(ii=1;ii<RIREKI;++ii){
 		SnoreTime_[RIREKI-ii] = SnoreTime_[RIREKI-ii-1];
 	}
@@ -214,17 +244,18 @@ static void Judge(void)
 	
 	for(ii=0;ii<RIREKI;++ii){
 		if(SnoreTime_[ii] == -1){
-			// SnoreState_ = SNORE_OFF;
+			SnoreState_ = SNORE_OFF;
 			return;
 		}
 	}
 	
 	for(ii=0;ii<RIREKI-1;++ii){
 		if(abs(SnoreTime_[0]-SnoreTime_[ii+1]) > SNORE_PARAM_GOSA){
-			// SnoreState_ = SNORE_OFF;
+			SnoreState_ = SNORE_OFF;
 			return;
 		}
 	}
+	snoreJudgeOnFlg_ = ON;
 	SnoreState_ = SNORE_ON;
 }
 
