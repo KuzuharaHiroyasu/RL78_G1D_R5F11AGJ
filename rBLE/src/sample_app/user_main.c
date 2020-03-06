@@ -3036,7 +3036,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 #if FUNC_DEBUG_CALC_NON == OFF
 	//‰‰Z³‹Kˆ—
 	int ii;
-	int average =0;
+	uint32_t average =0;
 	UB newstate;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
