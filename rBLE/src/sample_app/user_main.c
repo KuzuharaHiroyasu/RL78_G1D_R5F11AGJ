@@ -915,7 +915,7 @@ void user_main_init( void )
 	// 演算初期化
 	calc_snore_init();
 	
-	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	s_unit.system_mode = SYSTEM_MODE_INITIAL;
 	set_ble_state(BLE_STATE_INITIAL);
 	set_ble_isconnect(false);
 	
@@ -926,7 +926,6 @@ void user_main_init( void )
 
     write1_sfr(P1, 5, 0);
 #endif
-
 }
 
 /************************************************************************/
@@ -982,7 +981,15 @@ STATIC void sw_proc(void)
 		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
 		
-		if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
+		if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
+		{
+			if( s_unit.sw_time_cnt == (TIME_20MS_CNT_POW_SW_LONG / 2))
+			{
+				// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
+				write1_sfr(P1, 4, 1);	// 電源ON
+				led_green_on();
+			}
+		}else if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
 			// 規定時間以上連続押下と判断
 			evt_act( EVENT_POW_SW_LONG );
 		}
@@ -995,6 +1002,13 @@ STATIC void sw_proc(void)
 				evt_act( EVENT_POW_SW_SHORT );
 			}else{
 				// 何もしない
+			}
+			
+			// INITIAL状態(初回電源ON時)は電源SW長押し離し時にLED消灯し、IDLE状態へ移行
+			if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
+			{
+				evt_act( EVENT_POW_SW_LONG );
+				led_green_off();
 			}
 		}
 		// 電源SW押下タイマー再スタート 

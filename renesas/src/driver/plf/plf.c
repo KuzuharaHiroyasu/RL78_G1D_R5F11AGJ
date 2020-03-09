@@ -335,7 +335,7 @@ _PLF_CODE static void plf_port_init(void)
     write_sfr(PM15, 0x80);
 #endif
 	// HIGH出力設定
-	write1_sfr(P1, 4, 1);	// 電源
+//	write1_sfr(P1, 4, 1);	// 電源
 	write1_sfr(P2, 0, 1);	// フォトセンサー
 }
 
