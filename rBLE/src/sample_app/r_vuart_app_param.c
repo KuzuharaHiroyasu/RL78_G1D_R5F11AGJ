@@ -55,8 +55,8 @@ const APP_BROADCAST_ENABLE_PARAM g_app_default_broadcast_param[] = {
         RBLE_GAP_UND_CONNECTABLE,       /* conn_mode */
         {
             {
-                0x5A0,                                  /* adv_intv_min: 0x5A0 * 0.625[ms] =  900[ms] */
-                0x640,                                  /* adv_intv_max: 0x640 * 0.625[ms] = 1000[ms] */
+                0x20,                                  /* adv_intv_min: 0x20 * 0.625[ms] =  20[ms] */
+                0x30,                                  /* adv_intv_max: 0x30 * 0.625[ms] =  30[ms] */
                 RBLE_GAP_ADV_CONN_UNDIR,                /* adv_type */
                 RBLE_ADDR_PUBLIC,                       /* own_addr_type */
                 RBLE_ADDR_PUBLIC,                       /* direct_addr_type */
