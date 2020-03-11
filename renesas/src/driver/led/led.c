@@ -224,7 +224,7 @@ STATIC void led_green_blink_low_batt(UW led_timer)
 /************************************************************************/
 STATIC void led_green_blink_sensing(UW led_timer)
 {
-	if( blink_timer <= (LED_TIMER_20MSEC * 3) )
+	if( blink_timer <= LED_TIMER_100MSEC )
 	{
 		if(read1_sfr( LED_PORT, LED_GREEN_BIT) == LED_OFF)
 		{

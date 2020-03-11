@@ -299,8 +299,8 @@ void codeptr app_evt_usr_2(void)
 }
 
 /************************************************************************/
-/* 関数     : app_evt_usr_2												*/
-/* 関数名   : ユーザーイベント(20ms周期)								*/
+/* 関数     : app_evt_usr_3												*/
+/* 関数名   : ユーザーイベント(100ms周期)								*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
 /* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
@@ -513,11 +513,11 @@ void user_main_timer_cyc( void )
 			s_unit.tick_10ms_new = 0;
 		}
 	}
-	// 20ms周期
-	if(s_unit.tick_10ms >= (uint16_t)PERIOD_20MSEC){
+	// 100ms周期
+	if(s_unit.tick_10ms >= (uint16_t)PERIOD_100MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
 
-		s_unit.tick_10ms -= PERIOD_20MSEC;
+		s_unit.tick_10ms -= PERIOD_100MSEC;
 	}
 	// 1秒周期 ※遅れの蓄積は厳禁
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
