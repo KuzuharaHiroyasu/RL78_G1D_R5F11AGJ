@@ -368,6 +368,9 @@ void arch_main_ent(void)
     	//バイブレーション
     	vib_cyc();
     	
+    	// LED
+    	led_cyc();
+    	
         // ユーザータイマー処理
         user_main_timer_cyc();
 

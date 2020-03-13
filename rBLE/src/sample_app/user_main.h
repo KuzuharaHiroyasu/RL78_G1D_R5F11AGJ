@@ -34,8 +34,7 @@
 #define USER_MAIN_CALC_ACL				KE_FIRST_MSG(USER_MAIN_ID) + 6
 #define USER_MAIN_CYC_CALC_RESULT		KE_FIRST_MSG(USER_MAIN_ID) + 7
 #define USER_MAIN_CYC_BATTERY			KE_FIRST_MSG(USER_MAIN_ID) + 8
-#define USER_MAIN_CYC_LED				KE_FIRST_MSG(USER_MAIN_ID) + 9
-#define USER_MAIN_CYC_PHOTOREF			KE_FIRST_MSG(USER_MAIN_ID) + 10
+#define USER_MAIN_CYC_PHOTOREF			KE_FIRST_MSG(USER_MAIN_ID) + 9
 
 
 
@@ -253,10 +252,11 @@ typedef enum{
 #define PERIOD_20MSEC   2U		//RD8001対応：定義追加
 #define PERIOD_50MSEC   5U		//RD8001対応：定義追加
 #define PERIOD_100MSEC   10U
+#define PERIOD_200MSEC   20U
 
-///20ms timer
-#define	TIME_20MS_CNT_POW_SW_LONG			20				/* 電源SW_長(2秒) */
-#define	TIME_20MS_CNT_POW_SW_SHORT			1				/* 電源SW_短(0.1秒) */
+///200ms timer
+#define	TIME_200MS_CNT_POW_SW_LONG			10				/* 電源SW_長(2秒) */
+#define	TIME_200MS_CNT_POW_SW_SHORT			1				/* 電源SW_短(0.1秒) */
 
 // 50ms timer
 #if FUNC_DEBUG_LOG == ON
@@ -426,7 +426,7 @@ typedef struct{
 	UH tick_10ms_new;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
-	UW tick_led_20ms_sec;
+	UW tick_led_10ms_sec;
 	UH tick_diag_10ms;
 	UW suppress_cont_time_cnt;				// 抑制継続時間用カウント
 	UW suppress_max_time_interval_cnt;		// 抑制最大時間のインターバルカウント
@@ -710,6 +710,7 @@ extern void reset_vib_timer( void );
 extern void reset_led_timer( void );
 extern void reset_bat_checkflg( void );
 extern void vib_cyc( void );
+extern void led_cyc( void );
 extern void set_vib_flg( bool flg );
 extern void main_set_battery( void );
 extern void set_ble_state(UB state);

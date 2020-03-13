@@ -26,7 +26,6 @@
 
 // プロトタイプ宣言
 static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t battery_level_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
@@ -300,7 +299,7 @@ void codeptr app_evt_usr_2(void)
 
 /************************************************************************/
 /* 関数     : app_evt_usr_3												*/
-/* 関数名   : ユーザーイベント(100ms周期)								*/
+/* 関数名   : ユーザーイベント(200ms周期)								*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
 /* 変更履歴	: 2018.01.25 Axia Soft Design 西島 稔	初版作成			*/
@@ -319,10 +318,6 @@ void codeptr app_evt_usr_3(void)
 		
 		// ユーザーアプリ周期処理
 		ke_msg = ke_msg_alloc( USER_MAIN_CYC_ACT, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-		
-		// LED
-		ke_msg = ke_msg_alloc( USER_MAIN_CYC_LED, USER_MAIN_ID, USER_MAIN_ID, 0 );
 		ke_msg_send(ke_msg);
 	}
 #endif
@@ -513,11 +508,11 @@ void user_main_timer_cyc( void )
 			s_unit.tick_10ms_new = 0;
 		}
 	}
-	// 100ms周期
-	if(s_unit.tick_10ms >= (uint16_t)PERIOD_100MSEC){
+	// 200ms周期
+	if(s_unit.tick_10ms >= (uint16_t)PERIOD_200MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
 
-		s_unit.tick_10ms -= PERIOD_100MSEC;
+		s_unit.tick_10ms -= PERIOD_200MSEC;
 	}
 	// 1秒周期 ※遅れの蓄積は厳禁
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
@@ -537,12 +532,10 @@ void user_main_timer_cyc( void )
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
-static int_t led_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+void led_cyc(void)
 {
-	led_start(s_unit.tick_led_20ms_sec);
-	s_unit.tick_led_20ms_sec++;
-	
-	return (KE_MSG_CONSUMED);
+	led_start(s_unit.tick_led_10ms_sec);
+	s_unit.tick_led_10ms_sec++;
 }
 
 /************************************************************************/
@@ -983,22 +976,22 @@ STATIC void sw_proc(void)
 		
 		if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
 		{
-			if( s_unit.sw_time_cnt == (TIME_20MS_CNT_POW_SW_LONG / 2))
+			if( s_unit.sw_time_cnt == 5)
 			{
 				// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
 				write1_sfr(P1, 4, 1);	// 電源ON
 				led_green_on();
 			}
-		}else if( s_unit.sw_time_cnt == TIME_20MS_CNT_POW_SW_LONG){
+		}else if( s_unit.sw_time_cnt == TIME_200MS_CNT_POW_SW_LONG){
 			// 規定時間以上連続押下と判断
 			evt_act( EVENT_POW_SW_LONG );
 		}
 	}else{					// OFF処理
 		if( ON == s_unit.pow_sw_last ){
 			// ON→OFFエッジ
-			if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_LONG){
+			if( s_unit.sw_time_cnt >= TIME_200MS_CNT_POW_SW_LONG){
 				// ON確定時にイベント発生済みなのでここでは何もしない
-			}else if( s_unit.sw_time_cnt >= TIME_20MS_CNT_POW_SW_SHORT){
+			}else if( s_unit.sw_time_cnt >= TIME_200MS_CNT_POW_SW_SHORT){
 				evt_act( EVENT_POW_SW_SHORT );
 			}else{
 				// 何もしない
@@ -3629,7 +3622,7 @@ void reset_vib_timer(void)
 /************************************************************************/
 void reset_led_timer(void)
 {
-	s_unit.tick_led_20ms_sec = 0;
+	s_unit.tick_led_10ms_sec = 0;
 }
 
 /************************************************************************/

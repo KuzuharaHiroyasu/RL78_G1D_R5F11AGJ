@@ -23,12 +23,13 @@
 #define LED_OFF          0
 
 // timer
-#define LED_TIMER_10SEC		100	// 100msec * 100 = 10000msec = 10sec
-#define LED_TIMER_2SEC		 20	// 100msec * 20  = 2000msec  = 2sec
-#define LED_TIMER_1SEC		 10	// 100msec * 10  = 1000msec  = 1sec
-#define LED_TIMER_200MSEC	  2	// 100msec * 2   = 200msec   = 200msec
-#define LED_TIMER_100MSEC	  1	// 100msec * 1   = 100msec   = 100msec
-//#define LED_TIMER_20MSEC	  1	// 100msec * 1   = 20msec    = 20msec
+#define LED_TIMER_10SEC		1000	// 10msec * 1000 = 10000msec = 10sec
+#define LED_TIMER_5SEC		 500	// 10msec * 500  = 5000msec  = 5sec
+#define LED_TIMER_2SEC		 200	// 10msec * 200  = 2000msec  = 2sec
+#define LED_TIMER_1SEC		 100	// 10msec * 100  = 1000msec  = 1sec
+#define LED_TIMER_200MSEC	  20	// 10msec * 20   = 200msec   = 200msec
+#define LED_TIMER_100MSEC	  10	// 10msec * 10   = 100msec   = 100msec
+#define LED_TIMER_20MSEC	   2	// 10msec * 2    = 20msec    = 20msec
 
 
 typedef enum{
