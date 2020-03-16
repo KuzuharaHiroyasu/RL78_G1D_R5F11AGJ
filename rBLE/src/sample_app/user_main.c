@@ -32,6 +32,7 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 
 #if FUNC_DEBUG_LOG != ON
 static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+static int_t main_vuart_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 static void set_suppress_cnt_time(UB suppress_max_time);
@@ -151,6 +152,7 @@ static B	vib_level = VIB_LEVEL_1;
 static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
 static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
+static uint16_t bleRcvComTimer = (uint16_t)PERIOD_5SEC;
 
 // 検査モード
 static bool diagStartFlg = false;
@@ -339,9 +341,25 @@ static int_t user_main_cyc(ke_msg_id_t const msgid, void const *param, ke_task_i
 {
 	sw_proc();				// SW検知処理
 	
-	main_vuart_proc();		// VUART通信サービス
-	
 	user_main_mode();		// メインモード処理
+
+	return (KE_MSG_CONSUMED);
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_cyc											*/
+/* 関数名   : BLEコマンド受信周期処理									*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2020.03.13 oneA	葛原 弘安			初版作成			*/
+/************************************************************************/
+/* 機能 : BLEコマンド受信周期処理										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+static int_t main_vuart_cyc(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+	main_vuart_proc();		// VUART通信サービス
 
 	return (KE_MSG_CONSUMED);
 }
@@ -382,6 +400,7 @@ static int_t user_main_calc_result_cyc(ke_msg_id_t const msgid, void const *para
 void user_main_timer_10ms_set( void )
 {
 	s_unit.tick_10ms++;
+	s_unit.tick_20ms++;
 	s_unit.tick_10ms_sec++;
 	s_unit.tick_10ms_new++;
 	s_unit.elapsed_time++;
@@ -508,12 +527,28 @@ void user_main_timer_cyc( void )
 			s_unit.tick_10ms_new = 0;
 		}
 	}
+	
+	// 20ms周期
+	if(s_unit.tick_20ms >= bleRcvComTimer){
+#if FUNC_DEBUG_LOG != ON
+		{
+			uint8_t *ke_msg;
+
+			ke_msg = ke_msg_alloc( USER_MAIN_CYC_VUART, USER_MAIN_ID, USER_MAIN_ID, 0 );
+
+			ke_msg_send(ke_msg);
+		}
+#endif
+		s_unit.tick_20ms = 0;
+	}
+	
 	// 200ms周期
 	if(s_unit.tick_10ms >= (uint16_t)PERIOD_200MSEC){
 		ke_evt_set(KE_EVT_USR_3_BIT);
 
 		s_unit.tick_10ms -= PERIOD_200MSEC;
 	}
+	
 	// 1秒周期 ※遅れの蓄積は厳禁
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
@@ -976,12 +1011,9 @@ STATIC void sw_proc(void)
 		
 		if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
 		{
-			if( s_unit.sw_time_cnt == 5)
-			{
-				// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
-				write1_sfr(P1, 4, 1);	// 電源ON
-				led_green_on();
-			}
+			// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
+			write1_sfr(P1, 4, 1);	// 電源ON
+			led_green_on();
 		}else if( s_unit.sw_time_cnt == TIME_200MS_CNT_POW_SW_LONG){
 			// 規定時間以上連続押下と判断
 			evt_act( EVENT_POW_SW_LONG );
@@ -3752,6 +3784,15 @@ UB get_ble_state(void)
 void set_ble_isconnect(bool connect)
 {
 	s_unit.ble_isconnect = connect;
+	
+	if(s_unit.ble_isconnect == true)
+	{
+		// 接続中 20ms
+		bleRcvComTimer = (uint16_t)PERIOD_20MSEC;
+	}else{
+		// 未接続 200ms
+		bleRcvComTimer = (uint16_t)PERIOD_5SEC;
+	}
 }
 
 /************************************************************************/

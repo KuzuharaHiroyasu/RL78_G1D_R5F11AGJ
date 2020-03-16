@@ -17,6 +17,7 @@ static const struct ke_msg_handler cpu_com_handler[] =
 	{ USER_MAIN_CYC_ACT			, (ke_msg_func_t)user_main_cyc },
 	{ USER_MAIN_CALC_KOKYU		, (ke_msg_func_t)main_calc_kokyu },
 	{ USER_MAIN_CALC_IBIKI		, (ke_msg_func_t)main_calc_ibiki },
+	{ USER_MAIN_CYC_VUART		, (ke_msg_func_t)main_vuart_cyc },	
 #endif
 	{ USER_MAIN_CALC_ACL		, (ke_msg_func_t)main_calc_acl },
 	{ USER_MAIN_CYC_CALC_RESULT	, (ke_msg_func_t)user_main_calc_result_cyc },

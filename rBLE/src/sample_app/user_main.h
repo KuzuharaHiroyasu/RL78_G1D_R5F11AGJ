@@ -35,7 +35,7 @@
 #define USER_MAIN_CYC_CALC_RESULT		KE_FIRST_MSG(USER_MAIN_ID) + 7
 #define USER_MAIN_CYC_BATTERY			KE_FIRST_MSG(USER_MAIN_ID) + 8
 #define USER_MAIN_CYC_PHOTOREF			KE_FIRST_MSG(USER_MAIN_ID) + 9
-
+#define USER_MAIN_CYC_VUART				KE_FIRST_MSG(USER_MAIN_ID) + 10
 
 
 
@@ -256,7 +256,7 @@ typedef enum{
 
 ///200ms timer
 #define	TIME_200MS_CNT_POW_SW_LONG			10				/* ìdåπSW_í∑(2ïb) */
-#define	TIME_200MS_CNT_POW_SW_SHORT			1				/* ìdåπSW_íZ(0.1ïb) */
+#define	TIME_200MS_CNT_POW_SW_SHORT			1				/* ìdåπSW_íZ(0.2ïb) */
 
 // 50ms timer
 #if FUNC_DEBUG_LOG == ON
@@ -422,6 +422,7 @@ typedef struct{
 	
 	// timer
 	UH tick_10ms;
+	UH tick_20ms;
 	UH tick_10ms_sec;
 	UH tick_10ms_new;
 	UW elapsed_time;									/* åoâﬂéûä‘(10ms) Å¶ñÒ1îN132ì˙åpë±ÇµÇƒââéZâ¬î\ */
