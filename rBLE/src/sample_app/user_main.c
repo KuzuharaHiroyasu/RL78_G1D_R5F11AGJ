@@ -480,10 +480,10 @@ void user_main_timer_cyc( void )
 					
 					if( bat_check_flg != true )
 					{
-						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
-						{// 装着していないと判定したらLED点灯
+//						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
+//						{// 装着していないと判定したらLED点灯
 							set_led( LED_PATT_GREEN_BLINK_SENSING );
-						}
+//						}
 					}
 				}
 				
@@ -494,10 +494,10 @@ void user_main_timer_cyc( void )
 					acl_photo_sens_read_flg = OFF;
 					if( bat_check_flg != true )
 					{
-						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
-						{// 装着していないと判定したらLED点灯
+//						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
+//						{// 装着していないと判定したらLED点灯
 							set_led( LED_PATT_GREEN_BLINK_SENSING );
-						}
+//						}
 					}
 				}
 			}
