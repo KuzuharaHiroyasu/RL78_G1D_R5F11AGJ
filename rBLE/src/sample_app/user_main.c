@@ -244,7 +244,7 @@ void codeptr app_evt_usr_2(void)
 	if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_CNT)
 	{
 		// 30分間外れていた（閾値を下回っている）
-		evt_act(EVENT_REMOVE_TIMEOUT);
+//		evt_act(EVENT_REMOVE_TIMEOUT);
 	}
 	
 	// センシング時間上限検知
@@ -1042,9 +1042,9 @@ STATIC void user_main_calc_result( void )
 	// フレーム位置とデータ位置からEEPアドレスを算出
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + ( s_unit.calc_cnt * EEP_CALC_DATA_SIZE );
 
-	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CALC_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
+//	eep_write( wr_adrs, (UB*)&s_unit.calc, EEP_CALC_DATA_SIZE, OFF );	// 30秒周期なので5ms待ちはしない
 	
-	s_unit.calc_cnt++;
+//	s_unit.calc_cnt++;
 	
 	/* いびき検知回数と無呼吸検知回数の確定処理 */
 	s_unit.ibiki_detect_cnt_decided = s_unit.ibiki_detect_cnt;
