@@ -366,7 +366,7 @@ void arch_main_ent(void)
     for (;;)
     {
     	//バイブレーション
-    	vib_cyc();
+//    	vib_cyc();
     	
         // ユーザータイマー処理
         user_main_timer_cyc();

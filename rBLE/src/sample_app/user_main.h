@@ -708,7 +708,9 @@ typedef enum{
 	RCV_COM_SNORE_SUPPRESS_TIME_NON,			// いびき抑制の連続時間（設定しない）
 	RCV_COM_SUPPRESS_START_TIME			= 60,	// バイブ抑制開始時間変更
 	RCV_COM_SUPPRESS_START				= 70,	// バイブ動作
-	RCV_COM_MAX,							// 最大
+	RCV_COM_MIC_DIAG_MODE_START			= 80,	// マイク検査モード開始
+	RCV_COM_MIC_DIAG_MODE_END,					// マイク検査モード終了
+	RCV_COM_MAX,								// 最大
 }RCV_COMMAND;
 
 // 自己診断（検査モード）
