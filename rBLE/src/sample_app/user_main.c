@@ -153,8 +153,6 @@ static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 
 // 検査モード
 static bool diagStartFlg = false;
-static uint32_t kokyu_val_add = 0;
-static uint32_t ibiki_val_add = 0;
 
 /********************/
 /*     定数定義     */
@@ -539,25 +537,10 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 	char dbg_tx_data[50] = {0};
 	int dbg_len;
 	
-	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
-//		s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
-		kokyu_val_add += s_unit.meas.info.dat.kokyu_val;
-	}
-	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
-//		s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
-		ibiki_val_add += s_unit.meas.info.dat.ibiki_val;
-	}
-	
-	// データフルで総和を送信
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
-		// 送信
-		make_send_data(dbg_tx_data);
-		dbg_len = strlen(dbg_tx_data);
-		com_srv_send(dbg_tx_data, dbg_len);
-
-		kokyu_val_add = 0;
-		ibiki_val_add = 0;
-	}
+	// 送信
+	make_send_data(dbg_tx_data);
+	dbg_len = strlen(dbg_tx_data);
+	com_srv_send(dbg_tx_data, dbg_len);
 	
 	INC_MAX_INI( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX - 1, 0 );
 	INC_MAX_INI( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX - 1, 0 );
@@ -583,54 +566,33 @@ STATIC void make_send_data(char* pBuff)
 	UB index = 0;
 	
 	// 呼吸音
-	tmp = kokyu_val_add / 100000;
-	next = kokyu_val_add % 100000;
+	tmp = s_unit.meas.info.dat.kokyu_val / 1000;
+	next = s_unit.meas.info.dat.kokyu_val % 1000;
 	pBuff[index++] = '0' + tmp;
-	
-	tmp = next / 10000;
-	next = next % 10000;
-	pBuff[index++] = '0' + tmp;
-	
-	tmp = next / 1000;
-	next = next % 1000;
-	pBuff[index++] = '0' + tmp;
-	
 	tmp = next / 100;
 	next = next % 100;
 	pBuff[index++] = '0' + tmp;
-	
 	tmp = next / 10;
 	next = next % 10;
 	pBuff[index++] = '0' + tmp;
-	
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
 	pBuff[index++] = ',';
 	
 	// いびき音
-	tmp = ibiki_val_add / 100000;
-	next = ibiki_val_add % 100000;
+	tmp = s_unit.meas.info.dat.ibiki_val / 1000;
+	next = s_unit.meas.info.dat.ibiki_val % 1000;
 	pBuff[index++] = '0' + tmp;
-	
-	tmp = next / 10000;
-	next = next % 10000;
-	pBuff[index++] = '0' + tmp;
-	
-	tmp = next / 1000;
-	next = next % 1000;
-	pBuff[index++] = '0' + tmp;
-	
 	tmp = next / 100;
 	next = next % 100;
 	pBuff[index++] = '0' + tmp;
-	
 	tmp = next / 10;
 	next = next % 10;
 	pBuff[index++] = '0' + tmp;
-	
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
-	
+	pBuff[index++] = ',';
+
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
 }
