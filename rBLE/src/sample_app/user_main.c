@@ -591,7 +591,6 @@ STATIC void make_send_data(char* pBuff)
 	pBuff[index++] = '0' + tmp;
 	tmp = next % 10;
 	pBuff[index++] = '0' + tmp;
-	pBuff[index++] = ',';
 
 	pBuff[index++] = '\r';
 	pBuff[index++] = '\n';
