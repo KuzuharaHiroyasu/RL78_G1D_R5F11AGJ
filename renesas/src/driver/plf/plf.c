@@ -411,6 +411,7 @@ _PLF_CODE void plf_init(const uint8_t plf_flg)
 #ifdef USE_FW_UPDATE_PROFILE
     if( true == check_fw_update() )
     {
+    	write1_sfr(P1, 4, 1);	// ìdåπ
         // When the FW update, use the High-speed on-chip oscillator clock
         write1_sfrbit(HIOSTOP, 0);
     }
