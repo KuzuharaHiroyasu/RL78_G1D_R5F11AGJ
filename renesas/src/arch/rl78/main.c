@@ -363,6 +363,7 @@ _MAINCODE void main( void )
         
         RBLE_Init(&RBLE_FWUP_CallBack);
         
+    	write1_sfr(P1, 5, 1);
         // And loop forever
         for (;;)
         {
