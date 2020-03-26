@@ -77,7 +77,6 @@ void calculator_apnea(const UH *data_apnea, const UH *data_snore)
 			movave_[ii] += data_apnea_temp[ii + 1];
 			movave_[ii] += data_apnea_temp[ii + 2];
 			movave_[ii] /= (double)APNEA_PARAM_AVE_NUM;
-			movave_[ii] /= APNEA_PARAM_RAW;	// ê∂ÉfÅ[É^ï‚ê≥
 		}
 	}
 	
