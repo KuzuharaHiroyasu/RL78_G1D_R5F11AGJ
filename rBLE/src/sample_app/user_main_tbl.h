@@ -47,7 +47,7 @@ const B		version_product_tbl[]= {0, 0, 1,17};				/* ソフトウェアバージョン */
 
 /* VUART通信受信データ処理 関数テーブル */
 STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
-	/* コマンド */					/* レングス */					/* 関数  */					/* 応答有無 */
+	/* コマンド */					/* レングス */					/* 関数  */							/* 応答有無 */
 	{	0x00,						0,								NULL							},	// なし
 	{	VUART_CMD_MODE_CHG,			VUART_CMD_LEN_MODE_CHG,			main_vuart_rcv_mode_chg			},	// 状態変更(G1D)
 	{	VUART_CMD_DATE_SET,			VUART_CMD_LEN_DATE_SET,			main_vuart_rcv_date				},	// 日時設定
@@ -62,7 +62,23 @@ STATIC const VUART_RCV_CMD_TBL s_vuart_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
 	{	VUART_CMD_DEVICE_SET,		VUART_CMD_LEN_DEVICE_SET,		main_vuart_rcv_device_set		},	// デバイス設定変更
 	{	VUART_CMD_VIB_CONFIRM,		VUART_CMD_LEN_VIB_CONFIRM,		main_vuart_rcv_vib_confirm		},	// バイブ動作確認
 	{	VUART_CMD_VIB_STOP,			VUART_CMD_LEN_VIB_STOP,			main_vuart_rcv_vib_stop			},	// バイブ動作停止
-	{	VUART_CMD_DIAG_POWER_OFF,	VUART_CMD_LEN_DIAG_POWER_OFF,	main_vuart_rcv_power_off		},	// 電源OFF
+};
+
+/* VUART通信受信データ処理 関数テーブル */
+STATIC const VUART_RCV_CMD_TBL s_vuart_diag_rcv_func_tbl[VUART_CMD_TYPE_MAX] = {
+	/* コマンド */					/* レングス */					/* 関数  */							/* 応答有無 */
+	{	0x00,						0,								NULL							},	// なし
+	{	VUART_CMD_MODE_CHG,			VUART_CMD_LEN_MODE_CHG,			main_vuart_rcv_mode_chg			},	// 状態変更(G1D)
+	{	VUART_CMD_VERSION,			VUART_CMD_LEN_VERSION,			main_vuart_rcv_version			},	// バージョン取得
+	{	VUART_CMD_DEVICE_INFO,		VUART_CMD_LEN_DEVICE_INFO,		main_vuart_rcv_device_info		},	// デバイス状況取得
+	{	VUART_CMD_DIAG_POWER_OFF,	VUART_CMD_LEN_DIAG_POWER_OFF,	main_vuart_diag_rcv_power_off	},	// 電源OFF
+	{	VUART_CMD_DIAG_CHARGE,		VUART_CMD_LEN_DIAG_CHARGE,		main_vuart_diag_rcv_charge		},	// 充電検査
+	{	VUART_CMD_DIAG_LED,			VUART_CMD_LEN_DIAG_LED,			main_vuart_diag_rcv_led			},	// LED検査
+	{	VUART_CMD_DIAG_VIB,			VUART_CMD_LEN_DIAG_VIB,			main_vuart_diag_rcv_vib			},	// バイブレーション検査
+	{	VUART_CMD_DIAG_MIC,			VUART_CMD_LEN_DIAG_MIC,			main_vuart_diag_rcv_mic			},	// マイク検査
+	{	VUART_CMD_DIAG_ACL,			VUART_CMD_LEN_DIAG_ACL,			main_vuart_diag_rcv_acl			},	// 加速度センサー検査
+	{	VUART_CMD_DIAG_PHOTO,		VUART_CMD_LEN_DIAG_PHOTO,		main_vuart_diag_rcv_photo		},	// 装着センサー検査
+	{	VUART_CMD_DIAG_EEPROM,		VUART_CMD_LEN_DIAG_EEPROM,		main_vuart_diag_rcv_eep			},	// EEPROM検査
 };
 
 /* モード別処理 */

@@ -102,6 +102,16 @@ void main_vuart_rcv_vib_confirm( void );
 void main_vuart_rcv_vib_stop( void );
 void main_vuart_rcv_power_off( void );
 
+//検査モード
+STATIC void main_vuart_diag_rcv_power_off( void );
+STATIC void main_vuart_diag_rcv_charge( void );
+STATIC void main_vuart_diag_rcv_led( void );
+STATIC void main_vuart_diag_rcv_vib( void );
+STATIC void main_vuart_diag_rcv_mic( void );
+STATIC void main_vuart_diag_rcv_acl( void );
+STATIC void main_vuart_diag_rcv_photo( void );
+STATIC void main_vuart_diag_rcv_eep( void );
+
 // ACL、フォト関連
 STATIC void main_acl_init(void);
 STATIC void main_acl_stop(void);
@@ -153,9 +163,6 @@ static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
 static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 static uint16_t bleRcvComTimer = (uint16_t)PERIOD_5SEC;
-
-// 検査モード
-static bool diagStartFlg = false;
 
 /********************/
 /*     定数定義     */
@@ -1680,9 +1687,7 @@ STATIC void user_main_mode_prg_g1d(void)
 STATIC void user_main_mode_self_check( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
-	UB read_eep[EEP_ACCESS_ONCE_SIZE];
 	UB diag_acl_data[10];
-	UW now_time = time_get_elapsed_time();
 	UH diag_kokyu_val;
 	UH diag_ibiki_val;
 	UH diag_photoref_val;
@@ -1690,212 +1695,45 @@ STATIC void user_main_mode_self_check( void )
 	UB  diag_acl_y;
 	UB  diag_acl_z;
 	
-	if( 0 == s_unit.self_check.seq ){
-		// LED確認
-		if( diagStartFlg == false )
-		{
-			// LED確認開始
-			tx[0] = VUART_CMD_DIAG_LED;
-			tx[1] = VUART_DIAG_START;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_LED );
-			diagStartFlg = true;
-			s_unit.tick_diag_10ms = 0;
-			// LED点灯
-			led_green_on();
-		}else{
-			if(s_unit.tick_diag_10ms >= DIAG_LED_TIMER)
-			{
-				// LED消灯
-				led_green_off();
-				// LED確認終了
-				tx[0] = VUART_CMD_DIAG_LED;
-				tx[1] = VUART_DIAG_END;
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_LED );
-				diagStartFlg = false;
-				s_unit.self_check.seq = 1;
-			}
-		}
-	}else if( 1 == s_unit.self_check.seq ){
-		// バイブ確認
-		if( diagStartFlg == false )
-		{
-			// バイブ確認開始
-			tx[0] = VUART_CMD_DIAG_VIB;
-			tx[1] = VUART_DIAG_START;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_VIB );
-			diagStartFlg = true;
-			s_unit.tick_diag_10ms = 0;
-			// バイブON
-			vib_on();
-		}else{
-			if(s_unit.tick_diag_10ms >= DIAG_LED_TIMER)
-			{
-				// バイブOFF
-				vib_off();
-				// バイブ確認終了
-				tx[0] = VUART_CMD_DIAG_VIB;
-				tx[1] = VUART_DIAG_END;
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_VIB );
-				diagStartFlg = false;
-				s_unit.self_check.seq = 2;
-			}
-		}
-	}else if( 2 == s_unit.self_check.seq ){
-		// マイク確認
-		if( diagStartFlg == false )
-		{
-			// マイク確認開始
-			tx[0] = VUART_CMD_DIAG_MIC;
-			tx[1] = VUART_DIAG_START;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC );
-			diagStartFlg = true;
-			s_unit.tick_diag_10ms = 0;
-		}else{
-			if(s_unit.tick_diag_10ms <= DIAG_MIC_TIMER)
-			{
-				// 呼吸音取得・送信
-				adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
-				tx[0] = VUART_CMD_DIAG_MIC_VAL;
-				tx[1] = ( diag_kokyu_val & 0x00ff );
-				tx[2] = (( diag_kokyu_val & 0xff00 ) >> 8 );
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
-			}else{
-				// マイク確認終了
-				tx[0] = VUART_CMD_DIAG_MIC;
-				tx[1] = VUART_DIAG_END;
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC );
-				diagStartFlg = false;
-				s_unit.self_check.seq = 3;
-			}
-		}
-	}else if( 3 == s_unit.self_check.seq ){
-		// 加速度センサー確認
-		if( diagStartFlg == false )
-		{
-			// 加速度センサー確認開始
-			tx[0] = VUART_CMD_DIAG_ACL;
-			tx[1] = VUART_DIAG_START;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL );
-			diagStartFlg = true;
-			s_unit.tick_diag_10ms = 0;
-		}else{
-			if(s_unit.tick_diag_10ms <= DIAG_ACL_TIMER)
-			{
-				// INT_SOURCE1		
-				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &diag_acl_data[0], 1 );
-				
-				// 加速度データ取得
-				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &diag_acl_data[0], 6 );
-				diag_acl_x = diag_acl_data[1];
-				diag_acl_y = diag_acl_data[3];
-				diag_acl_z = diag_acl_data[5];
-				
-				// INT_REL読み出し　※割り込み要求クリア
-				i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
-				
-				// 加速度データ送信
-				tx[0] = VUART_CMD_DIAG_ACL_VAL;
-				// X
-				tx[1] = ( diag_acl_x & 0x00ff );
-				tx[2] = (( diag_acl_x & 0xff00 ) >> 8 );
-				// Y
-				tx[3] = ( diag_acl_y & 0x00ff );
-				tx[4] = (( diag_acl_y & 0xff00 ) >> 8 );
-				// Z
-				tx[5] = ( diag_acl_z & 0x00ff );
-				tx[6] = (( diag_acl_z & 0xff00 ) >> 8 );
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL_VAL );
-			}else{
-				// 加速度センサー確認終了
-				tx[0] = VUART_CMD_DIAG_ACL;
-				tx[1] = VUART_DIAG_END;
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL );
-				diagStartFlg = false;
-				s_unit.self_check.seq = 4;
-			}
-		}
-	}else if( 4 == s_unit.self_check.seq ){
-		// 装着センサー確認
-		if( diagStartFlg == false )
-		{
-			// 装着センサー確認開始
-			tx[0] = VUART_CMD_DIAG_PHOTO;
-			tx[1] = VUART_DIAG_START;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO );
-			diagStartFlg = true;
-			s_unit.tick_diag_10ms = 0;
-		}else{
-			if(s_unit.tick_diag_10ms <= DIAG_PHOTO_TIMER)
-			{
-				// 装着センサー値取得・送信
-				diag_photoref_val = main_photo_read();
-				tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
-				tx[1] = ( diag_photoref_val & 0x00ff );
-				tx[2] = (( diag_photoref_val & 0xff00 ) >> 8 );
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
-			}else{
-				// 装着センサー確認終了
-				tx[0] = VUART_CMD_DIAG_PHOTO;
-				tx[1] = VUART_DIAG_END;
-				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO );
-				diagStartFlg = false;
-				s_unit.self_check.seq = 5;
-			}
-		}
-	}else if( 5 == s_unit.self_check.seq ){
-		// EEPROM確認(書き込み)
-		if( diagStartFlg == false )
-		{
-			tx[0] = VUART_CMD_DIAG_EEPROM;
-			tx[1] = VUART_DIAG_START;
-			tx[2] = VUART_DATA_RESULT_OK;
-			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
-			diagStartFlg = true;
-		}
-		// 全0書き込み
-		// EEPプログラムモード
-		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
-		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
-		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
-			s_unit.self_check.eep_cnt = 0;
-			s_unit.self_check.seq = 6;
-		}
-	}else if( 6 == s_unit.self_check.seq ){
-		// EEPROM確認(読み出し)
-		// フレーム位置とデータ位置からEEPアドレスを算出
-		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
-		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
-			s_unit.self_check.seq = 7;
-			s_unit.self_check.last_time = now_time;
-		}
-		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
-		if( s_unit.self_check.eep_cnt >= EEP_PAGE_CNT_MAX ){
-			s_unit.self_check.eep_cnt = 0;
-			s_unit.self_check.seq = 8;
-			s_unit.self_check.last_time = now_time;
-		}
-	}else if( 7 == s_unit.self_check.seq ){
-		// 異常
-		tx[0] = VUART_CMD_DIAG_EEPROM;
-		tx[1] = VUART_DIAG_END;
-		tx[2] = VUART_DATA_RESULT_NG;
-		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
-		diagStartFlg = false;
-		s_unit.self_check.seq = 9;
-	}else if( 8 == s_unit.self_check.seq ){
-		// 正常
-		tx[0] = VUART_CMD_DIAG_EEPROM;
-		tx[1] = VUART_DIAG_END;
-		tx[2] = VUART_DATA_RESULT_OK;
-		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
-		diagStartFlg = false;
-		s_unit.self_check.seq = 9;
-	}else{
-		// 完了
-		if( ON ==  s_unit.self_check.com_flg ){
-			s_unit.self_check.com_flg = OFF;
-			evt_act( EVENT_COMPLETE );
-		}
+	if( DIAG_SEQ_MIC == s_unit.self_check.seq ){
+		// 呼吸音取得・送信
+		adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
+		tx[0] = VUART_CMD_DIAG_MIC_VAL;
+		tx[1] = ( diag_kokyu_val & 0x00ff );
+		tx[2] = (( diag_kokyu_val & 0xff00 ) >> 8 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
+	}else if( DIAG_SEQ_ACL == s_unit.self_check.seq ){
+		// INT_SOURCE1		
+		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &diag_acl_data[0], 1 );
+		
+		// 加速度データ取得
+		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &diag_acl_data[0], 6 );
+		diag_acl_x = diag_acl_data[1];
+		diag_acl_y = diag_acl_data[3];
+		diag_acl_z = diag_acl_data[5];
+		
+		// INT_REL読み出し　※割り込み要求クリア
+		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
+		
+		// 加速度データ送信
+		tx[0] = VUART_CMD_DIAG_ACL_VAL;
+		// X
+		tx[1] = ( diag_acl_x & 0x00ff );
+		tx[2] = (( diag_acl_x & 0xff00 ) >> 8 );
+		// Y
+		tx[3] = ( diag_acl_y & 0x00ff );
+		tx[4] = (( diag_acl_y & 0xff00 ) >> 8 );
+		// Z
+		tx[5] = ( diag_acl_z & 0x00ff );
+		tx[6] = (( diag_acl_z & 0xff00 ) >> 8 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL_VAL );
+	}else if( DIAG_SEQ_PHOTO == s_unit.self_check.seq ){
+		// 装着センサー値取得・送信
+		diag_photoref_val = main_photo_read();
+		tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
+		tx[1] = ( diag_photoref_val & 0x00ff );
+		tx[2] = (( diag_photoref_val & 0xff00 ) >> 8 );
+		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
 	}
 }
 
@@ -2889,7 +2727,7 @@ void main_vuart_rcv_vib_stop( void )
 }
 
 /************************************************************************/
-/* 関数     : main_vuart_rcv_power_off									*/
+/* 関数     : main_vuart_diag_rcv_power_off								*/
 /* 関数名   : VUART受信(電源OFF)										*/
 /* 引数     : なし														*/
 /* 戻り値   : なし														*/
@@ -2900,7 +2738,7 @@ void main_vuart_rcv_vib_stop( void )
 /************************************************************************/
 /* 注意事項 :															*/
 /************************************************************************/
-void main_vuart_rcv_power_off( void )
+void main_vuart_diag_rcv_power_off( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
@@ -2913,13 +2751,228 @@ void main_vuart_rcv_power_off( void )
 	tx[1] = result;
 	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_POWER_OFF );
 	
+	
 	if(result == VUART_DATA_RESULT_OK)
 	{
 #if FUNC_DEBUG_LOG != ON
+		wait_ms(500);
 		// 電源OFF
 		write1_sfr(P1, 4, 0);
 #endif
 	}
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_charge								*/
+/* 関数名   : VUART受信(充電検査)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(充電検査)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_charge( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	UB bat = drv_i_port_bat_chg_detect();
+	
+	if(bat == OFF)
+	{
+		result = VUART_DATA_RESULT_NG;
+	}
+	
+	tx[0] = VUART_CMD_DIAG_CHARGE;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_CHARGE );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_led									*/
+/* 関数名   : VUART受信(LED検査)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(LED検査)													*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_led( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
+	{
+		// LED点灯
+		led_green_on();
+	}else{
+		// LED消灯
+		led_green_off();
+	}
+	
+	tx[0] = VUART_CMD_DIAG_LED;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_LED );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_vib									*/
+/* 関数名   : VUART受信(バイブレーション検査)							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(バイブレーション検査)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_vib( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
+	{
+		// バイブON
+		vib_on();
+	}else{
+		// バイブOFF
+		vib_off();
+	}
+	
+	tx[0] = VUART_CMD_DIAG_VIB;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_VIB );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_mic									*/
+/* 関数名   : VUART受信(マイク検査)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(マイク検査)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_mic( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
+	{
+		s_unit.self_check.seq = DIAG_SEQ_MIC;
+	}
+	
+	tx[0] = VUART_CMD_DIAG_MIC;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_acl									*/
+/* 関数名   : VUART受信(加速度センサー検査)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(加速度センサー検査)										*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_acl( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
+	{
+		s_unit.self_check.seq = DIAG_SEQ_ACL;
+	}
+	
+	tx[0] = VUART_CMD_DIAG_ACL;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_photo									*/
+/* 関数名   : VUART受信(装着センサー検査)								*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(装着センサー検査)											*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_photo( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	
+	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
+	{
+		s_unit.self_check.seq = DIAG_SEQ_PHOTO;
+	}
+	
+	tx[0] = VUART_CMD_DIAG_PHOTO;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO );
+}
+
+/************************************************************************/
+/* 関数     : main_vuart_diag_rcv_eep									*/
+/* 関数名   : VUART受信(EEPROM検査)										*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.3.28  oneA 葛原 弘安				初版作成			*/
+/************************************************************************/
+/* 機能 :																*/
+/* VUART受信(EEPROM検査)												*/
+/************************************************************************/
+/* 注意事項 :															*/
+/************************************************************************/
+void main_vuart_diag_rcv_eep( void )
+{
+	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB result = VUART_DATA_RESULT_OK;
+	UB read_eep[EEP_ACCESS_ONCE_SIZE];
+
+	// 全0書き込み
+	// EEPプログラムモード
+	for(s_unit.self_check.eep_cnt = 0; s_unit.self_check.eep_cnt <= EEP_PAGE_CNT_MAX; s_unit.self_check.eep_cnt++)
+	{
+		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
+	}
+	
+	// EEPROM確認(読み出し)
+	// フレーム位置とデータ位置からEEPアドレスを算出
+	for(s_unit.self_check.eep_cnt = 0; s_unit.self_check.eep_cnt <= EEP_PAGE_CNT_MAX; s_unit.self_check.eep_cnt++)
+	{
+		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
+		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
+			result = VUART_DATA_RESULT_NG;
+			break;
+		}
+	}
+	
+	tx[0] = VUART_CMD_DIAG_EEPROM;
+	tx[1] = result;
+	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
 }
 
 /************************************************************************/

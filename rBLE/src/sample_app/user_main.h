@@ -272,7 +272,17 @@ typedef enum program_ver{
 	VERSION_NUM
 }tag_program_ver;
 
-
+typedef enum diag_seq{
+	DIAG_SEQ_START = 0,
+	DIAG_SEQ_CHARGE,
+	DIAG_SEQ_LED,
+	DIAG_SEQ_VIB,
+	DIAG_SEQ_MIC,
+	DIAG_SEQ_ACL,
+	DIAG_SEQ_PHOTO,
+	DIAG_SEQ_EEP,
+	DIAG_SEQ_END
+}DIAG_SEQ;
 
 // 測定情報
 typedef struct{
@@ -332,7 +342,7 @@ typedef struct{
 typedef struct{
 	UW	last_time;
 	UH	eep_cnt;		// EEP消去回数
-	UB	seq;			// シーケンス
+	DIAG_SEQ	seq;	// シーケンス
 	UB	com_flg;		// 通信での自己診断フラグ
 }SELF_CHECK;
 
@@ -549,7 +559,8 @@ typedef struct{
 #define	VUART_CMD_VIB_CONFIRM	0xC7
 #define	VUART_CMD_VIB_STOP		0xC8
 
-#define VUART_CMD_DIAG_POWER_OFF	0xA0
+#define VUART_CMD_DIAG_POWER_OFF	0xF0
+#define VUART_CMD_DIAG_CHARGE		0xA0
 #define VUART_CMD_DIAG_LED			0xA1
 #define VUART_CMD_DIAG_VIB			0xA2
 #define VUART_CMD_DIAG_MIC			0xA3
@@ -586,6 +597,13 @@ typedef struct{
 #define	VUART_CMD_LEN_VIB_STOP		1
 
 #define	VUART_CMD_LEN_DIAG_POWER_OFF	1
+#define VUART_CMD_LEN_DIAG_CHARGE		2
+#define VUART_CMD_LEN_DIAG_LED			2
+#define VUART_CMD_LEN_DIAG_VIB			2
+#define VUART_CMD_LEN_DIAG_MIC			2
+#define VUART_CMD_LEN_DIAG_ACL			2
+#define VUART_CMD_LEN_DIAG_PHOTO		2
+#define VUART_CMD_LEN_DIAG_EEPROM		1
 
 #define	VUART_CMD_ONLY_SIZE			1	// コマンドのみのサイズ
 
@@ -608,15 +626,16 @@ typedef struct{
 #define	VUART_SND_LEN_VIB_STOP			2
 
 #define VUART_SND_LEN_DIAG_POWER_OFF	2
+#define VUART_SND_LEN_DIAG_CHARGE		2
 #define VUART_SND_LEN_DIAG_LED			2
 #define VUART_SND_LEN_DIAG_VIB			2
 #define VUART_SND_LEN_DIAG_MIC			2
 #define VUART_SND_LEN_DIAG_ACL			2
 #define VUART_SND_LEN_DIAG_PHOTO		2
-#define VUART_SND_LEN_DIAG_EEPROM		3
-#define VUART_SND_LEN_DIAG_MIC_VAL		3
+#define VUART_SND_LEN_DIAG_EEPROM		2
+#define VUART_SND_LEN_DIAG_MIC_VAL		2
 #define VUART_SND_LEN_DIAG_ACL_VAL		7
-#define VUART_SND_LEN_DIAG_PHOTO_VAL	3
+#define VUART_SND_LEN_DIAG_PHOTO_VAL	2
 
 
 #define VUART_DATA_SIZE_MAX				20
@@ -624,6 +643,8 @@ typedef struct{
 #define VUART_DATA_RESULT_OK		0
 #define VUART_DATA_RESULT_NG		1
 
+#define VUART_DATA_DIAG_START		0
+#define VUART_DATA_DIAG_END			1
 
 
 typedef struct _DS_VUART_INPUT{
