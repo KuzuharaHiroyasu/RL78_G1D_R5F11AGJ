@@ -2295,9 +2295,6 @@ STATIC void main_vuart_rcv_mode_chg( void )
 		ret = evt_act( EVENT_G1D_PRG );
 	}else if( 6 == s_ds.vuart.input.rcv_data[1] ){
 		ret = evt_act( EVENT_SELF_CHECK_COM );
-		if( TRUE == ret){
-			s_unit.self_check.com_flg = ON;
-		} 
 	}else{
 		// ‰½‚à‚µ‚È‚¢
 	}

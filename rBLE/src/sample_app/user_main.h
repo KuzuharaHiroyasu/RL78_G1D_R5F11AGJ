@@ -343,7 +343,6 @@ typedef struct{
 	UW	last_time;
 	UH	eep_cnt;		// EEP消去回数
 	DIAG_SEQ	seq;	// シーケンス
-	UB	com_flg;		// 通信での自己診断フラグ
 }SELF_CHECK;
 
 // G1D情報
