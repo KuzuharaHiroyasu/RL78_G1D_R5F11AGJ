@@ -2028,7 +2028,7 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
 	
-	s_unit.self_check.seq = 0;
+	s_unit.self_check.seq = DIAG_SEQ_START;
 	
 	return system_mode;
 }
