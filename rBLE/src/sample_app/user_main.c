@@ -163,6 +163,7 @@ static bool vib_startflg = false;
 static UB vib_start_limit_cnt = 0;
 static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 static uint16_t bleRcvComTimer = (uint16_t)PERIOD_5SEC;
+static uint16_t evtUsr3Timer = (uint16_t)PERIOD_200MSEC;
 
 /********************/
 /*     定数定義     */
@@ -549,11 +550,11 @@ void user_main_timer_cyc( void )
 		s_unit.tick_20ms = 0;
 	}
 	
-	// 200ms周期
-	if(s_unit.tick_10ms >= (uint16_t)PERIOD_200MSEC){
+	// 通常：200ms周期、データ取得&検査時：10ms周期
+	if(s_unit.tick_10ms >= evtUsr3Timer){
 		ke_evt_set(KE_EVT_USR_3_BIT);
 
-		s_unit.tick_10ms -= PERIOD_200MSEC;
+		s_unit.tick_10ms = 0;
 	}
 	
 	// 1秒周期 ※遅れの蓄積は厳禁
@@ -2124,6 +2125,9 @@ STATIC void main_mode_chg( void )
 		s_ds.vuart.input.send_status = OFF;
 		s_unit.get_mode_seq = 0;
 	}
+	
+	// モード毎の周期にセット
+	set_evtUsr3Timer();
 }
 
 /************************************************************************/
@@ -3853,8 +3857,29 @@ void set_ble_isconnect(bool connect)
 		// 接続中 20ms
 		bleRcvComTimer = (uint16_t)PERIOD_20MSEC;
 	}else{
-		// 未接続 200ms
+		// 未接続 5sec
 		bleRcvComTimer = (uint16_t)PERIOD_5SEC;
+	}
+}
+
+/************************************************************************/
+/* 関数     : set_evtUsr3Timer											*/
+/* 関数名   : app_evt_usr_3の周期タイマー設定							*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2020.03.30 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_evtUsr3Timer(void)
+{
+	if(s_unit.system_mode == SYSTEM_MODE_GET || s_unit.system_mode == SYSTEM_MODE_SELF_CHECK)
+	{
+		evtUsr3Timer = (uint16_t)PERIOD_10MSEC;
+	}else{
+		evtUsr3Timer = (uint16_t)PERIOD_200MSEC;
 	}
 }
 

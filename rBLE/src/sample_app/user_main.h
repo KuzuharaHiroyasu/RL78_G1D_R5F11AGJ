@@ -738,5 +738,6 @@ extern void main_set_battery( void );
 extern void set_ble_state(UB state);
 extern UB get_ble_state(void);
 extern void set_ble_isconnect(bool connect);
+extern void set_evtUsr3Timer(void);
 extern bool get_ble_isconnect(void);
 #endif // __MAIN_USR_INC__
