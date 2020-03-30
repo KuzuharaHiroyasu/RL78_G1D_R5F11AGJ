@@ -1740,8 +1740,8 @@ STATIC void user_main_mode_self_check( void )
 		// 上位8bit送信（受信側でビットシフトしなおす）
 		tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
 #else
-		tx[1] = ( diag_photoref_val & 0x00ff );
-		tx[2] = (( diag_photoref_val & 0xff00 ) >> 8 );
+		tx[1] = (UB)( diag_photoref_val & 0x00ff );
+		tx[2] = (UB)(( diag_photoref_val & 0xff00 ) >> 8 );
 #endif
 		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
 	}
