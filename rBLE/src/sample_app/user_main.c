@@ -2111,9 +2111,12 @@ STATIC void main_mode_chg( void )
 	}
 	
 	if( SYSTEM_MODE_PRG_G1D == s_unit.system_mode ){
+		UB eep_data = EEP_DATA_TYPE_PRG_G1D;
+		
 		// 応答を返してからアップデートを開始するための待ちに入る
 		s_unit.prg_g1d_update_wait_flg = ON;
 		s_unit.prg_g1d_update_wait_sec = 2;	// 2秒後
+		eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
 //		FW_Update_Receiver_Start();
 	}
 	
@@ -3428,8 +3431,15 @@ STATIC void user_main_eep_read_pow_on(void)
 	// EEP種別チェック
 	eep_read( EEP_ADRS_DATA_TYPE, &eep_type, 1 );
 	
-	if( EEP_DATA_TYPE_NORMAL != eep_type){
+	if((EEP_DATA_TYPE_NORMAL != eep_type) && (EEP_DATA_TYPE_PRG_G1D != eep_type)){
 		eep_part_erase();
+	}else if(EEP_DATA_TYPE_PRG_G1D == eep_type)
+	{
+		UB eep_data = EEP_DATA_TYPE_NORMAL;
+		// G1Dアップデート後
+		eep_write( EEP_ADRS_DATA_TYPE, &eep_data, 1, ON );
+		write1_sfr(P1, 4, 1);	// 電源ON
+		evt_act( EVENT_POW_SW_LONG );
 	}
 	
 	// フレーム関連

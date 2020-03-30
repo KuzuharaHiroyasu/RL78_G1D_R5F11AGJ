@@ -65,7 +65,7 @@
 
 // ラベル
 #define EEP_DATA_TYPE_NORMAL				0x11		// 通常時(0x11)
-#define EEP_DATA_TYPE_PRG_H1D				0xAA		// H1Dプログラム転送(0xAA)
+#define EEP_DATA_TYPE_PRG_G1D				0xAA		// G1Dプログラム転送(0xAA)
 
 
 #define EEP_I2C_LOCK_ERR_VAL			10000		// I2C異常判定回数(ロック)
