@@ -1699,8 +1699,13 @@ STATIC void user_main_mode_self_check( void )
 		// 呼吸音取得・送信
 		adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
 		tx[0] = VUART_CMD_DIAG_MIC_VAL;
-		tx[1] = ( diag_kokyu_val & 0x00ff );
-		tx[2] = (( diag_kokyu_val & 0xff00 ) >> 8 );
+#if 1
+		// 上位8bit送信（受信側でビットシフトしなおす）
+		tx[1] = (UB)(( diag_kokyu_val >> 2 ) & 0xff );
+#else
+		tx[1] = (UB)( diag_kokyu_val & 0x00ff );
+		tx[2] = (UB)(( diag_kokyu_val & 0xff00 ) >> 8 );
+#endif
 		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
 	}else if( DIAG_SEQ_ACL == s_unit.self_check.seq ){
 		// INT_SOURCE1		
@@ -1731,8 +1736,13 @@ STATIC void user_main_mode_self_check( void )
 		// 装着センサー値取得・送信
 		diag_photoref_val = main_photo_read();
 		tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
+#if	1
+		// 上位8bit送信（受信側でビットシフトしなおす）
+		tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
+#else
 		tx[1] = ( diag_photoref_val & 0x00ff );
 		tx[2] = (( diag_photoref_val & 0xff00 ) >> 8 );
+#endif
 		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
 	}
 }
