@@ -251,7 +251,7 @@ void codeptr app_evt_usr_2(void)
 	if( s_unit.calc_cnt >= EEP_CALC_DATA_NUM )
 	{
 		// 12時間を超えたなら待機モードへ
-		evt_act( EVENT_COMPLETE );
+//		evt_act( EVENT_COMPLETE );
 	}
 
 	// 加速度センサ、フォトセンサ値演算(10秒周期)
@@ -273,8 +273,8 @@ void codeptr app_evt_usr_2(void)
 	if(s_unit.sec600_cnt >= BAT_LEVEL_GET_CYC)
 	{
 		s_unit.sec600_cnt -= BAT_LEVEL_GET_CYC;
-		ke_msg = ke_msg_alloc( USER_MAIN_CYC_BATTERY, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
+//		ke_msg = ke_msg_alloc( USER_MAIN_CYC_BATTERY, USER_MAIN_ID, USER_MAIN_ID, 0 );
+//		ke_msg_send(ke_msg);
 	}
 	
 	// 取得データ保存(30秒周期)
@@ -507,7 +507,7 @@ void user_main_timer_cyc( void )
 			if(bat == ON)
 			{
 				//充電中なら待機モードへ
-				evt_act( EVENT_CHG_PORT_ON );
+//				evt_act( EVENT_CHG_PORT_ON );
 			}
 #endif
 			s_unit.tick_10ms_new = 0;
