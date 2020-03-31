@@ -27,7 +27,7 @@
 // 移動平均50%閾値
 #define APNEA_PARAM_AVE_THRE			0.015f
 // 2値化50%閾値
-#define APNEA_PARAM_BIN_THRE			40
+#define APNEA_PARAM_BIN_THRE			20
 
 // いびき閾値
 #define APNEA_PARAM_SNORE				0.0125f
