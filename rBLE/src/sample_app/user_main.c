@@ -164,6 +164,7 @@ static UB vib_start_limit_cnt = 0;
 static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 static uint16_t bleRcvComTimer = (uint16_t)PERIOD_5SEC;
 static uint16_t evtUsr3Timer = (uint16_t)PERIOD_200MSEC;
+UB kokyu_val_off_flg = OFF;
 
 /********************/
 /*     定数定義     */
@@ -472,6 +473,10 @@ void user_main_timer_cyc( void )
 #else
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+			if(kokyu_val_off_flg == ON)
+			{
+				s_unit.meas.info.dat.kokyu_val = 0;
+			}
 			user_main_calc_data_set_kyokyu_ibiki();
 			
 			if(vib_startflg == true)
@@ -3069,6 +3074,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 					}
 				}
 				set_vib(set_vib_mode(vib_power));
+				set_kokyu_val_off(ON);
 			}
 		}
 	}else{
@@ -3904,4 +3910,20 @@ void set_evtUsr3Timer(void)
 bool get_ble_isconnect(void)
 {
 	return s_unit.ble_isconnect;
+}
+
+/************************************************************************/
+/* 関数     : set_kokyu_val_off											*/
+/* 関数名   : 呼吸データ無効状態セット									*/
+/* 引数     : state														*/
+/* 戻り値   : なし														*/
+/* 変更履歴	: 2020.04.02 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+void set_kokyu_val_off(UB state)
+{
+	kokyu_val_off_flg = state;
 }

@@ -739,4 +739,5 @@ extern UB get_ble_state(void);
 extern void set_ble_isconnect(bool connect);
 extern void set_evtUsr3Timer(void);
 extern bool get_ble_isconnect(void);
+extern void set_kokyu_val_off(UB state);
 #endif // __MAIN_USR_INC__

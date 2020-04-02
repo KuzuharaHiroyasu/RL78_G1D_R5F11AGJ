@@ -97,6 +97,7 @@ void vib_start(UH vib_timer)
 		}
 	}else if(vib_mode != VIB_MODE_INITIAL)
 	{
+		set_kokyu_val_off(OFF);
 		vib_mode = VIB_MODE_INITIAL;
 		vib_last_mode = vib_mode;
 		confirm_flg = false;
