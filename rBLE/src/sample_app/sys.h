@@ -194,6 +194,8 @@
 #define		NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 #endif
 
+#define		FUNC_POWER_OFF							ON					/* スイッチ操作による電源OFF機能 */
+
 #define		wdt_refresh()	{		R_WDT_Restart();}
 
 /************************************************************/

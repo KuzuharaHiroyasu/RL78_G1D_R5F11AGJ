@@ -1054,7 +1054,10 @@ STATIC void sw_proc(void)
 			s_unit.power_off_timer = 0;
 			if(sw_power_off_flg == ON)
 			{
+				sw_power_off_flg = OFF;
+#if FUNC_POWER_OFF == ON
 				write1_sfr(P1, 4, 0);	// ìdåπOFF
+#endif
 			}
 		}
 		
