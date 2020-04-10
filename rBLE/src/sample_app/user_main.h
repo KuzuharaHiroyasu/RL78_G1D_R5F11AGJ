@@ -257,6 +257,8 @@ typedef enum{
 ///200ms timer
 #define	TIME_200MS_CNT_POW_SW_LONG			10				/* 電源SW_長(2秒) */
 #define	TIME_200MS_CNT_POW_SW_SHORT			1				/* 電源SW_短(0.2秒) */
+#define	TIME_200MS_CNT_POW_OFF_SW_LONG		25				/* 電源SW_電源OFF操作_長(5秒) */
+#define	TIME_200MS_CNT_POW_OFF_TIMER		5				/* 電源SW_電源OFF操作（短と長のインターバル(1秒) */
 
 // 50ms timer
 #if FUNC_DEBUG_LOG == ON
@@ -449,6 +451,8 @@ typedef struct{
 	UH data_end_timeout;		// VUART_CMD_DATA_ENDの応答タイムアウト
 	UH get_mode_timeout;		// getmode時の送信中エラータイムアウト
 	
+	UB power_off_timer;		// 電源OFF操作タイマー
+
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
 	UW sec10_cnt;			//10秒カウント

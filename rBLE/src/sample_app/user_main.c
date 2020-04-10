@@ -165,6 +165,8 @@ static UW suppressIntervalCnt = SUPPRESS_INTERVAL_CNT_10_MIN;
 static uint16_t bleRcvComTimer = (uint16_t)PERIOD_5SEC;
 static uint16_t evtUsr3Timer = (uint16_t)PERIOD_200MSEC;
 UB kokyu_val_off_flg = OFF;
+static UB sw_power_off_flg = OFF;
+static UB sw_power_off_ope_flg = OFF;
 
 /********************/
 /*     定数定義     */
@@ -1018,26 +1020,54 @@ STATIC void sw_proc(void)
 		led_green_off();
 	}
 #else
+	if(sw_power_off_ope_flg == ON)
+	{
+		s_unit.power_off_timer++;
+	}
+	
 	if( ON == pow_sw ){		// ON処理
 		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
 		
-		if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
+		if(sw_power_off_ope_flg == ON)
 		{
-			// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
-			write1_sfr(P1, 4, 1);	// 電源ON
-			led_green_on();
-		}else if( s_unit.sw_time_cnt == TIME_200MS_CNT_POW_SW_LONG){
-			// 規定時間以上連続押下と判断
-			evt_act( EVENT_POW_SW_LONG );
+			if(s_unit.power_off_timer == TIME_200MS_CNT_POW_OFF_SW_LONG)
+			{ // パワーOFF操作 Step.2: Step.1後0.6秒以内から5秒長押し
+				led_green_on();
+				sw_power_off_flg = ON;
+			}
+		}else{
+			if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
+			{
+				// INITIAL状態(初回電源ON時)は電源SW長押し確定時に回路ON、LED点灯
+				write1_sfr(P1, 4, 1);	// 電源ON
+				led_green_on();
+			}else if( s_unit.sw_time_cnt == TIME_200MS_CNT_POW_SW_LONG){
+				// 規定時間以上連続押下と判断
+				evt_act( EVENT_POW_SW_LONG );
+			}
 		}
 	}else{					// OFF処理
+		if(s_unit.power_off_timer >= TIME_200MS_CNT_POW_OFF_TIMER)
+		{// 「パワーOFF操作 Step.1短押し」の後、0.6秒以上経過するとフラグOFF
+			sw_power_off_ope_flg = OFF;
+			s_unit.power_off_timer = 0;
+			if(sw_power_off_flg == ON)
+			{
+				write1_sfr(P1, 4, 0);	// 電源OFF
+			}
+		}
+		
 		if( ON == s_unit.pow_sw_last ){
 			// ON→OFFエッジ
 			if( s_unit.sw_time_cnt >= TIME_200MS_CNT_POW_SW_LONG){
 				// ON確定時にイベント発生済みなのでここでは何もしない
 			}else if( s_unit.sw_time_cnt >= TIME_200MS_CNT_POW_SW_SHORT){
 				evt_act( EVENT_POW_SW_SHORT );
+				
+				// パワーOFF操作 Step.1:短押し
+				sw_power_off_ope_flg = ON;
+				s_unit.power_off_timer = 0;
 			}else{
 				// 何もしない
 			}
