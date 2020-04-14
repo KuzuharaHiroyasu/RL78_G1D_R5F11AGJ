@@ -2220,14 +2220,29 @@ STATIC void main_vuart_proc(void)
 	
 	/* 以降受信データ有り */
 	for( i = VUART_CMD_TYPE_NONE; i < VUART_CMD_TYPE_MAX; i++){
-		if( s_vuart_rcv_func_tbl[i].len == s_ds.vuart.input.rcv_len ){
-			/* データ長が一致 */
-			if(( s_vuart_rcv_func_tbl[i].cmd == s_ds.vuart.input.rcv_data[0] ) ||
-			   ( s_vuart_rcv_func_tbl[i].cmd == VUART_CMD_INVALID )){
-				/* 受信コマンドとコマンドテーブルが一致またはコマンド無効 */
-				if( NULL != s_vuart_rcv_func_tbl[i].func ){
-					/* 受信処理有り */
-					s_vuart_rcv_func_tbl[i].func();
+		if( s_unit.system_mode != SYSTEM_MODE_SELF_CHECK)
+		{
+			if( s_vuart_rcv_func_tbl[i].len == s_ds.vuart.input.rcv_len ){
+				/* データ長が一致 */
+				if(( s_vuart_rcv_func_tbl[i].cmd == s_ds.vuart.input.rcv_data[0] ) ||
+				   ( s_vuart_rcv_func_tbl[i].cmd == VUART_CMD_INVALID )){
+					/* 受信コマンドとコマンドテーブルが一致またはコマンド無効 */
+					if( NULL != s_vuart_rcv_func_tbl[i].func ){
+						/* 受信処理有り */
+						s_vuart_rcv_func_tbl[i].func();
+					}
+				}
+			}
+		}else{
+			if( s_vuart_diag_rcv_func_tbl[i].len == s_ds.vuart.input.rcv_len ){
+				/* データ長が一致 */
+				if(( s_vuart_diag_rcv_func_tbl[i].cmd == s_ds.vuart.input.rcv_data[0] ) ||
+				   ( s_vuart_diag_rcv_func_tbl[i].cmd == VUART_CMD_INVALID )){
+					/* 受信コマンドとコマンドテーブルが一致またはコマンド無効 */
+					if( NULL != s_vuart_diag_rcv_func_tbl[i].func ){
+						/* 受信処理有り */
+						s_vuart_diag_rcv_func_tbl[i].func();
+					}
 				}
 			}
 		}
