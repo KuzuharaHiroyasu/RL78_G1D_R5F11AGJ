@@ -3106,6 +3106,13 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 	newstate = get_state();
 	
 	bit_shift = s_unit.phase_kokyu * 2;
+	
+	// 振動開始時間(アプリからの設定値)がくるまではすべて通常呼吸とする
+	if(s_unit.suppress_start_cnt <= (suppress_start_time * 6))
+	{
+		newstate = APNEA_NORMAL;
+	}
+	
 	if(newstate == APNEA_ERROR){
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
