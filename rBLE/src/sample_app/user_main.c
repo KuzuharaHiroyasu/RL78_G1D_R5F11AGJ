@@ -167,6 +167,7 @@ static uint16_t evtUsr3Timer = (uint16_t)PERIOD_200MSEC;
 UB kokyu_val_off_flg = OFF;
 static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
+static int diagScanDataSendCnt = 0;
 
 /********************/
 /*     定数定義     */
@@ -1734,55 +1735,75 @@ STATIC void user_main_mode_self_check( void )
 	UB  diag_acl_y;
 	UB  diag_acl_z;
 	
-	if( DIAG_SEQ_MIC == s_unit.self_check.seq ){
-		// 呼吸音取得・送信
-		adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
-		tx[0] = VUART_CMD_DIAG_MIC_VAL;
-#if 1
-		// 上位8bit送信（受信側でビットシフトしなおす）
-		tx[1] = (UB)(( diag_kokyu_val >> 2 ) & 0xff );
-#else
-		tx[1] = (UB)( diag_kokyu_val & 0x00ff );
-		tx[2] = (UB)(( diag_kokyu_val & 0xff00 ) >> 8 );
-#endif
-		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
-	}else if( DIAG_SEQ_ACL == s_unit.self_check.seq ){
-		// INT_SOURCE1		
-		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &diag_acl_data[0], 1 );
-		
-		// 加速度データ取得
-		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &diag_acl_data[0], 6 );
-		diag_acl_x = diag_acl_data[1];
-		diag_acl_y = diag_acl_data[3];
-		diag_acl_z = diag_acl_data[5];
-		
-		// INT_REL読み出し　※割り込み要求クリア
-		i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
-		
-		// 加速度データ送信
-		tx[0] = VUART_CMD_DIAG_ACL_VAL;
-		// X
-		tx[1] = ( diag_acl_x & 0x00ff );
-		tx[2] = (( diag_acl_x & 0xff00 ) >> 8 );
-		// Y
-		tx[3] = ( diag_acl_y & 0x00ff );
-		tx[4] = (( diag_acl_y & 0xff00 ) >> 8 );
-		// Z
-		tx[5] = ( diag_acl_z & 0x00ff );
-		tx[6] = (( diag_acl_z & 0xff00 ) >> 8 );
-		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL_VAL );
-	}else if( DIAG_SEQ_PHOTO == s_unit.self_check.seq ){
-		// 装着センサー値取得・送信
-		diag_photoref_val = main_photo_read();
-		tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
-#if	1
-		// 上位8bit送信（受信側でビットシフトしなおす）
-		tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
-#else
-		tx[1] = (UB)( diag_photoref_val & 0x00ff );
-		tx[2] = (UB)(( diag_photoref_val & 0xff00 ) >> 8 );
-#endif
-		main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
+	if( DIAG_SEQ_MIC_START == s_unit.self_check.seq ){
+		if(diagScanDataSendCnt <= VUART_DATA_DIAG_SEND_CNT)
+		{
+			// 呼吸音取得・送信
+			adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
+			tx[0] = VUART_CMD_DIAG_MIC_VAL;
+	#if 1
+			// 上位8bit送信（受信側でビットシフトしなおす）
+			tx[1] = (UB)(( diag_kokyu_val >> 2 ) & 0xff );
+	#else
+			tx[1] = (UB)( diag_kokyu_val & 0x00ff );
+			tx[2] = (UB)(( diag_kokyu_val & 0xff00 ) >> 8 );
+	#endif
+			if( OFF == s_ds.vuart.input.send_status ){
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
+				diagScanDataSendCnt++;
+			}
+		}
+	}else if( DIAG_SEQ_ACL_START == s_unit.self_check.seq ){
+		if(diagScanDataSendCnt <= VUART_DATA_DIAG_SEND_CNT)
+		{
+			// INT_SOURCE1		
+			i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &diag_acl_data[0], 1 );
+			
+			// 加速度データ取得
+			i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &diag_acl_data[0], 6 );
+			diag_acl_x = diag_acl_data[1];
+			diag_acl_y = diag_acl_data[3];
+			diag_acl_z = diag_acl_data[5];
+			
+			// INT_REL読み出し　※割り込み要求クリア
+			i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
+			
+			// 加速度データ送信
+			tx[0] = VUART_CMD_DIAG_ACL_VAL;
+			// X
+			tx[1] = ( diag_acl_x & 0x00ff );
+			tx[2] = (( diag_acl_x & 0xff00 ) >> 8 );
+			// Y
+			tx[3] = ( diag_acl_y & 0x00ff );
+			tx[4] = (( diag_acl_y & 0xff00 ) >> 8 );
+			// Z
+			tx[5] = ( diag_acl_z & 0x00ff );
+			tx[6] = (( diag_acl_z & 0xff00 ) >> 8 );
+			
+			if( OFF == s_ds.vuart.input.send_status ){
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_ACL_VAL );
+				diagScanDataSendCnt++;
+			}
+		}
+	}else if( DIAG_SEQ_PHOTO_START == s_unit.self_check.seq ){
+		if(diagScanDataSendCnt <= VUART_DATA_DIAG_SEND_CNT)
+		{
+			// 装着センサー値取得・送信
+			diag_photoref_val = main_photo_read();
+			tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
+	#if	1
+			// 上位8bit送信（受信側でビットシフトしなおす）
+			tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
+	#else
+			tx[1] = (UB)( diag_photoref_val & 0x00ff );
+			tx[2] = (UB)(( diag_photoref_val & 0xff00 ) >> 8 );
+	#endif
+			
+			if( OFF == s_ds.vuart.input.send_status ){
+				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
+				diagScanDataSendCnt++;
+			}
+		}
 	}
 }
 
@@ -2938,7 +2959,10 @@ void main_vuart_diag_rcv_mic( void )
 	
 	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
 	{
-		s_unit.self_check.seq = DIAG_SEQ_MIC;
+		s_unit.self_check.seq = DIAG_SEQ_MIC_START;
+	}else if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_END){
+		s_unit.self_check.seq = DIAG_SEQ_MIC_END;
+		diagScanDataSendCnt = 0;
 	}
 	
 	tx[0] = VUART_CMD_DIAG_MIC;
@@ -2965,7 +2989,10 @@ void main_vuart_diag_rcv_acl( void )
 	
 	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
 	{
-		s_unit.self_check.seq = DIAG_SEQ_ACL;
+		s_unit.self_check.seq = DIAG_SEQ_ACL_START;
+	}else if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_END){
+		s_unit.self_check.seq = DIAG_SEQ_ACL_END;
+		diagScanDataSendCnt = 0;
 	}
 	
 	tx[0] = VUART_CMD_DIAG_ACL;
@@ -2992,7 +3019,10 @@ void main_vuart_diag_rcv_photo( void )
 	
 	if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_START)
 	{
-		s_unit.self_check.seq = DIAG_SEQ_PHOTO;
+		s_unit.self_check.seq = DIAG_SEQ_PHOTO_START;
+	}else if(s_ds.vuart.input.rcv_data[1] == VUART_DATA_DIAG_END){
+		s_unit.self_check.seq = DIAG_SEQ_PHOTO_END;
+		diagScanDataSendCnt = 0;
 	}
 	
 	tx[0] = VUART_CMD_DIAG_PHOTO;
