@@ -105,7 +105,7 @@ STATIC EVENT_TABLE p_event_table[ EVENT_MAX ][ SYSTEM_MODE_MAX ] = {
 /*充電完了			*/	{ evt_non,			evt_non,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*データ取得		*/	{ evt_non,			evt_get,			evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*プログラム(G1D)	*/	{ evt_non,			evt_g1d_prg_denchi,	evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
-/*自己診断(通信)	*/	{ evt_non,			evt_self_check,		evt_non,		evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
+/*自己診断(通信)	*/	{ evt_non,			evt_self_check,		evt_non,		evt_non,			evt_non,		evt_self_check,	evt_non,			evt_non },
 /*完了				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_idle_com,		evt_idle_com,	evt_idle_com,	evt_non,			evt_non },
 /*中断				*/	{ evt_non,			evt_non,			evt_idle_com,	evt_non,			evt_non,		evt_non,		evt_non,			evt_non },
 /*タイムアウト		*/	{ evt_non,			evt_non,			evt_non,		evt_time_out,		evt_non,		evt_non,		evt_non,			evt_non },

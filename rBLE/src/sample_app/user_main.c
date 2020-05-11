@@ -1727,6 +1727,7 @@ STATIC void user_main_mode_prg_g1d(void)
 STATIC void user_main_mode_self_check( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
+	UB read_eep[EEP_ACCESS_ONCE_SIZE];
 	UB diag_acl_data[10];
 	UH diag_kokyu_val;
 	UH diag_ibiki_val;
@@ -1803,6 +1804,32 @@ STATIC void user_main_mode_self_check( void )
 				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
 				diagScanDataSendCnt++;
 			}
+		}
+	}else if(DIAG_SEQ_EEP == s_unit.self_check.seq)
+	{
+		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
+		if(s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX)
+		{
+			s_unit.self_check.seq = DIAG_SEQ_END;
+			s_unit.self_check.eep_cnt = 0;
+		}
+	}else if(DIAG_SEQ_END == s_unit.self_check.seq)
+	{
+		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
+		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
+		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
+			tx[0] = VUART_CMD_DIAG_EEPROM;
+			tx[1] = VUART_DATA_RESULT_NG;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+			s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
+		}
+		if(s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX)
+		{
+			tx[0] = VUART_CMD_DIAG_EEPROM;
+			tx[1] = VUART_DATA_RESULT_OK;
+			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+			s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
 		}
 	}
 }
@@ -2843,7 +2870,7 @@ void main_vuart_diag_rcv_power_off( void )
 	if(result == VUART_DATA_RESULT_OK)
 	{
 #if FUNC_DEBUG_LOG != ON
-		wait_ms(500);
+//		wait_ms(500);
 		// 電源OFF
 		write1_sfr(P1, 4, 0);
 #endif
@@ -3044,32 +3071,7 @@ void main_vuart_diag_rcv_photo( void )
 /************************************************************************/
 void main_vuart_diag_rcv_eep( void )
 {
-	UB tx[VUART_DATA_SIZE_MAX] = {0};
-	UB result = VUART_DATA_RESULT_OK;
-	UB read_eep[EEP_ACCESS_ONCE_SIZE];
-
-	// 全0書き込み
-	// EEPプログラムモード
-	for(s_unit.self_check.eep_cnt = 0; s_unit.self_check.eep_cnt <= EEP_PAGE_CNT_MAX; s_unit.self_check.eep_cnt++)
-	{
-		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
-		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
-	}
-	
-	// EEPROM確認(読み出し)
-	// フレーム位置とデータ位置からEEPアドレスを算出
-	for(s_unit.self_check.eep_cnt = 0; s_unit.self_check.eep_cnt <= EEP_PAGE_CNT_MAX; s_unit.self_check.eep_cnt++)
-	{
-		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
-		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
-			result = VUART_DATA_RESULT_NG;
-			break;
-		}
-	}
-	
-	tx[0] = VUART_CMD_DIAG_EEPROM;
-	tx[1] = result;
-	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
+	s_unit.self_check.seq = DIAG_SEQ_EEP;
 }
 
 /************************************************************************/
