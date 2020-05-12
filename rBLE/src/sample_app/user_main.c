@@ -1742,6 +1742,7 @@ STATIC void user_main_mode_self_check( void )
 			// 呼吸音取得・送信
 			adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
 			tx[0] = VUART_CMD_DIAG_MIC_VAL;
+			diag_kokyu_val = 1023;
 			// 上位8bit送信（受信側でビットシフトしなおす）
 			tx[1] = (UB)(( diag_kokyu_val >> 2 ) & 0xff );
 			if( OFF == s_ds.vuart.input.send_status ){
@@ -1763,6 +1764,10 @@ STATIC void user_main_mode_self_check( void )
 			
 			// INT_REL読み出し　※割り込み要求クリア
 			i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &diag_acl_data[0], 1 );
+			
+			diag_acl_x = 254;
+			diag_acl_y = 1;
+			diag_acl_z = 60;
 			
 			// 加速度データ送信
 			tx[0] = VUART_CMD_DIAG_ACL_VAL;
@@ -1787,6 +1792,7 @@ STATIC void user_main_mode_self_check( void )
 			// 装着センサー値取得・送信
 			diag_photoref_val = main_photo_read();
 			tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
+			diag_photoref_val = 600;
 			// 上位8bit送信（受信側でビットシフトしなおす）
 			tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
 			
