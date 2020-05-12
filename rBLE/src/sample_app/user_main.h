@@ -253,6 +253,8 @@ typedef enum{
 #define PERIOD_50MSEC   5U		//RD8001ëŒâûÅFíËã`í«â¡
 #define PERIOD_100MSEC   10U
 #define PERIOD_200MSEC   20U
+#define PERIOD_500MSEC   50U
+
 
 ///200ms timer
 #define	TIME_200MS_CNT_POW_SW_LONG			10				/* ìdåπSW_í∑(2ïb) */

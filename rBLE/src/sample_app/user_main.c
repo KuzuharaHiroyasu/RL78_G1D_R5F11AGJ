@@ -86,6 +86,7 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC SYSTEM_MODE evt_remove( int evt);
 STATIC SYSTEM_MODE evt_time_out( int evt);
+STATIC SYSTEM_MODE evt_vib_test( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 STATIC void eep_part_erase( void );
@@ -168,6 +169,9 @@ UB kokyu_val_off_flg = OFF;
 static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
+
+static UB vib_test_start = OFF;
+static UB vib_on_flg = OFF;
 
 /********************/
 /*     ’è”’è‹`     */
@@ -569,6 +573,22 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// ’x‚ê‚ª’~Ï‚µ‚È‚¢—l‚Éˆ—
 		ke_evt_set(KE_EVT_USR_2_BIT);
+	}
+	
+	// 500msŽüŠú
+	if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_500MSEC){
+		if(vib_test_start == ON)
+		{
+			if(vib_on_flg == ON)
+			{
+				vib_off();
+				vib_on_flg = OFF;
+			}else{
+				vib_on();
+				vib_on_flg = ON;
+			}
+			s_unit.tick_10ms_new = 0;
+		}
 	}
 }
 
@@ -2162,6 +2182,21 @@ STATIC SYSTEM_MODE evt_time_out( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	s_ds.vuart.input.send_status = OFF;
+	return system_mode;
+}
+
+
+STATIC SYSTEM_MODE evt_vib_test( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	s_unit.tick_10ms_new = 0;
+	
+	if(vib_test_start == OFF)
+	{
+		vib_test_start = ON;
+	}else{
+		vib_test_start = OFF;
+	}
 	return system_mode;
 }
 
