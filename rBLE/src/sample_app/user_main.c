@@ -1742,13 +1742,8 @@ STATIC void user_main_mode_self_check( void )
 			// 呼吸音取得・送信
 			adc_ibiki_kokyu( &diag_ibiki_val, &diag_kokyu_val );
 			tx[0] = VUART_CMD_DIAG_MIC_VAL;
-	#if 1
 			// 上位8bit送信（受信側でビットシフトしなおす）
 			tx[1] = (UB)(( diag_kokyu_val >> 2 ) & 0xff );
-	#else
-			tx[1] = (UB)( diag_kokyu_val & 0x00ff );
-			tx[2] = (UB)(( diag_kokyu_val & 0xff00 ) >> 8 );
-	#endif
 			if( OFF == s_ds.vuart.input.send_status ){
 				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_MIC_VAL );
 				diagScanDataSendCnt++;
@@ -1792,44 +1787,51 @@ STATIC void user_main_mode_self_check( void )
 			// 装着センサー値取得・送信
 			diag_photoref_val = main_photo_read();
 			tx[0] = VUART_CMD_DIAG_PHOTO_VAL;
-	#if	1
 			// 上位8bit送信（受信側でビットシフトしなおす）
 			tx[1] = (UB)(( diag_photoref_val >> 2 ) & 0xff );
-	#else
-			tx[1] = (UB)( diag_photoref_val & 0x00ff );
-			tx[2] = (UB)(( diag_photoref_val & 0xff00 ) >> 8 );
-	#endif
 			
 			if( OFF == s_ds.vuart.input.send_status ){
 				main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_PHOTO_VAL );
 				diagScanDataSendCnt++;
 			}
 		}
-	}else if(DIAG_SEQ_EEP == s_unit.self_check.seq)
+	}else if( DIAG_SEQ_EEP_START == s_unit.self_check.seq )
 	{
-		eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
-		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
-		if(s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX)
+		if( s_unit.self_check.eep_cnt < EEP_PAGE_CNT_MAX )
 		{
-			s_unit.self_check.seq = DIAG_SEQ_END;
+			eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+			INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
+		}
+		if( s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX )
+		{
+			s_unit.self_check.seq = DIAG_SEQ_EEP_END;
 			s_unit.self_check.eep_cnt = 0;
 		}
-	}else if(DIAG_SEQ_END == s_unit.self_check.seq)
+	}else if( DIAG_SEQ_EEP_END == s_unit.self_check.seq )
 	{
 		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
-		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE)){
+		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE ) ){
 			tx[0] = VUART_CMD_DIAG_EEPROM;
 			tx[1] = VUART_DATA_RESULT_NG;
 			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
 			s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
 		}
-		if(s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX)
+		if( s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX )
 		{
 			tx[0] = VUART_CMD_DIAG_EEPROM;
 			tx[1] = VUART_DATA_RESULT_OK;
 			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
 			s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
+		}
+	}
+	
+	if( s_unit.self_check.seq < DIAG_SEQ_EEP_START )
+	{
+		if(s_unit.self_check.eep_cnt < EEP_PAGE_CNT_MAX)
+		{
+			eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+			INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		}
 	}
 }
@@ -2893,12 +2895,6 @@ void main_vuart_diag_rcv_charge( void )
 {
 	UB tx[VUART_DATA_SIZE_MAX] = {0};
 	UB result = VUART_DATA_RESULT_OK;
-	UB bat = drv_i_port_bat_chg_detect();
-	
-	if(bat == OFF)
-	{
-		result = VUART_DATA_RESULT_NG;
-	}
 	
 	tx[0] = VUART_CMD_DIAG_CHARGE;
 	tx[1] = result;
@@ -3071,7 +3067,7 @@ void main_vuart_diag_rcv_photo( void )
 /************************************************************************/
 void main_vuart_diag_rcv_eep( void )
 {
-	s_unit.self_check.seq = DIAG_SEQ_EEP;
+	s_unit.self_check.seq = DIAG_SEQ_EEP_START;
 }
 
 /************************************************************************/
