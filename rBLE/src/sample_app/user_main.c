@@ -2196,6 +2196,7 @@ STATIC SYSTEM_MODE evt_vib_test( int evt)
 		vib_test_start = ON;
 	}else{
 		vib_test_start = OFF;
+		vib_off();
 	}
 	return system_mode;
 }
