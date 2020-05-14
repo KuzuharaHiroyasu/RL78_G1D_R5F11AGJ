@@ -418,6 +418,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
 	s_unit.tick_diag_10ms++;
+	s_unit.power_off_timer++;
 }
 
 
@@ -1824,6 +1825,14 @@ STATIC void user_main_mode_self_check( void )
 			main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_EEPROM );
 			s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
 		}
+	}else if( DIAG_SEQ_SHUTDOWN == s_unit.self_check.seq )
+	{
+		s_unit.tick_power_off++;
+		if(s_unit.tick_power_off >= PERIOD_1SEC)
+		{
+			// ìdåπOFF
+			write1_sfr(P1, 4, 0);
+		}
 	}
 	
 	if( s_unit.self_check.seq < DIAG_SEQ_EEP_START )
@@ -2868,14 +2877,10 @@ void main_vuart_diag_rcv_power_off( void )
 	tx[1] = result;
 	main_vuart_send( &tx[0], VUART_SND_LEN_DIAG_POWER_OFF );
 	
-	
 	if(result == VUART_DATA_RESULT_OK)
 	{
-#if FUNC_DEBUG_LOG != ON
-//		wait_ms(500);
-		// ìdåπOFF
-		write1_sfr(P1, 4, 0);
-#endif
+		s_unit.self_check.seq = DIAG_SEQ_SHUTDOWN;
+		s_unit.tick_power_off = 0;
 	}
 }
 

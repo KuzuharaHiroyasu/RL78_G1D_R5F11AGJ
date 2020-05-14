@@ -456,6 +456,7 @@ typedef struct{
 	UH get_mode_timeout;		// getmode時の送信中エラータイムアウト
 	
 	UB power_off_timer;		// 電源OFF操作タイマー
+	UW tick_power_off;		// 電源OFFコマンド受信後カウントアップ
 
 	// 以降ワーク領域
 	UW sec30_cnt;			//30秒カウント
