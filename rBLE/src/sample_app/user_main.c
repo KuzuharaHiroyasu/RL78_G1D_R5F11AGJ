@@ -418,7 +418,6 @@ void user_main_timer_10ms_set( void )
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
 	s_unit.tick_diag_10ms++;
-	s_unit.power_off_timer++;
 }
 
 
