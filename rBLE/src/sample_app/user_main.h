@@ -258,7 +258,7 @@ typedef enum{
 #define	TIME_200MS_CNT_POW_SW_LONG			10				/* 電源SW_長(2秒) */
 #define	TIME_200MS_CNT_POW_SW_SHORT			1				/* 電源SW_短(0.2秒) */
 #define	TIME_200MS_CNT_POW_OFF_SW_LONG		25				/* 電源SW_電源OFF操作_長(5秒) */
-#define	TIME_200MS_CNT_POW_OFF_TIMER		5				/* 電源SW_電源OFF操作（短と長のインターバル(1秒) */
+#define	TIME_200MS_CNT_POW_OFF_TIMER		2				/* 電源SW_電源OFF操作（短と長のインターバル(1秒) */
 
 // 50ms timer
 #if FUNC_DEBUG_LOG == ON

@@ -1030,7 +1030,7 @@ STATIC void sw_proc(void)
 		// 電源SW押下タイマー継続
 		s_unit.sw_time_cnt++;
 		
-		if(sw_power_off_ope_flg == ON)
+		if(sw_power_off_ope_flg == ON && s_unit.system_mode == SYSTEM_MODE_IDLE_COM)
 		{
 			if(s_unit.power_off_timer == TIME_200MS_CNT_POW_OFF_SW_LONG)
 			{ // パワーOFF操作 Step.2: Step.1後0.6秒以内から5秒長押し
@@ -1044,6 +1044,7 @@ STATIC void sw_proc(void)
 				write1_sfr(P1, 4, 1);	// 電源ON
 				led_green_on();
 			}else if( s_unit.sw_time_cnt == TIME_200MS_CNT_POW_SW_LONG){
+				sw_power_off_ope_flg = OFF;
 				// 規定時間以上連続押下と判断
 				evt_act( EVENT_POW_SW_LONG );
 			}
