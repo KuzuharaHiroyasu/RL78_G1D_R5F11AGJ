@@ -988,6 +988,7 @@ void user_main_init( void )
 STATIC void sw_proc(void)
 {
 	UB pow_sw;
+	UB bat;
 	
 	pow_sw = drv_i_port_read_pow_sw();
 	
@@ -1034,8 +1035,12 @@ STATIC void sw_proc(void)
 		{
 			if(s_unit.power_off_timer == TIME_200MS_CNT_POW_OFF_SW_LONG)
 			{ // パワーOFF操作 Step.2: Step.1後0.6秒以内から5秒長押し
-				led_green_on();
-				sw_power_off_flg = ON;
+				bat = drv_i_port_bat_chg_detect();
+				if(bat == ON)
+				{
+					led_green_on();
+					sw_power_off_flg = ON;
+				}
 			}
 		}else{
 			if(s_unit.system_mode == SYSTEM_MODE_INITIAL)
@@ -1070,9 +1075,13 @@ STATIC void sw_proc(void)
 			}else if( s_unit.sw_time_cnt >= TIME_200MS_CNT_POW_SW_SHORT){
 				evt_act( EVENT_POW_SW_SHORT );
 				
-				// パワーOFF操作 Step.1:短押し
-				sw_power_off_ope_flg = ON;
-				s_unit.power_off_timer = 0;
+				bat = drv_i_port_bat_chg_detect();
+				if(bat == ON)
+				{
+					// パワーOFF操作 Step.1:短押し
+					sw_power_off_ope_flg = ON;
+					s_unit.power_off_timer = 0;
+				}
 			}else{
 				// 何もしない
 			}
