@@ -3462,7 +3462,7 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 		photo_data_max = true;
 #endif
 	}
-	
+/*	
 	// ‘•’…”»’è
 	if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
 	{
@@ -3482,7 +3482,7 @@ static int_t main_calc_photoref(ke_msg_id_t const msgid, void const *param, ke_t
 	}else{
 		s_unit.photosens_remove_cnt = 0; // “rØ‚ê‚½‚çƒŠƒZƒbƒg
 	}
-	
+*/
 	return (KE_MSG_CONSUMED);
 }
 
