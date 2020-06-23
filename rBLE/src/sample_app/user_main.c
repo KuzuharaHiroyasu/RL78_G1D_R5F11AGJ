@@ -141,7 +141,6 @@ static bool vib_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_power = VIB_MODE_DURING;
-static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
@@ -151,6 +150,7 @@ static bool snore_data_max = false;
 static bool acl_data_max = false;
 static bool photo_data_max = false;
 #else
+static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB sw_on_flg = OFF;
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 static UB snore_state;
