@@ -121,6 +121,8 @@ STATIC void main_acl_read(void);
 STATIC UH main_photo_read(void);
 #endif
 
+STATIC bool isPosition(void);
+
 /********************/
 /*     ŠO•”ŽQÆ     */
 /********************/
@@ -569,8 +571,53 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// ’x‚ê‚ª’~Ï‚µ‚È‚¢—l‚Éˆ—
 		ke_evt_set(KE_EVT_USR_2_BIT);
+		
+		main_acl_read();
+		if((main_photo_read() >= PHOTO_SENSOR_WEARING_AD) && (isPosition() == true))
+		{
+			s_unit.demo_tick_10sec++;
+			if(s_unit.demo_tick_10sec >= 10)
+			{
+				set_vib(set_vib_mode(vib_power));
+				s_unit.demo_tick_10sec = 0;
+			}
+		}else{
+			s_unit.demo_tick_10sec = 0;
+		}
 	}
 }
+
+STATIC bool isPosition(void)
+{
+	bool ret_x = false;
+	bool ret_y = false;
+	bool ret_z = false;
+	
+	bool ret = false;
+	
+	if(-40 <= s_unit.meas.info.dat.acl_x && s_unit.meas.info.dat.acl_x <= 0)
+	{
+		ret_x = true;
+	}
+	
+	if(50 <= s_unit.meas.info.dat.acl_y && s_unit.meas.info.dat.acl_y <= 70)
+	{
+		ret_y = true;
+	}
+	
+	if(-20 <= s_unit.meas.info.dat.acl_z && s_unit.meas.info.dat.acl_z <= 0)
+	{
+		ret_z = true;
+	}
+	
+	if(ret_x == true && ret_y == true & ret_z == true)
+	{
+		ret = true;
+	}
+	
+	return ret;
+}
+
 
 /************************************************************************/
 /* ŠÖ”     : led_cyc													*/
@@ -970,6 +1017,7 @@ void user_main_init( void )
 
     write1_sfr(P1, 5, 0);
 #endif
+	s_unit.demo_tick_10sec = 0;
 }
 
 /************************************************************************/
