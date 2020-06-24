@@ -451,11 +451,14 @@ void user_main_timer_cyc( void )
 			
 			// 呼吸音、いびき音取得
 			adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+			s_unit.meas.info.dat.photoref_val = main_photo_read();
+
 #if FUNC_DEBUG_WAVEFORM_LOG == ON
 	// 波形&結果確認
 			user_main_calc_data_set_kyokyu_ibiki();
 #else
-	//通常デバッグ版
+/*
+			//通常デバッグ版
 			s_unit.acl_timing+=1;
 			if(s_unit.acl_timing >= ACL_TIMING_VAL){
 				s_unit.acl_timing = 0;
@@ -469,6 +472,7 @@ void user_main_timer_cyc( void )
 				s_unit.meas.info.dat.acl_z = 99;
 				s_unit.meas.info.dat.photoref_val = 0;
 			}
+*/
 #endif
 			make_send_data(dbg_tx_data);
 			dbg_len = strlen(dbg_tx_data);
@@ -780,6 +784,7 @@ STATIC void make_send_data(char* pBuff)
 #if FUNC_DEBUG_WAVEFORM_LOG == OFF
 	//通常デバッグ版
 	// 加速度(X)
+/*
 	if(s_unit.meas.info.dat.acl_x >= 0){
 		tmp = s_unit.meas.info.dat.acl_x / 100;
 		next = s_unit.meas.info.dat.acl_x % 100;
@@ -853,7 +858,7 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = '0' + tmp;
 		pBuff[index++] = ',';
 	}
-	
+*/
 	// フォトセンサー
 	tmp = s_unit.meas.info.dat.photoref_val / 100;
 	next = s_unit.meas.info.dat.photoref_val % 100;
@@ -959,7 +964,11 @@ void user_main_init( void )
 	// 演算初期化
 	calc_snore_init();
 	
+#if FUNC_DEBUG_LOG != ON
 	s_unit.system_mode = SYSTEM_MODE_INITIAL;
+#else
+	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+#endif
 	set_ble_state(BLE_STATE_INITIAL);
 	set_ble_isconnect(false);
 	
