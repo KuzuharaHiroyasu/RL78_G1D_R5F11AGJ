@@ -792,3 +792,13 @@ STATIC void vib_level_4(UH vib_timer)
 		VIB_ENA = 1;
 	}	
 }
+
+bool get_confirm_flg(void)
+{
+	return confirm_flg;
+}
+
+bool set_confirm_flg(bool flg)
+{
+	confirm_flg = flg;
+}

@@ -86,6 +86,7 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC SYSTEM_MODE evt_remove( int evt);
 STATIC SYSTEM_MODE evt_time_out( int evt);
+STATIC SYSTEM_MODE evt_demo_vib( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 STATIC void eep_part_erase( void );
@@ -168,6 +169,7 @@ UB kokyu_val_off_flg = OFF;
 static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
+static bool demo_vib_flg = false;
 
 /********************/
 /*     定数定義     */
@@ -418,6 +420,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
 	s_unit.tick_diag_10ms++;
+	s_unit.demo_vib_cnt++;
 }
 
 
@@ -569,6 +572,18 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
 		ke_evt_set(KE_EVT_USR_2_BIT);
+	}
+	
+	// demo用バイブ処理
+	if(demo_vib_flg == true)
+	{
+		if(s_unit.demo_vib_cnt >= (uint16_t)PERIOD_1SEC)
+		{
+			vib_level = VIB_LEVEL_1;
+			set_vib_level(vib_level);
+			set_vib_confirm(set_vib_mode(vib_power));
+			demo_vib_flg = false;
+		}
 	}
 }
 
@@ -2182,6 +2197,32 @@ STATIC SYSTEM_MODE evt_time_out( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	s_ds.vuart.input.send_status = OFF;
+	return system_mode;
+}
+
+/************************************************************************/
+/* 関数     : evt_demo_vib												*/
+/* 関数名   : イベント(デモ用バイブ)									*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2020.06.30  OneA 葛原 初版作成							*/
+/************************************************************************/
+/* 機能 : イベント(デモ用バイブ)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_demo_vib( int evt)
+{
+	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
+	
+	if(get_confirm_flg() == true)
+	{
+		set_confirm_flg(false);
+		vib_off();
+	}else{
+		demo_vib_flg = true;
+		s_unit.demo_vib_cnt = 0;
+	}
 	return system_mode;
 }
 

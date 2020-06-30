@@ -500,6 +500,8 @@ typedef struct{
 	// 
 	UB ble_state;			// BLE管理状態
 	bool ble_isconnect;		// BLE接続状態
+	
+	UW demo_vib_cnt;
 }T_UNIT;
 
 // 取り外しタイムアウト時の保存用
