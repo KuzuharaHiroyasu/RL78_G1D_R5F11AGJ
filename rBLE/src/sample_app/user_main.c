@@ -968,6 +968,7 @@ void user_main_init( void )
 	s_unit.system_mode = SYSTEM_MODE_INITIAL;
 #else
 	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+	write1_sfr(P1, 4, 1);	// ìdåπON
 #endif
 	set_ble_state(BLE_STATE_INITIAL);
 	set_ble_isconnect(false);
