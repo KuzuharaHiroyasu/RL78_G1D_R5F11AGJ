@@ -265,6 +265,9 @@ typedef enum{
 #define	TIME_20MS_CNT_POW_SW_SHORT_DEBUG		5			/* 電源SW_短(0.25秒) */
 #endif
 
+// 1sec timer
+#define TIME_30MIN		1800
+
 typedef enum program_ver{
 	VERSION_MAJOR = 0,
 	VERSION_MINOR,
@@ -444,6 +447,7 @@ typedef struct{
 	UH tick_vib_10ms_sec;
 	UW tick_led_10ms_sec;
 	UH tick_diag_10ms;
+	UH tick_vibstop_timer;
 	UW suppress_cont_time_cnt;				// 抑制継続時間用カウント
 	UW suppress_max_time_interval_cnt;		// 抑制最大時間のインターバルカウント
 	UW suppress_start_cnt;					// 抑制開始カウント

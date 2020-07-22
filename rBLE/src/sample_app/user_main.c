@@ -86,6 +86,7 @@ STATIC SYSTEM_MODE evt_g1d_prg_denchi( int evt);
 STATIC SYSTEM_MODE evt_self_check( int evt);
 STATIC SYSTEM_MODE evt_remove( int evt);
 STATIC SYSTEM_MODE evt_time_out( int evt);
+STATIC SYSTEM_MODE evt_vib_stop( int evt);
 STATIC void user_main_mode_get_after( void );
 STATIC void user_main_eep_read_pow_on(void);
 STATIC void eep_part_erase( void );
@@ -168,6 +169,9 @@ UB kokyu_val_off_flg = OFF;
 static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
+static bool set_vib_stop = false;
+static UB newstate_apnea = APNEA_NORMAL;
+static UB newstate_snore = SNORE_OFF;
 
 /********************/
 /*     定数定義     */
@@ -488,7 +492,10 @@ void user_main_timer_cyc( void )
 				{
 					vib_startflg = false;
 					vib_start_limit_cnt = 0;
-					set_vib(set_vib_mode(vib_power));
+					if(set_vib_stop == false)
+					{
+						set_vib(set_vib_mode(vib_power));
+					}
 				}else{
 					vib_start_limit_cnt++;
 				}
@@ -569,6 +576,14 @@ void user_main_timer_cyc( void )
 	if( s_unit.tick_10ms_sec >= (uint16_t)PERIOD_1SEC){
 		s_unit.tick_10ms_sec -= PERIOD_1SEC;	// 遅れが蓄積しない様に処理
 		ke_evt_set(KE_EVT_USR_2_BIT);
+		s_unit.tick_vibstop_timer++;
+		if(s_unit.tick_vibstop_timer >= TIME_30MIN)
+		{
+			if(set_vib_stop == true)
+			{
+				set_vib_stop = false;
+			}
+		}
 	}
 }
 
@@ -1309,6 +1324,8 @@ STATIC void user_main_mode_sensing_before( void )
 	vib_start_limit_cnt = 0;
 	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
+	
+	set_vib_stop = false;
 }
 
 /************************************************************************/
@@ -2183,6 +2200,54 @@ STATIC SYSTEM_MODE evt_time_out( int evt)
 	SYSTEM_MODE system_mode = SYSTEM_MODE_IDLE_COM;
 	s_ds.vuart.input.send_status = OFF;
 	return system_mode;
+}
+
+/************************************************************************/
+/* 関数     : evt_vib_stop												*/
+/* 関数名   : イベント(バイブストップ)									*/
+/* 引数     : evt	イベント番号										*/
+/* 戻り値   : システムモード											*/
+/* 変更履歴 : 2020.07.15  OneA 葛原 初版作成							*/
+/************************************************************************/
+/* 機能 : イベント(バイブストップ)										*/
+/************************************************************************/
+/* 注意事項 :なし														*/
+/************************************************************************/
+STATIC SYSTEM_MODE evt_vib_stop( int evt)
+{
+	UB stop = OFF;
+	
+	if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
+	{
+		if(newstate_apnea == APNEA_ERROR || newstate_snore == SNORE_ON)
+		{
+			stop = ON;
+		}
+	}else if(act_mode == ACT_MODE_SUPPRESS_APNEA)
+	{
+		if(newstate_apnea == APNEA_ERROR)
+		{
+			stop = ON;
+		}
+	}else if(act_mode == ACT_MODE_SUPPRESS_SNORE)
+	{
+		if(newstate_snore == SNORE_ON)
+		{
+			stop = ON;
+		}
+	}
+	
+	if(stop == ON)
+	{
+		if(set_vib_stop == false)
+		{
+			vib_stop();
+			s_unit.tick_vibstop_timer = 0;
+			set_vib_stop = true;
+		}
+	}
+
+	return SYSTEM_MODE_NON;
 }
 
 /************************************************************************/
@@ -3138,24 +3203,23 @@ void ds_set_vuart_send_status( UB status )
 static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
 #if FUNC_DEBUG_CALC_NON == OFF
-	UB newstate;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
 	
 	calculator_apnea(&s_unit.kokyu_val[0], &s_unit.ibiki_val[0]);
 	s_unit.kokyu_cnt = 0;
-	newstate = get_state();
+	newstate_apnea = get_state();
 	
 	bit_shift = s_unit.phase_kokyu * 2;
 	
 	// 振動開始時間(アプリからの設定値)がくるまではすべて通常呼吸とする
 	if(s_unit.suppress_start_cnt <= (suppress_start_time * 6))
 	{
-		newstate = APNEA_NORMAL;
+		newstate_apnea = APNEA_NORMAL;
 	}
 	
-	if(newstate == APNEA_ERROR){
+	if(newstate_apnea == APNEA_ERROR){
 		s_unit.calc.info.dat.state |= (set_kokyu_mask << bit_shift);		// 無呼吸状態ON
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_APNEA)
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
@@ -3170,8 +3234,11 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 						vib_level = VIB_LEVEL_9;
 					}
 				}
-				set_vib(set_vib_mode(vib_power));
-				set_kokyu_val_off(ON);
+				if(set_vib_stop == false)
+				{
+					set_vib(set_vib_mode(vib_power));
+					set_kokyu_val_off(ON);
+				}
 			}
 		}
 	}else{
@@ -3250,7 +3317,6 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	//演算正規処理
 	int ii;
 	uint32_t average =0;
-	UB newstate;
 	UB	set_ibiki_mask = 0x01;
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
@@ -3266,7 +3332,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 
 	// いびき演算
 	calc_snore_proc(&s_unit.ibiki_val[0]);
-	newstate = calc_snore_get();
+	newstate_snore = calc_snore_get();
 	
 	if(suppress_max_cnt_over_flg == ON)
 	{// 抑制動作最大時間オーバー時
@@ -3280,7 +3346,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	}
 	
 	bit_shift = s_unit.phase_ibiki * 2;
-	if(newstate == SNORE_ON){
+	if(newstate_snore == SNORE_ON){
 		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
 		{//抑制モード（いびき + 無呼吸）か抑制モード（いびき）ならバイブレーション動作
