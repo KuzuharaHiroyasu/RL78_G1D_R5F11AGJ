@@ -141,7 +141,6 @@ static bool vib_flg = false;
 #if FUNC_DEBUG_LOG != ON
 static UB act_mode = ACT_MODE_SUPPRESS_SNORE;
 static UB vib_power = VIB_MODE_DURING;
-static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
@@ -157,6 +156,7 @@ static UB snore_state;
 static UB apnea_state;
 #endif
 #endif
+static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 
 static B	vib_level = VIB_LEVEL_1;
 static bool vib_startflg = false;
@@ -456,19 +456,19 @@ void user_main_timer_cyc( void )
 			user_main_calc_data_set_kyokyu_ibiki();
 #else
 	//通常デバッグ版
-			s_unit.acl_timing+=1;
-			if(s_unit.acl_timing >= ACL_TIMING_VAL){
-				s_unit.acl_timing = 0;
+//			s_unit.acl_timing+=1;
+//			if(s_unit.acl_timing >= ACL_TIMING_VAL){
+//				s_unit.acl_timing = 0;
 				// 加速度取得
 				main_acl_read();
 				// フォトセンサー値取得
 				s_unit.meas.info.dat.photoref_val = main_photo_read();
-			}else{
-				s_unit.meas.info.dat.acl_x = 99;
-				s_unit.meas.info.dat.acl_y = 99;
-				s_unit.meas.info.dat.acl_z = 99;
-				s_unit.meas.info.dat.photoref_val = 0;
-			}
+//			}else{
+//				s_unit.meas.info.dat.acl_x = 99;
+//				s_unit.meas.info.dat.acl_y = 99;
+//				s_unit.meas.info.dat.acl_z = 99;
+//				s_unit.meas.info.dat.photoref_val = 0;
+//			}
 #endif
 			make_send_data(dbg_tx_data);
 			dbg_len = strlen(dbg_tx_data);
@@ -781,8 +781,11 @@ STATIC void make_send_data(char* pBuff)
 	//通常デバッグ版
 	// 加速度(X)
 	if(s_unit.meas.info.dat.acl_x >= 0){
-		tmp = s_unit.meas.info.dat.acl_x / 100;
-		next = s_unit.meas.info.dat.acl_x % 100;
+		tmp = s_unit.meas.info.dat.acl_x / 1000;
+		next = s_unit.meas.info.dat.acl_x % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -791,10 +794,13 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = '0' + tmp;
 		pBuff[index++] = ',';
 	}else{
-		UB acl_x = -1 * s_unit.meas.info.dat.acl_x;
+		UH acl_x = -1 * s_unit.meas.info.dat.acl_x;
 		pBuff[index++] = '-';
-		tmp = acl_x / 100;
-		next = acl_x % 100;
+		tmp = acl_x / 1000;
+		next = acl_x % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -806,8 +812,11 @@ STATIC void make_send_data(char* pBuff)
 	
 	// 加速度(Y)
 	if(s_unit.meas.info.dat.acl_y >= 0){
-		tmp = s_unit.meas.info.dat.acl_y / 100;
-		next = s_unit.meas.info.dat.acl_y % 100;
+		tmp = s_unit.meas.info.dat.acl_y / 1000;
+		next = s_unit.meas.info.dat.acl_y % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -816,10 +825,13 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = '0' + tmp;
 		pBuff[index++] = ',';
 	}else{
-		UB acl_y = -1 * s_unit.meas.info.dat.acl_y;
+		UH acl_y = -1 * s_unit.meas.info.dat.acl_y;
 		pBuff[index++] = '-';
-		tmp = acl_y / 100;
-		next = acl_y % 100;
+		tmp = acl_y / 1000;
+		next = acl_y % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -831,8 +843,11 @@ STATIC void make_send_data(char* pBuff)
 	
 	// 加速度(Z)
 	if(s_unit.meas.info.dat.acl_z >= 0){
-		tmp = s_unit.meas.info.dat.acl_z / 100;
-		next = s_unit.meas.info.dat.acl_z % 100;
+		tmp = s_unit.meas.info.dat.acl_z / 1000;
+		next = s_unit.meas.info.dat.acl_z % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -841,10 +856,13 @@ STATIC void make_send_data(char* pBuff)
 		pBuff[index++] = '0' + tmp;
 		pBuff[index++] = ',';
 	}else{
-		UB acl_z = -1 * s_unit.meas.info.dat.acl_z;
+		UH acl_z = -1 * s_unit.meas.info.dat.acl_z;
 		pBuff[index++] = '-';
-		tmp = acl_z / 100;
-		next = acl_z % 100;
+		tmp = acl_z / 1000;
+		next = acl_z % 1000;
+		pBuff[index++] = '0' + tmp;
+		tmp = next / 100;
+		next = next % 100;
 		pBuff[index++] = '0' + tmp;
 		tmp = next / 10;
 		next = next % 10;
@@ -959,7 +977,11 @@ void user_main_init( void )
 	// 演算初期化
 	calc_snore_init();
 	
+#if FUNC_DEBUG_LOG == ON
+	s_unit.system_mode = SYSTEM_MODE_IDLE_COM;
+#else
 	s_unit.system_mode = SYSTEM_MODE_INITIAL;
+#endif
 	set_ble_state(BLE_STATE_INITIAL);
 	set_ble_isconnect(false);
 	
@@ -3716,6 +3738,7 @@ STATIC void main_acl_start(void)
 	wr_data[1] = 0x00;
 	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
 	
+#if 0
 	// 動作モード設定
 	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
 	wr_data[1] = 0x20;
@@ -3725,7 +3748,17 @@ STATIC void main_acl_start(void)
 	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
 	wr_data[1] = 0xA0;
 	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
-	
+#else
+	// 動作モード設定
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0x60;
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+
+	// 動作モード開始
+	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
+	wr_data[1] = 0xE0;
+	i2c_write_sub( ACL_DEVICE_ADR, &wr_data[0], 2, OFF );
+#endif
 	
 }
 
@@ -3755,9 +3788,40 @@ STATIC void main_acl_read(void)
 	
 	// データ取得
 	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_DATA_XYZ, &rd_data[0], 6 );
+	
+#if 0
 	s_unit.meas.info.dat.acl_x = rd_data[1];
 	s_unit.meas.info.dat.acl_y = rd_data[3];
 	s_unit.meas.info.dat.acl_z = rd_data[5];
+#else
+	s_unit.meas.info.dat.acl_x = rd_data[1];
+	s_unit.meas.info.dat.acl_x = (s_unit.meas.info.dat.acl_x << 4) | (rd_data[0] >> 4);
+	
+	if(s_unit.meas.info.dat.acl_x & 0x800)
+	{
+		s_unit.meas.info.dat.acl_x = s_unit.meas.info.dat.acl_x | 0xF000;
+	}
+	
+/*	
+	if(s_unit.meas.info.dat.acl_x > 2047)
+	{
+		s_unit.meas.info.dat.acl_x = 2047 - s_unit.meas.info.dat.acl_x;
+	}
+*/	
+	s_unit.meas.info.dat.acl_y = rd_data[3];
+	s_unit.meas.info.dat.acl_y = (s_unit.meas.info.dat.acl_y << 4) | (rd_data[2] >> 4);
+	if(s_unit.meas.info.dat.acl_y & 0x800)
+	{
+		s_unit.meas.info.dat.acl_y = s_unit.meas.info.dat.acl_y | 0xF000;
+	}
+	
+	s_unit.meas.info.dat.acl_z = rd_data[5];
+	s_unit.meas.info.dat.acl_z = (s_unit.meas.info.dat.acl_z << 4) | (rd_data[4] >> 4);
+	if(s_unit.meas.info.dat.acl_z & 0x800)
+	{
+		s_unit.meas.info.dat.acl_z = s_unit.meas.info.dat.acl_z | 0xF000;
+	}
+#endif
 	
 	// INT_REL読み出し　※割り込み要求クリア
 	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_REL, &rd_data[0], 1 );

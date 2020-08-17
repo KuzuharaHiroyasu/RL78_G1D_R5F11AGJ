@@ -297,9 +297,12 @@ typedef struct{
 		struct{
 			UH	kokyu_val;		
 			UH	ibiki_val;		
-			B acl_x;
-			B acl_y;
-			B acl_z;
+			H acl_x;
+			H acl_y;
+			H acl_z;
+//			B acl_x;
+//			B acl_y;
+//			B acl_z;
 			UH photoref_val;			// フォトリフレクタ
 		}dat;
 	}info;
