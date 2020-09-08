@@ -169,6 +169,9 @@ static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
 
+static UB auto_sensing_ready_flg = OFF;
+static UH auto_sensing_ready_cnt = 0;
+
 /********************/
 /*     定数定義     */
 /********************/
@@ -418,6 +421,8 @@ void user_main_timer_10ms_set( void )
 	s_unit.elapsed_time++;
 	s_unit.tick_vib_10ms_sec++;
 	s_unit.tick_diag_10ms++;
+	s_unit.tick_auto_sensing_ready_20sec++;
+	s_unit.tick_auto_sensing_ready_1sec++;
 }
 
 
@@ -541,6 +546,45 @@ void user_main_timer_cyc( void )
 			}
 #endif
 			s_unit.tick_10ms_new = 0;
+		}
+	}else{
+		/* 自動測定判定 */
+		if(auto_sensing_ready_flg == ON)
+		{
+			if(s_unit.tick_auto_sensing_ready_1sec >= (uint16_t)PERIOD_1SEC)
+			{
+				// 装着センサ反応あり後、1秒間隔でチェック
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+				/* 装着センサ判定 */
+				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
+				{
+					auto_sensing_ready_cnt++;
+					
+					if(auto_sensing_ready_cnt >= 20)
+					{
+						auto_sensing_ready_flg = OFF;
+						evt_act( EVENT_POW_SW_LONG );
+					}
+				}else{
+					auto_sensing_ready_flg = OFF;
+				}
+				s_unit.tick_auto_sensing_ready_1sec = 0;
+			}
+		}else{
+			/* 20秒周期でポーリング */
+			if(s_unit.tick_auto_sensing_ready_20sec >= (uint16_t)PERIOD_20SEC)
+			{
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+				/* 装着センサ判定 */
+				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
+				{
+					/* 装着センサ反応あり */
+					auto_sensing_ready_flg = ON;
+					auto_sensing_ready_cnt = 0;
+					s_unit.tick_auto_sensing_ready_1sec = 0;
+				}
+				s_unit.tick_auto_sensing_ready_20sec = 0;
+			}
 		}
 	}
 	
@@ -970,6 +1014,7 @@ void user_main_init( void )
 
     write1_sfr(P1, 5, 0);
 #endif
+	s_unit.tick_auto_sensing_ready_20sec = 0;
 }
 
 /************************************************************************/

@@ -246,6 +246,7 @@ typedef enum{
 
 
 ///10ms timer
+#define PERIOD_20SEC    2000U
 #define PERIOD_5SEC     500U
 #define PERIOD_1SEC     100U
 #define PERIOD_10MSEC   1U		//RD8001対応：定義追加
@@ -440,6 +441,8 @@ typedef struct{
 	UH tick_20ms;
 	UH tick_10ms_sec;
 	UH tick_10ms_new;
+	UH tick_auto_sensing_ready_1sec;
+	UH tick_auto_sensing_ready_20sec;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
 	UW tick_led_10ms_sec;
