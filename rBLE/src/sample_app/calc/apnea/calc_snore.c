@@ -14,9 +14,11 @@
 /* プロトタイプ宣言											*/
 /************************************************************/
 static int proc_on(int Pos);
+static int proc_breath_on(int Pos);
 static int proc_off(int Pos);
 static void Save(void);
 static void Judge(void);
+static void Judge_breath(void);
 
 /************************************************************/
 /* 定数定義													*/
@@ -30,6 +32,7 @@ static UB	SnoreFlg_; // ONカウント中 or OFFカウント中
 static UB	SnoreCnt_; // ON連続回数, OFF連続回数 兼用
 static B	SnoreTime_[RIREKI];
 static UB	SnoreState_;		// いびき
+static UB	BreathState_;		// 呼吸
 static UH	snore_sens = SNORE_PARAM_THRE_DURING;	// いびき感度
 static UB	snoreJudgeOnFlg_;	// いびき判定ONフラグ
 static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
@@ -115,6 +118,60 @@ void calc_snore_proc(const UH *pData)
 }
 
 /************************************************************************/
+/* 関数     : calc_breath_proc											*/
+/* 関数名   : いびき判定演算											*/
+/* 引数     : int *pData : 波形データ									*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.09.15 oneA 葛原	初版作成							*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+void calc_breath_proc(const UH *pData)
+{
+	int ii;
+	int jj;
+	int loop;
+	int size;
+	int pos=0;
+	
+	// 閾値を超えた回数の移動累計をとる
+	loop = DATA_SIZE - SNORE_PARAM_SIZE;
+	for(ii=0;ii<loop;++ii){
+		thresholds_over_num[ii] = 0;
+		size = ii+SNORE_PARAM_SIZE;
+		for(jj=ii;jj<size;++jj){
+			if(pData[jj] >= 100){
+				thresholds_over_num[ii] += 1;
+			}
+		}
+	}
+	
+	while(pos < loop){
+		switch(SnoreFlg_){
+		case ON:
+			pos = proc_on(pos);
+			break;
+		case OFF:
+			pos = proc_off(pos);
+			break;
+		default:
+			calc_snore_init();
+			return;
+		}
+	}
+	
+	if(snoreJudgeOnFlg_ == OFF)
+	{
+		BreathState_ = BREATH_OFF;
+	}
+	judgeSkipFlg_ = OFF;
+	snoreJudgeOnFlg_ = OFF;
+}
+
+/************************************************************************/
 /* 関数     : proc_on													*/
 /* 関数名   : いびきON時処理											*/
 /* 引数     : int Data : 波形データ										*/
@@ -141,6 +198,46 @@ static int proc_on(int Pos)
 			if(judgeSkipFlg_ == OFF)
 			{
 				Judge();
+			}
+			break;
+		}else{
+			SnoreCnt_ += 1;
+			if (SnoreCnt_ >= SNORE_PARAM_NORMAL_CNT) {
+				Reset();
+			}			
+		}
+	}
+	
+	return pos;
+}
+
+/************************************************************************/
+/* 関数     : proc_breath_on											*/
+/* 関数名   : 呼吸ON時処理												*/
+/* 引数     : int Data : 波形データ										*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.09.15 oneA 葛原	初版作成							*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+static int proc_breath_on(int Pos)
+{
+	int ii;
+	int loop = DATA_SIZE - SNORE_PARAM_SIZE;
+	int pos = loop;
+	
+	// OFF確定している場所を特定する
+	for(ii=Pos;ii<loop;++ii){
+		if(thresholds_over_num[ii] <= SNORE_PARAM_OFF_CNT){
+			SnoreFlg_ = OFF;
+			pos = ii;
+			Save();
+			if(judgeSkipFlg_ == OFF)
+			{
+				Judge_breath();
 			}
 			break;
 		}else{
@@ -260,6 +357,39 @@ static void Judge(void)
 }
 
 /************************************************************************/
+/* 関数     : Judge_breath												*/
+/* 関数名   : 呼吸判定													*/
+/* 引数     : なし														*/
+/* 戻り値   : なし														*/
+/* 変更履歴 : 2020.09.15 oneA 葛原	初版作成							*/
+/************************************************************************/
+/* 機能 :																*/
+/************************************************************************/
+/* 注意事項 :															*/
+/* なし																	*/
+/************************************************************************/
+static void Judge_breath(void)
+{
+	int ii;
+	
+	for(ii=0;ii<RIREKI;++ii){
+		if(SnoreTime_[ii] == -1){
+			BreathState_ = BREATH_OFF;
+			return;
+		}
+	}
+	
+	for(ii=0;ii<RIREKI-1;++ii){
+		if(abs(SnoreTime_[0]-SnoreTime_[ii+1]) > SNORE_PARAM_GOSA){
+			BreathState_ = BREATH_OFF;
+			return;
+		}
+	}
+	snoreJudgeOnFlg_ = ON;
+	BreathState_ = BREATH_ON;
+}
+
+/************************************************************************/
 /* 関数     : Reset														*/
 /* 関数名   : 通常呼吸への復帰処理										*/
 /* 引数     : なし														*/
@@ -285,6 +415,11 @@ void Reset(void)
 UB calc_snore_get(void)
 {
 	return SnoreState_;
+}
+
+UB calc_breath_get(void)
+{
+	return BreathState_;
 }
 
 /************************************************************************/

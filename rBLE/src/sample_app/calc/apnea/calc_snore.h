@@ -29,7 +29,9 @@ typedef enum{
 /************************************************************/
 extern void	calc_snore_init(void);
 extern void	calc_snore_proc(const UH *pData);
+extern void	calc_breath_proc(const UH *pData);
 extern UB	calc_snore_get(void);
+extern UB	calc_breath_get(void);
 extern void set_snore_sens( UB sens );
 extern void Reset(void);
 

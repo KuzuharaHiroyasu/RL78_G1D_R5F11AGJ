@@ -441,7 +441,7 @@ typedef struct{
 	UH tick_20ms;
 	UH tick_10ms_sec;
 	UH tick_10ms_new;
-	UH tick_auto_sensing_ready_1sec;
+	UH tick_auto_sensing_ready_10ms;
 	UH tick_auto_sensing_ready_20sec;
 	UW elapsed_time;									/* 経過時間(10ms) ※約1年132日継続して演算可能 */
 	UH tick_vib_10ms_sec;
@@ -707,7 +707,7 @@ typedef struct{
 
 // フォトセンサ
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
-#define PHOTO_SENSOR_REMOVE_CNT			180		// 10秒毎なので 6 * 30 = 180 (30分)
+#define PHOTO_SENSOR_REMOVE_CNT			2		// 10秒毎なので 6 * 30 = 180 (30分)
 
 // 抑制開始カウント(デフォルト)
 #define SUPPRESS_START_CNT				20		// センシング開始20分間は抑制しない 20min

@@ -170,7 +170,6 @@ static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
 
 static UB auto_sensing_ready_flg = OFF;
-static UH auto_sensing_ready_cnt = 0;
 
 /********************/
 /*     定数定義     */
@@ -422,7 +421,7 @@ void user_main_timer_10ms_set( void )
 	s_unit.tick_vib_10ms_sec++;
 	s_unit.tick_diag_10ms++;
 	s_unit.tick_auto_sensing_ready_20sec++;
-	s_unit.tick_auto_sensing_ready_1sec++;
+	s_unit.tick_auto_sensing_ready_10ms++;
 }
 
 
@@ -547,28 +546,16 @@ void user_main_timer_cyc( void )
 #endif
 			s_unit.tick_10ms_new = 0;
 		}
-	}else{
+	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
 		/* 自動測定判定 */
 		if(auto_sensing_ready_flg == ON)
 		{
-			if(s_unit.tick_auto_sensing_ready_1sec >= (uint16_t)PERIOD_1SEC)
+			if(s_unit.tick_auto_sensing_ready_10ms >= (uint16_t)PERIOD_50MSEC)
 			{
-				// 装着センサ反応あり後、1秒間隔でチェック
-				s_unit.meas.info.dat.photoref_val = main_photo_read();
-				/* 装着センサ判定 */
-				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
-				{
-					auto_sensing_ready_cnt++;
-					
-					if(auto_sensing_ready_cnt >= 20)
-					{
-						auto_sensing_ready_flg = OFF;
-						evt_act( EVENT_POW_SW_LONG );
-					}
-				}else{
-					auto_sensing_ready_flg = OFF;
-				}
-				s_unit.tick_auto_sensing_ready_1sec = 0;
+				adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+				user_main_calc_data_set_kyokyu_ibiki();
+//						evt_act( EVENT_POW_SW_LONG );
+				s_unit.tick_auto_sensing_ready_10ms = 0;
 			}
 		}else{
 			/* 20秒周期でポーリング */
@@ -580,8 +567,9 @@ void user_main_timer_cyc( void )
 				{
 					/* 装着センサ反応あり */
 					auto_sensing_ready_flg = ON;
-					auto_sensing_ready_cnt = 0;
-					s_unit.tick_auto_sensing_ready_1sec = 0;
+					s_unit.tick_auto_sensing_ready_10ms = 0;
+					s_unit.kokyu_cnt = 0;
+					s_unit.ibiki_cnt = 0;
 				}
 				s_unit.tick_auto_sensing_ready_20sec = 0;
 			}
@@ -715,28 +703,39 @@ STATIC void user_main_calc_data_set_kyokyu_ibiki( void )
 {
 	uint8_t *ke_msg;
 	
-	if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
-		s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
-	}
-	if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
-		s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
-	}
-	
-	// データフルで演算呼出
-	if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
-		s_unit.suppress_start_cnt++;
+	if(s_unit.system_mode == SYSTEM_MODE_SENSING){
+		if( s_unit.kokyu_cnt < MEAS_KOKYU_CNT_MAX ){
+			s_unit.kokyu_val[s_unit.kokyu_cnt] = s_unit.meas.info.dat.kokyu_val;
+		}
+		if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
+			s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
+		}
 		
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
-	}
+		// データフルで演算呼出
+		if( s_unit.kokyu_cnt >= ( DATA_SIZE - 1 )){
+			s_unit.suppress_start_cnt++;
+			
+			ke_msg = ke_msg_alloc( USER_MAIN_CALC_KOKYU, USER_MAIN_ID, USER_MAIN_ID, 0 );
+			ke_msg_send(ke_msg);
+		}
 
-	if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
-		ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
-		ke_msg_send(ke_msg);
+		if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
+			ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
+			ke_msg_send(ke_msg);
+		}
+		
+		INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );
+		INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );
+	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
+		if( s_unit.ibiki_cnt < MEAS_IBIKI_CNT_MAX ){
+			s_unit.ibiki_val[s_unit.ibiki_cnt] = s_unit.meas.info.dat.ibiki_val;
+		}
+		if( s_unit.ibiki_cnt >= ( DATA_SIZE - 1 )){
+			ke_msg = ke_msg_alloc( USER_MAIN_CALC_IBIKI, USER_MAIN_ID, USER_MAIN_ID, 0 );
+			ke_msg_send(ke_msg);
+		}
+		INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );
 	}
-	
-	INC_MAX( s_unit.kokyu_cnt, MEAS_KOKYU_CNT_MAX );
-	INC_MAX( s_unit.ibiki_cnt, MEAS_IBIKI_CNT_MAX );
 
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -1248,6 +1247,8 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
+	
+	calc_snore_init();
 	
 	// 日時情報取得
 	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
@@ -3300,113 +3301,114 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	UB	set_kokyu_mask = 0x02;
 	UB	bit_shift = 0;
 	
-	// 10秒間の平均値
-	for(ii=0;ii<s_unit.ibiki_cnt;++ii){
-		average += s_unit.ibiki_val[ii];
-	}
-	average = average / s_unit.ibiki_cnt;
-	
-	// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
-	s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( average >> 2 ) & 0xff );
-
-	// いびき演算
-	calc_snore_proc(&s_unit.ibiki_val[0]);
-	newstate = calc_snore_get();
-	
-	if(suppress_max_cnt_over_flg == ON)
-	{// 抑制動作最大時間オーバー時
-		s_unit.suppress_max_time_interval_cnt++;
-		if( suppressIntervalCnt <= s_unit.suppress_max_time_interval_cnt )
-		{// 抑制動作最大時間オーバー時のインターバル満了
-			suppress_max_cnt_over_flg = OFF;
-			s_unit.suppress_max_time_interval_cnt = 0;
-			s_unit.suppress_cont_time_cnt = 0;
+	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
+	{
+		// 10秒間の平均値
+		for(ii=0;ii<s_unit.ibiki_cnt;++ii){
+			average += s_unit.ibiki_val[ii];
 		}
-	}
-	
-	bit_shift = s_unit.phase_ibiki * 2;
-	if(newstate == SNORE_ON){
-		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-		if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
-		{//抑制モード（いびき + 無呼吸）か抑制モード（いびき）ならバイブレーション動作
-			if((s_unit.suppress_cont_time_cnt + 1) <= suppress_max_cnt)
-			{//抑制動作最大時間以下
-				if(suppress_max_cnt_over_flg == OFF)
-				{//抑制動作最大時間オーバー時以外
-					if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
-					{// 抑制開始時間経過（センシング開始から20分）
-						s_unit.suppress_cont_time_cnt++;
-						if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
-						{
-							set_vib_level(vib_level);
-							vib_level++;
-							if(vib_level > VIB_LEVEL_12)
-							{
-								vib_level = VIB_LEVEL_9;
-							}
-						}
-						vib_startflg = true;
-//						set_vib(set_vib_mode(vib_power));
-					}
-				}
-			} else {
-				//抑制動作最大時間オーバー時にフラグON
-				suppress_max_cnt_over_flg = ON;
+		average = average / s_unit.ibiki_cnt;
+		
+		// AD値10bitデータを2bitシフトして上位8bitのみを保存する(下位2bitは誤差範囲で問題なし)
+		s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( average >> 2 ) & 0xff );
+
+		// いびき演算
+		calc_snore_proc(&s_unit.ibiki_val[0]);
+		newstate = calc_snore_get();
+		
+		if(suppress_max_cnt_over_flg == ON)
+		{// 抑制動作最大時間オーバー時
+			s_unit.suppress_max_time_interval_cnt++;
+			if( suppressIntervalCnt <= s_unit.suppress_max_time_interval_cnt )
+			{// 抑制動作最大時間オーバー時のインターバル満了
+				suppress_max_cnt_over_flg = OFF;
+				s_unit.suppress_max_time_interval_cnt = 0;
+				s_unit.suppress_cont_time_cnt = 0;
 			}
 		}
-	}else{
-		s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
-		s_unit.suppress_cont_time_cnt = 0;	// 初期化
-		if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
-		{
-			if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
-			{// 抑制モード（いびき + 無呼吸）の場合
-				if( ((s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask) == 0x00 )
-				{// 無呼吸判定チェック
-					// 無呼吸判定もされていない場合バイブレベルを初期化
+		
+		bit_shift = s_unit.phase_ibiki * 2;
+		if(newstate == SNORE_ON){
+			s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
+			if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA || act_mode == ACT_MODE_SUPPRESS_SNORE)
+			{//抑制モード（いびき + 無呼吸）か抑制モード（いびき）ならバイブレーション動作
+				if((s_unit.suppress_cont_time_cnt + 1) <= suppress_max_cnt)
+				{//抑制動作最大時間以下
+					if(suppress_max_cnt_over_flg == OFF)
+					{//抑制動作最大時間オーバー時以外
+						if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
+						{// 抑制開始時間経過（センシング開始から20分）
+							s_unit.suppress_cont_time_cnt++;
+							if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+							{
+								set_vib_level(vib_level);
+								vib_level++;
+								if(vib_level > VIB_LEVEL_12)
+								{
+									vib_level = VIB_LEVEL_9;
+								}
+							}
+							vib_startflg = true;
+	//						set_vib(set_vib_mode(vib_power));
+						}
+					}
+				} else {
+					//抑制動作最大時間オーバー時にフラグON
+					suppress_max_cnt_over_flg = ON;
+				}
+			}
+		}else{
+			s_unit.calc.info.dat.state &= ~(set_ibiki_mask << bit_shift);		// いびき状態OFF
+			s_unit.suppress_cont_time_cnt = 0;	// 初期化
+			if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+			{
+				if(act_mode == ACT_MODE_SUPPRESS_SNORE_APNEA)
+				{// 抑制モード（いびき + 無呼吸）の場合
+					if( ((s_unit.calc.info.dat.state >> bit_shift) & set_kokyu_mask) == 0x00 )
+					{// 無呼吸判定チェック
+						// 無呼吸判定もされていない場合バイブレベルを初期化
+						vib_level = VIB_LEVEL_1;
+					}
+				} else if(act_mode == ACT_MODE_SUPPRESS_SNORE)
+				{// 抑制モード（いびき）の場合
 					vib_level = VIB_LEVEL_1;
 				}
-			} else if(act_mode == ACT_MODE_SUPPRESS_SNORE)
-			{// 抑制モード（いびき）の場合
-				vib_level = VIB_LEVEL_1;
 			}
 		}
-	}
-	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
-	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
-		s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
-		s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
-	}
-	
-	// いびき検知数更新
-	if( ((s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask) == set_ibiki_mask ){
-		s_unit.ibiki_detect_cnt++;
-		
-		// いびき発生検知回数
-		if(s_unit.ibiki_state_flg == OFF){
-			s_unit.ibiki_state_flg = ON;
-			s_unit.ibiki_chg_detect_cnt++;
+		// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
+		if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
+			s_unit.calc.info.dat.state &= ~(set_kokyu_mask << bit_shift);		// 無呼吸状態OFF
+			s_unit.calc.info.dat.state |= (set_ibiki_mask << bit_shift);		// いびき状態ON
 		}
-	}else{
-		s_unit.ibiki_state_flg = OFF;
+		
+		// いびき検知数更新
+		if( ((s_unit.calc.info.dat.state >> bit_shift) & set_ibiki_mask) == set_ibiki_mask ){
+			s_unit.ibiki_detect_cnt++;
+			
+			// いびき発生検知回数
+			if(s_unit.ibiki_state_flg == OFF){
+				s_unit.ibiki_state_flg = ON;
+				s_unit.ibiki_chg_detect_cnt++;
+			}
+		}else{
+			s_unit.ibiki_state_flg = OFF;
+		}
+		
+		s_unit.phase_ibiki++;
+		if(s_unit.phase_ibiki >= SEC_PHASE_NUM){
+			s_unit.phase_ibiki = SEC_PHASE_0_10;
+			snore_data_max = true;
+		}	
+	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
+		// 待機モード
+		// 呼吸演算
+		calc_breath_proc(&s_unit.ibiki_val[0]);
+		newstate = calc_breath_get();
+		if(newstate == BREATH_ON){
+			evt_act( EVENT_POW_SW_LONG );
+		}
 	}
-	
-	s_unit.phase_ibiki++;
-	if(s_unit.phase_ibiki >= SEC_PHASE_NUM){
-		s_unit.phase_ibiki = SEC_PHASE_0_10;
-		snore_data_max = true;
-	}	
-	
-#if 0	
-	// 移動累計とるので前のデータを残す
-	for(ii=0;ii<size;++ii){
-		s_unit.ibiki_val[ii] = s_unit.ibiki_val[DATA_SIZE-size+ii];
-	}
-	s_unit.ibiki_cnt = size;
-#else
 	s_unit.ibiki_cnt = 0;
-#endif
-	
 #else
 	//デバッグ用ダミー処理
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
