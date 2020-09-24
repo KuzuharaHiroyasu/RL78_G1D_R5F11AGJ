@@ -499,6 +499,7 @@ typedef struct{
 	MEAS meas;				/* 計測値(50ms) */
 	UH acl_timing;
 	UH photosens_remove_cnt;
+	UH photosens_remove_led_time;
 	
 	// 
 	UB ble_state;			// BLE管理状態
@@ -688,6 +689,8 @@ typedef struct{
 
 #define I2C_WAIT		255					// スタートコンディション待ち ※200us程度なので最大値を設定しておく
 
+#define PHOTO_REMOVE_TIMING_VAL 20			// 接触センサーが外れていた時のLEDの点滅間隔（50ms × 20 = 1000ms = 1秒）
+
 // レジスタアドレス
 #define ACL_REG_ADR_WHO_AM_I			0x0F				// WHO AM I
 #define ACL_REG_ADR_DATA_XYZ			0x06				// XOUT,YOUT,ZOUT
@@ -707,7 +710,7 @@ typedef struct{
 
 // フォトセンサ
 #define PHOTO_SENSOR_WEARING_AD			100		// 装着判定AD閾値
-#define PHOTO_SENSOR_REMOVE_CNT			2		// 10秒毎なので 6 * 30 = 180 (30分)
+#define PHOTO_SENSOR_REMOVE_CNT			3		// 10秒毎なので 6 * 30 = 180 (30分)
 
 // 抑制開始カウント(デフォルト)
 #define SUPPRESS_START_CNT				20		// センシング開始20分間は抑制しない 20min

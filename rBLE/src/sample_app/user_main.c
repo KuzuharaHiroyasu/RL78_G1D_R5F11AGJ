@@ -511,14 +511,6 @@ void user_main_timer_cyc( void )
 					s_unit.meas.info.dat.photoref_val = main_photo_read();
 					
 					acl_photo_sens_read_flg = ON;
-					
-					if( bat_check_flg != true )
-					{
-						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
-						{// 装着していないと判定したらLED点灯
-							set_led( LED_PATT_GREEN_BLINK_SENSING );
-						}
-					}
 				}
 				
 				// センサー値取得5秒後にリセット
@@ -526,14 +518,18 @@ void user_main_timer_cyc( void )
 				{
 					s_unit.acl_timing = 0;
 					acl_photo_sens_read_flg = OFF;
-					if( bat_check_flg != true )
-					{
-						if(s_unit.meas.info.dat.photoref_val <= PHOTO_SENSOR_WEARING_AD)
-						{// 装着していないと判定したらLED点灯
-							set_led( LED_PATT_GREEN_BLINK_SENSING );
-						}
-					}
 				}
+			}
+			
+			s_unit.photosens_remove_led_time++;
+			// 1秒間隔
+			if(s_unit.photosens_remove_led_time > PHOTO_REMOVE_TIMING_VAL)
+			{
+				if(main_photo_read() <= PHOTO_SENSOR_WEARING_AD)
+				{// 装着していないと判定したらLED点灯
+					set_led( LED_PATT_GREEN_BLINK_SENSING );
+				}
+				s_unit.photosens_remove_led_time = 0;
 			}
 			
 			//充電検知
@@ -1314,6 +1310,7 @@ STATIC void user_main_mode_sensing_before( void )
 	s_unit.ibiki_detect_cnt_decided = 0;
 	s_unit.mukokyu_detect_cnt_decided = 0;
 	s_unit.suppress_start_cnt = 0;
+	s_unit.photosens_remove_led_time = 0;
 	
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
