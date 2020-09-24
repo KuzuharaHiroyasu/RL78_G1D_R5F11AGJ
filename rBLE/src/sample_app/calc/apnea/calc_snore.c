@@ -143,7 +143,7 @@ void calc_breath_proc(const UH *pData)
 		thresholds_over_num[ii] = 0;
 		size = ii+SNORE_PARAM_SIZE;
 		for(jj=ii;jj<size;++jj){
-			if(pData[jj] >= 100){
+			if(pData[jj] >= 50){
 				thresholds_over_num[ii] += 1;
 			}
 		}
@@ -152,7 +152,7 @@ void calc_breath_proc(const UH *pData)
 	while(pos < loop){
 		switch(SnoreFlg_){
 		case ON:
-			pos = proc_on(pos);
+			pos = proc_breath_on(pos);
 			break;
 		case OFF:
 			pos = proc_off(pos);
