@@ -168,6 +168,7 @@ UB kokyu_val_off_flg = OFF;
 static UB sw_power_off_flg = OFF;
 static UB sw_power_off_ope_flg = OFF;
 static int diagScanDataSendCnt = 0;
+static int apnea_3cnt = 0;
 
 static UB auto_sensing_ready_flg = OFF;
 
@@ -1359,6 +1360,8 @@ STATIC void user_main_mode_sensing_before( void )
 	set_ble_isconnect(false);
 	
 	vib_start_limit_cnt = 0;
+	
+	apnea_3cnt = 0;
 	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
@@ -3213,17 +3216,23 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
-				if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+				if(apnea_3cnt >= 2)
 				{
-					set_vib_level(vib_level);
-					vib_level++;
-					if(vib_level > VIB_LEVEL_12)
+					if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 					{
-						vib_level = VIB_LEVEL_9;
+						set_vib_level(vib_level);
+						vib_level++;
+						if(vib_level > VIB_LEVEL_12)
+						{
+							vib_level = VIB_LEVEL_9;
+						}
 					}
+					set_vib(set_vib_mode(vib_power));
+					set_kokyu_val_off(ON);
+					apnea_3cnt = 0;
+				}else{
+					apnea_3cnt++;
 				}
-				set_vib(set_vib_mode(vib_power));
-				set_kokyu_val_off(ON);
 			}
 		}
 	}else{
@@ -3232,6 +3241,7 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		{// 抑制モード（無呼吸）の場合
 			vib_level = VIB_LEVEL_1;
 		}
+		apnea_3cnt = 0;
 	}
 	// もし、いびきも無呼吸もどちらもセットされたらいびきを優先するため、いびき状態とする
 	if( ((s_unit.calc.info.dat.state >> bit_shift) & 0x03) == 0x03 ){
