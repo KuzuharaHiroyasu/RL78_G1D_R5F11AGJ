@@ -36,6 +36,7 @@ static UB	BreathState_;		// 呼吸
 static UH	snore_sens = SNORE_PARAM_THRE_DURING;	// いびき感度
 static UB	snoreJudgeOnFlg_;	// いびき判定ONフラグ
 static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
+static UH	breath_thre = 50;
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -143,7 +144,7 @@ void calc_breath_proc(const UH *pData)
 		thresholds_over_num[ii] = 0;
 		size = ii+SNORE_PARAM_SIZE;
 		for(jj=ii;jj<size;++jj){
-			if(pData[jj] >= 50){
+			if(pData[jj] >= breath_thre){
 				thresholds_over_num[ii] += 1;
 			}
 		}
@@ -421,6 +422,13 @@ UB calc_breath_get(void)
 {
 	return BreathState_;
 }
+
+void set_breath_thre(UH thresh)
+{
+	breath_thre = thresh;
+}
+
+
 
 /************************************************************************/
 /* 関数     : set_snore_thre											*/

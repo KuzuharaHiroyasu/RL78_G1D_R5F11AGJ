@@ -548,10 +548,17 @@ void user_main_timer_cyc( void )
 		{
 			if(s_unit.tick_auto_sensing_ready_10ms >= (uint16_t)PERIOD_50MSEC)
 			{
-				adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-				user_main_calc_data_set_kyokyu_ibiki();
-//						evt_act( EVENT_POW_SW_LONG );
-				s_unit.tick_auto_sensing_ready_10ms = 0;
+				s_unit.meas.info.dat.photoref_val = main_photo_read();
+				/* 装着センサ判定 */
+				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
+				{
+					adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+					user_main_calc_data_set_kyokyu_ibiki();
+	//						evt_act( EVENT_POW_SW_LONG );
+					s_unit.tick_auto_sensing_ready_10ms = 0;
+				}else{
+					auto_sensing_ready_flg = OFF;
+				}
 			}
 		}else{
 			/* 20秒周期でポーリング */
@@ -1243,6 +1250,8 @@ STATIC void user_main_mode_sensing_before( void )
 {
 	UW wr_adrs = 0;
 	rtc_counter_value_t rtc_val;
+	
+	auto_sensing_ready_flg = OFF;
 	
 	calc_snore_init();
 	
@@ -3403,6 +3412,8 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		newstate = calc_breath_get();
 		if(newstate == BREATH_ON){
 			evt_act( EVENT_POW_SW_LONG );
+		}else{
+//			auto_sensing_ready_flg = OFF;
 		}
 	}
 	s_unit.ibiki_cnt = 0;
@@ -3938,21 +3949,25 @@ void main_set_battery(void)
 /************************************************************************/
 static void set_suppress_cnt_time(UB suppress_max_time)
 {
+	UH thre;
+	
 	switch(suppress_max_time)
 	{
 	case SET_MAX_SUPPRESS_CONT_5_MIN:
-		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_5_MIN_CNT;
+		thre = BREATH_THRE_1;
 		break;
 	case SET_MAX_SUPPRESS_CONT_10_MIN:
-		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
+		thre = BREATH_THRE_2;
 		break;
 	case SET_MAX_SUPPRESS_CONT_NON:
-		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_NON_CNT;
+		thre = BREATH_THRE_3;
 		break;
 	default:
-		suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
+		thre = BREATH_THRE_1;
 		break;
 	}
+	
+	set_breath_thre(thre);
 }
 #endif
 

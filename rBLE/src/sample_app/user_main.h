@@ -189,6 +189,11 @@ typedef enum{
 #define		SUPPRESS_INTERVAL_CNT_5_MIN			30		// 10•b–ˆ 1•ª(6) * 5  = 30‰ñ = 5•ª
 #define		SUPPRESS_INTERVAL_CNT_10_MIN		60		// 10•b–ˆ 1•ª(6) * 10 = 60‰ñ = 10•ª
 
+// ŒÄ‹zè‡’l
+#define BREATH_THRE_1					50
+#define BREATH_THRE_2					100
+#define BREATH_THRE_3					150
+
 // ‘ª’èŒÂ”
 #define		MEAS_KOKYU_CNT_MAX			200
 #define		MEAS_IBIKI_CNT_MAX			200
