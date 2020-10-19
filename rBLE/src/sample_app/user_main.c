@@ -3229,7 +3229,6 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 					}
 					set_vib(set_vib_mode(vib_power));
 					set_kokyu_val_off(ON);
-					apnea_3cnt = 0;
 				}else{
 					apnea_3cnt++;
 				}
