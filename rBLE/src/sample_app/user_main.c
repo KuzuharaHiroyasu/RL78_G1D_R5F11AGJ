@@ -574,6 +574,7 @@ void user_main_timer_cyc( void )
 					s_unit.tick_auto_sensing_ready_10ms = 0;
 					s_unit.kokyu_cnt = 0;
 					s_unit.ibiki_cnt = 0;
+					calc_snore_init();
 				}
 				s_unit.tick_auto_sensing_ready_20sec = 0;
 			}
@@ -1325,7 +1326,7 @@ STATIC void user_main_mode_sensing_before( void )
 	// センサー取得データをクリア
 	memset(s_unit.kokyu_val, 0, MEAS_KOKYU_CNT_MAX);
 	memset(s_unit.ibiki_val, 0, MEAS_IBIKI_CNT_MAX);
-	Reset();
+	Reset(CALC_TYPE_SNORE);
 	
 	s_unit.kokyu_cnt = 0;
 	s_unit.ibiki_cnt = 0;
@@ -3328,7 +3329,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 		s_unit.calc.info.dat.ibiki_val[s_unit.phase_ibiki] = (UB)(( average >> 2 ) & 0xff );
 
 		// いびき演算
-		calc_snore_proc(&s_unit.ibiki_val[0]);
+		calc_proc(&s_unit.ibiki_val[0], CALC_TYPE_SNORE);
 		newstate = calc_snore_get();
 		
 		if(suppress_max_cnt_over_flg == ON)
@@ -3417,7 +3418,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
 		// 待機モード
 		// 呼吸演算
-		calc_breath_proc(&s_unit.ibiki_val[0]);
+		calc_proc(&s_unit.ibiki_val[0], CALC_TYPE_BREATH);
 		newstate = calc_breath_get();
 		if(newstate == BREATH_ON){
 			evt_act( EVENT_POW_SW_LONG );
@@ -3442,7 +3443,7 @@ static int_t main_calc_ibiki(ke_msg_id_t const msgid, void const *param, ke_task
 static UB main_calc_ibiki( void)
 {
 	// いびき演算
-	calc_snore_proc(&s_unit.ibiki_val[0]);
+	calc_snore_proc(&s_unit.ibiki_val[0], CALC_TYPE_SNORE);
 	return calc_snore_get();
 }
 #endif

@@ -24,16 +24,22 @@ typedef enum{
 	SNORE_SENS_MAX
 }SNORE_SENS;
 
+typedef enum{
+	CALC_TYPE_SNORE = 0,
+	CALC_TYPE_BREATH,
+	CALC_TYPE_MAX
+}CALC_TYPE;
+
 /************************************************************/
 /*					äOïîéQè∆êÈåæ							*/
 /************************************************************/
 extern void	calc_snore_init(void);
-extern void	calc_snore_proc(const UH *pData);
-extern void	calc_breath_proc(const UH *pData);
+extern void	calc_proc(const UH *pData, UB calc_type);
 extern UB	calc_snore_get(void);
-extern UB	calc_breath_get(void);
 extern void set_snore_sens( UB sens );
-extern void Reset(void);
+extern void Reset(UB calc_type);
+
+extern UB	calc_breath_get(void);
 extern void set_breath_thre(UH thresh);
 
 #endif	/*_CALC_SNORE_H_*/
