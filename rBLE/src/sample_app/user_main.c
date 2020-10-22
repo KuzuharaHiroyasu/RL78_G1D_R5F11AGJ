@@ -1865,7 +1865,7 @@ STATIC void user_main_mode_self_check( void )
 	{
 		if( s_unit.self_check.eep_cnt < EEP_PAGE_CNT_MAX )
 		{
-			eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+			eep_write( (UW)s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
 			INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		}
 		if( s_unit.self_check.eep_cnt == EEP_PAGE_CNT_MAX )
@@ -1875,7 +1875,7 @@ STATIC void user_main_mode_self_check( void )
 		}
 	}else if( DIAG_SEQ_EEP_END == s_unit.self_check.seq )
 	{
-		eep_read( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
+		eep_read( (UW)s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, &read_eep[0], EEP_ACCESS_ONCE_SIZE );
 		INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		if( 0 != memcmp( &s_eep_page0_tbl[0], &read_eep[0], EEP_ACCESS_ONCE_SIZE ) ){
 			tx[0] = VUART_CMD_DIAG_EEPROM;
