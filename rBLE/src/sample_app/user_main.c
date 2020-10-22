@@ -1904,7 +1904,7 @@ STATIC void user_main_mode_self_check( void )
 	{
 		if(s_unit.self_check.eep_cnt < EEP_PAGE_CNT_MAX)
 		{
-			eep_write( s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
+			eep_write( (UW)s_unit.self_check.eep_cnt * EEP_ACCESS_ONCE_SIZE, (UB*)&s_eep_page0_tbl, EEP_ACCESS_ONCE_SIZE, ON );
 			INC_MAX( s_unit.self_check.eep_cnt, EEP_PAGE_CNT_MAX );
 		}
 	}
@@ -2192,6 +2192,8 @@ STATIC SYSTEM_MODE evt_self_check( int evt)
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SELF_CHECK;
 	
 	s_unit.self_check.seq = DIAG_SEQ_START;
+	
+	s_unit.self_check.eep_cnt = 0;
 	
 	return system_mode;
 }
