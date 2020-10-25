@@ -37,7 +37,7 @@ static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
 
 static B	BreathTime_[RIREKI_BREATH];
 static UB	BreathState_;		// 呼吸
-static UH	breath_thre = 50;
+static UH	breath_thre = 100;
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
