@@ -3216,17 +3216,20 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 		{//抑制モード（いびき + 無呼吸）か抑制モード（無呼吸）ならバイブレーション動作
 			if(s_unit.suppress_start_cnt >= (suppress_start_time * 6))
 			{// 抑制開始時間経過（センシング開始から20分）
-				if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
-				{
-					set_vib_level(vib_level);
-					vib_level++;
-					if(vib_level > VIB_LEVEL_12)
+				if(s_unit.meas.info.dat.photoref_val >= PHOTO_SENSOR_WEARING_AD)
+				{// 装着センサー反応している場合振動する
+					if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 					{
-						vib_level = VIB_LEVEL_9;
+						set_vib_level(vib_level);
+						vib_level++;
+						if(vib_level > VIB_LEVEL_12)
+						{
+							vib_level = VIB_LEVEL_9;
+						}
 					}
+					set_vib(set_vib_mode(vib_power));
+					set_kokyu_val_off(ON);
 				}
-				set_vib(set_vib_mode(vib_power));
-				set_kokyu_val_off(ON);
 			}
 		}
 	}else{
