@@ -22,7 +22,7 @@ static void Judge(UB calc_type);
 /* 定数定義													*/
 /************************************************************/
 #define RIREKI				3
-#define RIREKI_BREATH		3
+#define RIREKI_BREATH		2
 
 /************************************************************/
 /* 変数定義													*/
@@ -37,7 +37,7 @@ static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
 
 static B	BreathTime_[RIREKI_BREATH];
 static UB	BreathState_;		// 呼吸
-static UH	breath_thre = 100;
+static UH	breath_thre = 50;
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
