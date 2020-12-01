@@ -38,6 +38,7 @@ static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
 static B	BreathTime_[RIREKI_BREATH];
 static UB	BreathState_;		// 呼吸
 static UH	breath_thre = 50;
+static UB	breathOverCnt = 0;
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -57,6 +58,7 @@ void calc_snore_init(void)
 	
 	SnoreFlg_ = OFF;
 	SnoreCnt_ = 0;
+	breathOverCnt = 0;
 	SnoreState_ = SNORE_OFF;
 	BreathState_ = BREATH_OFF;
 	snoreJudgeOnFlg_ = OFF;
@@ -196,15 +198,35 @@ static int proc_off(int Pos, UB calc_type)
 	int ii;
 	int loop = DATA_SIZE - SNORE_PARAM_SIZE;
 	int pos = loop;
+	int onCnt = SNORE_PARAM_ON_CNT;
+	
+	if(calc_type == CALC_TYPE_BREATH)
+	{
+		onCnt = SNORE_PARAM_ON_CNT_BREATH;
+	}
 	
 	// ON確定している場所を特定する
 	for(ii=Pos;ii<loop;++ii){
-		if(thresholds_over_num[ii] >= SNORE_PARAM_ON_CNT){
-			SnoreFlg_ = ON;
-			SnoreCnt_ = 0;
-			pos = ii;
-			break;
+		if(thresholds_over_num[ii] >= onCnt){
+			if(calc_type == CALC_TYPE_BREATH)
+			{
+				breathOverCnt++;
+				if(breathOverCnt >= BREATH_OVER_CNT)
+				{
+					breathOverCnt = 0;
+					SnoreFlg_ = ON;
+					SnoreCnt_ = 0;
+					pos = ii;
+					break;
+				}
+			}else{
+				SnoreFlg_ = ON;
+				SnoreCnt_ = 0;
+				pos = ii;
+				break;
+			}
 		}else{
+			breathOverCnt = 0;
 			SnoreCnt_ += 1;
 			if(SnoreCnt_ >= SNORE_PARAM_NORMAL_CNT){
 				Reset(calc_type);
