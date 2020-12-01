@@ -55,8 +55,6 @@
 #define SNORE_PARAM_NORMAL_CNT			(80)
 // ‹–—eŒë· 0.4s
 #define SNORE_PARAM_GOSA				(8)
-// ON”»’è‰ñ”(ŒÄ‹z)‚Ì˜A‘±”
-#define BREATH_OVER_CNT					(7)
 #endif
 
 /************************************************************/
