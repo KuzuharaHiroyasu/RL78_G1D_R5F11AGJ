@@ -22,9 +22,7 @@ static void Judge(UB calc_type);
 /* 定数定義													*/
 /************************************************************/
 #define RIREKI				3
-#define RIREKI_BREATH		3
-
-#define BREATH_THRE			50
+#define RIREKI_BREATH		2
 
 /************************************************************/
 /* 変数定義													*/
@@ -39,7 +37,7 @@ static UB	judgeSkipFlg_;	// いびき判定スキップフラグ
 
 static B	BreathTime_[RIREKI_BREATH];
 static UB	BreathState_;		// 呼吸
-static UH	breath_thre = BREATH_THRE;
+static UH	breath_thre = 100;
 
 /************************************************************************/
 /* 関数     : calculator_apnea											*/
@@ -198,10 +196,16 @@ static int proc_off(int Pos, UB calc_type)
 	int ii;
 	int loop = DATA_SIZE - SNORE_PARAM_SIZE;
 	int pos = loop;
+	int onCnt = SNORE_PARAM_ON_CNT;
+	
+	if(calc_type == CALC_TYPE_BREATH)
+	{
+		onCnt = SNORE_PARAM_ON_CNT_BREATH;
+	}
 	
 	// ON確定している場所を特定する
 	for(ii=Pos;ii<loop;++ii){
-		if(thresholds_over_num[ii] >= SNORE_PARAM_ON_CNT){
+		if(thresholds_over_num[ii] >= onCnt){
 			SnoreFlg_ = ON;
 			SnoreCnt_ = 0;
 			pos = ii;

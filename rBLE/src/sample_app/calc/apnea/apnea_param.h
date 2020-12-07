@@ -39,8 +39,10 @@
 // 新いびき演算向け ---------------------------------------
 // 判定向け観測回数
 #define SNORE_PARAM_SIZE				(10)
-// ON判定回数
+// ON判定回数(いびき)
 #define SNORE_PARAM_ON_CNT				(8)
+// ON判定回数(呼吸)
+#define SNORE_PARAM_ON_CNT_BREATH		(10)
 // OFF判定回数
 #define SNORE_PARAM_OFF_CNT				(0)
 // いびき閾値[感度：弱]
