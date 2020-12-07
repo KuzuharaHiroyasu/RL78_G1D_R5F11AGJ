@@ -21,9 +21,11 @@ bool		confirm_flg = false;
 
 // プロトタイプ宣言
 STATIC void set_vib_repeat(VIB_MODE mode);
+#if 0
 STATIC void vib_mode_weak(UH vib_timer);
 STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
+#endif
 STATIC void vib_mode_during_repeat(UH vib_timer);
 STATIC void vib_mode_strength_repeat(UH vib_timer);
 STATIC void vib_mode_gradually_stronger(UH vib_timer);
@@ -304,6 +306,7 @@ void vib_off(void)
 	VIB_ENA = 0;
 }
 
+#if 0
 /************************************************************************/
 /* 関数     : vib_mode_weak												*/
 /* 関数名   : バイブレーション弱制御									*/
@@ -399,6 +402,7 @@ STATIC void vib_mode_strength(UH vib_timer)
 		VIB_ENA = 1;
 	}	
 }
+#endif
 
 /************************************************************************/
 /* 関数     : vib_mode_during_repeat									*/

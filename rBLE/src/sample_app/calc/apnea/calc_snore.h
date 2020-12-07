@@ -40,7 +40,6 @@ extern void set_snore_sens( UB sens );
 extern void Reset(UB calc_type);
 
 extern UB	calc_breath_get(void);
-extern void set_breath_thre(UH thresh);
 
 #endif	/*_CALC_SNORE_H_*/
 /************************************************************/

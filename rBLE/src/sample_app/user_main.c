@@ -77,7 +77,9 @@ STATIC SYSTEM_MODE evt_idle_com_denchi( int evt);
 STATIC SYSTEM_MODE evt_sensing( int evt);
 #endif
 STATIC SYSTEM_MODE evt_sensing_chg( int evt);
+#if 0
 STATIC SYSTEM_MODE evt_bat_check( int evt);
+#endif
 #if 0
 STATIC SYSTEM_MODE evt_send_clear( int evt);
 #endif
@@ -145,7 +147,6 @@ static UH suppress_max_cnt = MAX_SUPPRESS_CONT_TIME_10_MIN_CNT;
 static UB suppress_start_time = SUPPRESS_START_CNT;
 static UB suppress_max_cnt_over_flg = OFF;
 static UB acl_photo_sens_read_flg = OFF;
-static bool bat_check_flg = false;
 static bool apnea_data_max = false;
 static bool snore_data_max = false;
 static bool acl_data_max = false;
@@ -2103,6 +2104,7 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 /************************************************************************/
 /* 注意事項 :なし														*/
 /************************************************************************/
+#if 0
 STATIC SYSTEM_MODE evt_bat_check( int evt)
 {
 	if(get_ble_isconnect() != true)
@@ -2115,12 +2117,10 @@ STATIC SYSTEM_MODE evt_bat_check( int evt)
 		} else if( s_unit.battery_sts == BAT_LEVEL_STS_LOW ) {
 			set_led( LED_PATT_GREEN_BLINK );
 		}
-#if FUNC_DEBUG_LOG != ON
-		bat_check_flg = true;
-#endif
 	}
 	return SYSTEM_MODE_NON;
 }
+#endif
 
 #if 0
 STATIC SYSTEM_MODE evt_send_clear( int evt)
@@ -3890,24 +3890,6 @@ void reset_vib_timer(void)
 void reset_led_timer(void)
 {
 	s_unit.tick_led_10ms_sec = 0;
-}
-
-/************************************************************************/
-/* 関数     : reset_bat_checkflg										*/
-/* 関数名   : 電池チェックフラグOFF										*/
-/* 引数     : なし														*/
-/* 戻り値   : なし														*/
-/* 変更履歴 : 2020.01.28 oneA 葛原 弘安	初版作成						*/
-/************************************************************************/
-/* 機能 : 																*/
-/************************************************************************/
-/* 注意事項 : なし														*/
-/************************************************************************/
-void reset_bat_checkflg(void)
-{
-#if FUNC_DEBUG_LOG != ON
-	bat_check_flg = false;
-#endif
 }
 
 /************************************************************************/
