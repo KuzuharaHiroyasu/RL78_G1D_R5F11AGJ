@@ -3624,8 +3624,20 @@ STATIC void user_main_eep_read_pow_on(void)
 	
 
 #if FUNC_DEBUG_LOG != ON
-	// 警告機能
-	eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
+	if((EEP_DATA_TYPE_NORMAL != eep_type) && (EEP_DATA_TYPE_PRG_G1D != eep_type)){
+		// 検査後の初回起動時
+		// 設定値に初期値を反映
+		s_unit.alarm.info.dat.act_mode = act_mode;
+		s_unit.alarm.info.dat.ibiki_sens = SNORE_SENS_DURING;
+		s_unit.alarm.info.dat.suppress_power = vib_power;
+		s_unit.alarm.info.dat.suppress_max_time = suppress_max_cnt;
+		s_unit.alarm.info.dat.suppress_start_time = suppress_start_time;
+		
+		eep_write( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE, ON );
+	}else{
+		// 設定値反映
+		eep_read( EEP_ADRS_TOP_ALARM, (UB*)&s_unit.alarm, EEP_ALARM_SIZE );
+	}
 
 	// 設定反映
 	// 動作モード設定
