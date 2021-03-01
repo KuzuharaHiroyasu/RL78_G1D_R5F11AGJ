@@ -472,6 +472,7 @@ typedef struct{
 	UW sec7_cnt;			//7秒カウント
 	UW sec600_cnt;			//10分カウント
 	UW sec10_led_cnt;		//LED用10秒カウント
+	UW secDemoVib_cnt;		//店頭デモ用バイブカウント
 	
 	UB get_mode_seq;				// GETモードシーケンス
 	UH get_mode_calc_cnt;

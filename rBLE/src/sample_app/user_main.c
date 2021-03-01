@@ -219,6 +219,8 @@ void codeptr app_evt_usr_2(void)
 #if FUNC_DEBUG_LOG != ON
 	uint8_t *ke_msg;
 #endif	
+	UB demo_vib_flg = OFF;
+
 	ke_evt_clear(KE_EVT_USR_2_BIT);
 	
 #if FUNC_DEBUG_LOG != ON
@@ -255,7 +257,8 @@ void codeptr app_evt_usr_2(void)
 	if( SYSTEM_MODE_SENSING != s_unit.system_mode ){
 		return;
 	}
-	
+
+/*
 	// フォトセンサー
 	if(s_unit.photosens_remove_cnt >= PHOTO_SENSOR_REMOVE_CNT)
 	{
@@ -308,6 +311,38 @@ void codeptr app_evt_usr_2(void)
 			snore_data_max = false;
 			acl_data_max = false;
 			photo_data_max = false;
+		}
+	}
+*/
+	if(act_mode != ACT_MODE_MONITOR)
+	{// モニタリングモード以外
+		s_unit.secDemoVib_cnt++;
+		if( suppress_start_time != 0 )
+		{
+			if( s_unit.secDemoVib_cnt >= (suppress_start_time * 60) ){
+				// 振動開始時間の設定毎
+				demo_vib_flg = ON;
+			}
+		}else{
+			if( s_unit.secDemoVib_cnt >= 30 ){
+				// 30秒毎
+				demo_vib_flg = ON;
+			}
+		}
+		
+		if(demo_vib_flg == ON)
+		{
+			if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+			{
+				set_vib_level(vib_level);
+				vib_level++;
+				if(vib_level > VIB_LEVEL_12)
+				{
+					vib_level = VIB_LEVEL_9;
+				}
+			}
+			set_vib(set_vib_mode(vib_power));
+			s_unit.secDemoVib_cnt = 0;
 		}
 	}
 	
@@ -448,6 +483,7 @@ void user_main_timer_cyc( void )
 #endif
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
+/*
 		// 50ms周期
 		if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
 #if FUNC_DEBUG_LOG == ON
@@ -543,6 +579,8 @@ void user_main_timer_cyc( void )
 #endif
 			s_unit.tick_10ms_new = 0;
 		}
+*/
+		
 	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
 		/* 自動測定判定 */
 		if(auto_sensing_ready_flg == ON)
@@ -1256,6 +1294,7 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	calc_snore_init();
 	
+/*
 	// 日時情報取得
 	if( MD_OK != R_RTC_Get_CounterValue( &rtc_val ) ){
 		err_info( ERR_ID_MAIN );
@@ -1303,7 +1342,7 @@ STATIC void user_main_mode_sensing_before( void )
 	// 抑制開始設定時間書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_DEVICE_SET_SUPPRESS_START_TIME;
 	eep_write( wr_adrs, &s_unit.suppress_start_time, EEP_DEVICE_SET_SUPPRESS_START_TIME_SIZE, ON );
-	
+*/
 	s_unit.calc_cnt = 0;
 	s_unit.ibiki_detect_cnt = 0;
 	s_unit.mukokyu_detect_cnt = 0;
