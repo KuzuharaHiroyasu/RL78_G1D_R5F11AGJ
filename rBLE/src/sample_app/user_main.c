@@ -314,36 +314,33 @@ void codeptr app_evt_usr_2(void)
 		}
 	}
 */
-	if(act_mode != ACT_MODE_MONITOR)
-	{// モニタリングモード以外
-		s_unit.secDemoVib_cnt++;
-		if( suppress_start_time != 0 )
-		{
-			if( s_unit.secDemoVib_cnt >= (suppress_start_time * 60) ){
-				// 振動開始時間の設定毎
-				demo_vib_flg = ON;
-			}
-		}else{
-			if( s_unit.secDemoVib_cnt >= 30 ){
-				// 30秒毎
-				demo_vib_flg = ON;
-			}
+	s_unit.secDemoVib_cnt++;
+	if( suppress_start_time != 0 )
+	{
+		if( s_unit.secDemoVib_cnt >= (suppress_start_time * 60) ){
+			// 振動開始時間の設定毎
+			demo_vib_flg = ON;
 		}
-		
-		if(demo_vib_flg == ON)
+	}else{
+		if( s_unit.secDemoVib_cnt >= 30 ){
+			// 30秒毎
+			demo_vib_flg = ON;
+		}
+	}
+	
+	if(demo_vib_flg == ON)
+	{
+		if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 		{
-			if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
+			set_vib_level(vib_level);
+			vib_level++;
+			if(vib_level > VIB_LEVEL_12)
 			{
-				set_vib_level(vib_level);
-				vib_level++;
-				if(vib_level > VIB_LEVEL_12)
-				{
-					vib_level = VIB_LEVEL_9;
-				}
+				vib_level = VIB_LEVEL_9;
 			}
-			set_vib(set_vib_mode(vib_power));
-			s_unit.secDemoVib_cnt = 0;
 		}
+		set_vib(set_vib_mode(vib_power));
+		s_unit.secDemoVib_cnt = 0;
 	}
 	
 #endif
