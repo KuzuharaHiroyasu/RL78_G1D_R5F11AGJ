@@ -554,7 +554,7 @@ void user_main_timer_cyc( void )
 					acl_photo_sens_read_flg = OFF;
 				}
 			}
-			
+*/			
 			s_unit.photosens_remove_led_time++;
 			// 1秒間隔
 			if(s_unit.photosens_remove_led_time > PHOTO_REMOVE_TIMING_VAL)
@@ -565,7 +565,7 @@ void user_main_timer_cyc( void )
 				}
 				s_unit.photosens_remove_led_time = 0;
 			}
-			
+/*			
 			//充電検知
 			bat = drv_i_port_bat_chg_detect();
 			if(bat == ON)
@@ -580,6 +580,7 @@ void user_main_timer_cyc( void )
 		
 	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
 		/* 自動測定判定 */
+#if 0
 		if(auto_sensing_ready_flg == ON)
 		{
 			if(s_unit.tick_auto_sensing_ready_10ms >= (uint16_t)PERIOD_50MSEC)
@@ -613,6 +614,7 @@ void user_main_timer_cyc( void )
 				s_unit.tick_auto_sensing_ready_20sec = 0;
 			}
 		}
+#endif
 	}
 	
 	// 20ms周期
@@ -2108,7 +2110,7 @@ STATIC SYSTEM_MODE evt_sensing( int evt)
 STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 {
 	SYSTEM_MODE system_mode = SYSTEM_MODE_SENSING;
-	UB bat = drv_i_port_bat_chg_detect();
+	UB bat = OFF;
 	
 	//電池残量確認
 	main_set_battery();
@@ -2117,7 +2119,7 @@ STATIC SYSTEM_MODE evt_sensing_chg( int evt)
 	{
 		// 電池残量なしなら移行しない
 		system_mode = SYSTEM_MODE_IDLE_COM;
-		set_led( LED_PATT_GREEN_BLINK_LOW_BATT );	
+		set_led( LED_PATT_GREEN_BLINK_LOW_BATT );
 	}
 	else if( bat == ON ){
 		// 充電中ならセンシングに移行しない
