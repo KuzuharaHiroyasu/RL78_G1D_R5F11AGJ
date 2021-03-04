@@ -315,21 +315,8 @@ void codeptr app_evt_usr_2(void)
 	}
 */
 	s_unit.secDemoVib_cnt++;
-	if( suppress_start_time != 0 )
-	{
-		if( s_unit.secDemoVib_cnt >= (suppress_start_time * 60) ){
-			// U“®ŠJŽnŽžŠÔ‚ÌÝ’è–ˆ
-			demo_vib_flg = ON;
-		}
-	}else{
-		if( s_unit.secDemoVib_cnt >= 30 ){
-			// 30•b–ˆ
-			demo_vib_flg = ON;
-		}
-	}
-	
-	if(demo_vib_flg == ON)
-	{
+	if( s_unit.secDemoVib_cnt >= 30 ){
+		// 30•b–ˆ
 		if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 		{
 			set_vib_level(vib_level);
