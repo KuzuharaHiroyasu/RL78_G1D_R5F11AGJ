@@ -320,13 +320,8 @@ void codeptr app_evt_usr_2(void)
 		if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 		{
 			set_vib_level(vib_level);
-			vib_level++;
-			if(vib_level > VIB_LEVEL_12)
-			{
-				vib_level = VIB_LEVEL_9;
-			}
 		}
-		set_vib(set_vib_mode(vib_power));
+		set_vib_confirm(set_vib_mode(vib_power));
 		s_unit.secDemoVib_cnt = 0;
 	}
 	
@@ -467,9 +462,9 @@ void user_main_timer_cyc( void )
 #endif
 	if(s_unit.system_mode == SYSTEM_MODE_SENSING)
 	{
-/*
 		// 50msŽüŠú
 		if(s_unit.tick_10ms_new >= (uint16_t)PERIOD_50MSEC){
+/*
 #if FUNC_DEBUG_LOG == ON
 			char dbg_tx_data[50] = {0};
 			int dbg_len;
@@ -561,10 +556,9 @@ void user_main_timer_cyc( void )
 				evt_act( EVENT_CHG_PORT_ON );
 			}
 #endif
+*/
 			s_unit.tick_10ms_new = 0;
 		}
-*/
-		
 	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
 		/* Ž©“®‘ª’è”»’è */
 #if 0
