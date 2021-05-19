@@ -749,6 +749,20 @@
       <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
       <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
     </Instance>
+    <Instance Guid="98407ce5-f1f9-4051-bf7b-3136649f586e">
+      <Name>r_timer.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\r_timer.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
+    </Instance>
+    <Instance Guid="5d4b729e-523c-43b5-b45e-cb5fe7edcdd9">
+      <Name>r_timer_user.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\rBLE\src\sample_app\r_timer_user.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>98637416-8be9-4a19-9cc0-5871b64c8475</ParentItem>
+    </Instance>
     <Instance Guid="5d87e470-1af1-4895-b3e3-12305348b912">
       <Name>apnea</Name>
       <Type>Category</Type>
@@ -1149,7 +1163,11 @@
       <SourceItemType53>CSource</SourceItemType53>
       <SourceItemGuid54>4ef1aa47-b5d5-4b49-baf9-58b73eb4e67e</SourceItemGuid54>
       <SourceItemType54>CSource</SourceItemType54>
-      <SourceItemCount>55</SourceItemCount>
+      <SourceItemGuid55>98407ce5-f1f9-4051-bf7b-3136649f586e</SourceItemGuid55>
+      <SourceItemType55>CSource</SourceItemType55>
+      <SourceItemGuid56>5d4b729e-523c-43b5-b45e-cb5fe7edcdd9</SourceItemGuid56>
+      <SourceItemType56>CSource</SourceItemType56>
+      <SourceItemCount>57</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="6bb7060d-7e24-4135-bd9b-7db166417523">
@@ -2209,6 +2227,14 @@ noCFG_PKTMON
       <ItemAddTime>637088068105130943</ItemAddTime>
       <ItemAddTimeCount>1</ItemAddTimeCount>
     </Instance>
+    <Instance Guid="98407ce5-f1f9-4051-bf7b-3136649f586e">
+      <ItemAddTime>637527865571636060</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="5d4b729e-523c-43b5-b45e-cb5fe7edcdd9">
+      <ItemAddTime>637527870288608623</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
     <Instance Guid="f782db2c-1c42-4ca1-af6a-53a3a5067217">
       <TimeTagModified-SourceItem0--0>-8587720036646824581</TimeTagModified-SourceItem0--0>
       <SourceItem0-IsLockedByUser>False</SourceItem0-IsLockedByUser>
@@ -2406,6 +2432,14 @@ noCFG_PKTMON
       <SourceItem54-IsLockedByUser>False</SourceItem54-IsLockedByUser>
       <SourceItem54-BuildingTarget-0>True</SourceItem54-BuildingTarget-0>
       <SourceItem54-IndividualCompileOption-0>False</SourceItem54-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem55--0>-8585844495283139748</TimeTagModified-SourceItem55--0>
+      <SourceItem55-IsLockedByUser>False</SourceItem55-IsLockedByUser>
+      <SourceItem55-BuildingTarget-0>True</SourceItem55-BuildingTarget-0>
+      <SourceItem55-IndividualCompileOption-0>False</SourceItem55-IndividualCompileOption-0>
+      <TimeTagModified-SourceItem56--0>-8585844490566167185</TimeTagModified-SourceItem56--0>
+      <SourceItem56-IsLockedByUser>False</SourceItem56-IsLockedByUser>
+      <SourceItem56-BuildingTarget-0>True</SourceItem56-BuildingTarget-0>
+      <SourceItem56-IndividualCompileOption-0>False</SourceItem56-IndividualCompileOption-0>
     </Instance>
     <Instance Guid="0b7e78c3-aadd-45ee-9f9d-ffac6141eeb2">
       <TimeTagModified-SourceItem9--0>-8587695222820463075</TimeTagModified-SourceItem9--0>

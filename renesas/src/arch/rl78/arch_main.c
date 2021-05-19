@@ -68,7 +68,7 @@ extern RBLE_STATUS RBLE_Application( void );
 
 //RD8001対応
 #include	"header.h"		//ユーザー定義
-
+#include "r_cg_timer.h"
 
 void arch_main_ent(void);
 void variables_init(void);
@@ -361,6 +361,8 @@ void arch_main_ent(void)
 	
 	//起動時電池残量取得
 	main_set_battery();
+	
+//	R_TAU0_Channel0_Start();
 	
     // And loop forever
     for (;;)

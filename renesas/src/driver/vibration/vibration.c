@@ -8,6 +8,7 @@
 
 #include	"header.h"				//ユーザー定義
 #include	"vibration.h"
+#include "r_cg_timer.h"
 
 // グローバル変数
 B			vib_repeat_value = 0;							// バイブ周回値
@@ -18,6 +19,7 @@ VIB_MODE	vib_mode = VIB_MODE_INITIAL;
 VIB_MODE	vib_last_mode = VIB_MODE_INITIAL;
 
 bool		confirm_flg = false;
+uint16_t temp_duty;
 
 // プロトタイプ宣言
 STATIC void set_vib_repeat(VIB_MODE mode);
@@ -282,10 +284,25 @@ STATIC void set_vib_repeat(VIB_MODE mode)
 /* 注意事項 : なし														*/
 /************************************************************************/
 void vib_on(void)
-{ 
+{
+	TOE0 |= _0080_TAU_CH7_OUTPUT_ENABLE;
+	TS0 |= _0001_TAU_CH0_START_TRG_ON | _0080_TAU_CH7_START_TRG_ON;
+	
 	// ON
 	VIB_CTL = 1;
 	VIB_ENA = 1;
+	
+	temp_duty = TDR07;			/* Read the current duty setting */
+	if(temp_duty >= _1900_TAU_TDR01_VALUE * 9)
+	{										/* If current duty is 90%, */
+		temp_duty = _1900_TAU_TDR01_VALUE;	/* Set duty factor to 10% */
+	}
+	else
+	{	/* Increase duty factor by 20% */
+		temp_duty += _1900_TAU_TDR01_VALUE;
+	}
+	TDR07 = temp_duty;			/* Set duty factor */
+	
 }
 
 /************************************************************************/
@@ -300,7 +317,10 @@ void vib_on(void)
 /* 注意事項 : なし														*/
 /************************************************************************/
 void vib_off(void)
-{ 
+{
+	TT0 |= _0001_TAU_CH0_STOP_TRG_ON | _0080_TAU_CH7_START_TRG_ON;
+	TOE0 &= ~_0080_TAU_CH7_OUTPUT_ENABLE;
+	
 	// OFF
 	VIB_CTL = 0;
 	VIB_ENA = 0;

@@ -51,7 +51,8 @@
 #include "port.h"
 #include "plf.h"
 #include "hw_config.h"
-
+#include "r_cg_timer.h"
+ 	
 /* CMC register settings(1/2) */
 #if defined(CLK_HOCO)
 /* High-speed on-chip oscillator */
@@ -436,6 +437,8 @@ _PLF_CODE void plf_init(const uint8_t plf_flg)
         //Configuration of Clock Output
         plf_clkoutput_init(plf_flg);
     }
+	
+   	R_TAU0_Create();
 
     return;
 }
