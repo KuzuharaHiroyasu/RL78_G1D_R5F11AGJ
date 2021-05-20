@@ -27,6 +27,12 @@ STATIC void vib_mode_during(UH vib_timer);
 STATIC void vib_mode_strength(UH vib_timer);
 #endif
 STATIC void vib_mode_during_repeat(UH vib_timer);
+STATIC void vib_mode_during_repeat_1(UH vib_timer);
+STATIC void vib_mode_during_repeat_2(UH vib_timer);
+STATIC void vib_mode_during_repeat_3(UH vib_timer);
+STATIC void vib_mode_during_repeat_4(UH vib_timer);
+STATIC void vib_mode_during_repeat_5(UH vib_timer);
+STATIC void vib_mode_during_repeat_6(UH vib_timer);
 STATIC void vib_mode_strength_repeat(UH vib_timer);
 STATIC void vib_mode_gradually_stronger(UH vib_timer);
 
@@ -64,23 +70,41 @@ void vib_start(UH vib_timer)
 			case VIB_MODE_OFF:	// OFF(単純動作)
 				vib_off();
 				break;
-			case VIB_MODE_WEAK:	// 弱（強さ：中で１セット）
+			case VIB_MODE_WEAK:	// 設定[弱]（強さ：正回転-逆止めで２セット）(従来動作)
 				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_DURING: // 中（強さ：中で２セット）
-				vib_mode_during_repeat(vib_timer);
+			case VIB_MODE_DURING: // 設定[中]（強さ：正回転で２セット）
+				if( set_suppress_max_time() == SET_MAX_SUPPRESS_CONT_NON)
+				{
+					vib_mode_during_repeat_4(vib_timer);
+				}else{
+					vib_mode_during_repeat_1(vib_timer);
+				}
+//				vib_mode_during_repeat(vib_timer);
 				break;
 			case VIB_MODE_DURING_REPEAT: // 未使用
 				vib_mode_during_repeat(vib_timer);
 				break;
-			case VIB_MODE_STRENGTH: // 強（強さ：中で３セット）
-				vib_mode_during_repeat(vib_timer);
+			case VIB_MODE_STRENGTH: // 設定[強]（強さ：正回転-逆回転で２セット）
+				if( set_suppress_max_time() == SET_MAX_SUPPRESS_CONT_NON)
+				{
+					vib_mode_during_repeat_5(vib_timer);
+				}else{
+					vib_mode_during_repeat_2(vib_timer);
+				}
+//				vib_mode_during_repeat(vib_timer);
 				break;
 			case VIB_MODE_STRENGTH_REPEAT: // 未使用
 				vib_mode_strength_repeat(vib_timer);
 				break;
-			case VIB_MODE_GRADUALLY_STRONGER: // 徐々に強く
-				vib_mode_gradually_stronger(vib_timer);
+			case VIB_MODE_GRADUALLY_STRONGER: // 設定[徐]（強さ：正回転-逆回転-逆止めで２セット）
+				if( set_suppress_max_time() == SET_MAX_SUPPRESS_CONT_NON)
+				{
+					vib_mode_during_repeat_6(vib_timer);
+				}else{
+					vib_mode_during_repeat_3(vib_timer);
+				}
+//				vib_mode_gradually_stronger(vib_timer);
 				break;
 			case VIB_MODE_STANDBY: // 待機モード移行時
 				vib_mode_standby(vib_timer);
@@ -237,32 +261,33 @@ STATIC void set_vib_repeat(VIB_MODE mode)
 	switch(mode)
 	{
 		case VIB_MODE_WEAK:
-			set_vib_repeat_value = VIB_REPEAT_ONE;
+			set_vib_repeat_value = VIB_REPEAT_TWO;
 			break;
 		case VIB_MODE_DURING:
 			set_vib_repeat_value = VIB_REPEAT_TWO;
 			break;
 		case VIB_MODE_STRENGTH:
-			set_vib_repeat_value = VIB_REPEAT_THREE;
+			set_vib_repeat_value = VIB_REPEAT_TWO;
 			break;
 		case VIB_MODE_DURING_REPEAT:
 		case VIB_MODE_STRENGTH_REPEAT:
 			set_vib_repeat_value = VIB_REPEAT_THREE;
 			break;
 		case VIB_MODE_GRADUALLY_STRONGER:
-			if(vib_gradually_stronger_level < VIB_LEVEL_5)
-			{
-				// レベル1～4は1セット
-				set_vib_repeat_value = VIB_REPEAT_ONE;
-			}else if(vib_gradually_stronger_level < VIB_LEVEL_9)
-			{
-				// レベル5～8は2セット
-				set_vib_repeat_value = VIB_REPEAT_TWO;
-			}else if(VIB_LEVEL_9 <= vib_gradually_stronger_level)
-			{
-				// レベル9～は3セット
-				set_vib_repeat_value = VIB_REPEAT_THREE;
-			}
+			set_vib_repeat_value = VIB_REPEAT_TWO;
+//			if(vib_gradually_stronger_level < VIB_LEVEL_5)
+//			{
+//				// レベル1～4は1セット
+//				set_vib_repeat_value = VIB_REPEAT_ONE;
+//			}else if(vib_gradually_stronger_level < VIB_LEVEL_9)
+//			{
+//				// レベル5～8は2セット
+//				set_vib_repeat_value = VIB_REPEAT_TWO;
+//			}else if(VIB_LEVEL_9 <= vib_gradually_stronger_level)
+//			{
+//				// レベル9～は3セット
+//				set_vib_repeat_value = VIB_REPEAT_THREE;
+//			}
 			break;
 		default:
 			set_vib_repeat_value = VIB_REPEAT_ONE;
@@ -428,10 +453,10 @@ STATIC void vib_mode_during_repeat(UH vib_timer)
 			vib_mode = VIB_MODE_INTERVAL;
 		}
 		reset_vib_timer();
-	} if( 13 <= vib_timer )
+	} else if( 13 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 11 <= vib_timer )
+	} else if( 11 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -465,10 +490,10 @@ STATIC void vib_mode_strength_repeat(UH vib_timer)
 			vib_mode = VIB_MODE_INTERVAL;
 		}
 		reset_vib_timer();
-	} if( 29 <= vib_timer )
+	} else if( 29 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 27 <= vib_timer )
+	} else if( 27 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -676,10 +701,10 @@ STATIC void vib_level_1(UH vib_timer)
 			vib_level_up_confirm();
 		}
 		reset_vib_timer();
-	} if( 13 <= vib_timer )
+	} else if( 13 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 11 <= vib_timer )
+	} else if( 11 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -712,10 +737,10 @@ STATIC void vib_level_2(UH vib_timer)
 			vib_level_up_confirm();
 		}
 		reset_vib_timer();
-	} if( 21 <= vib_timer )
+	} else if( 21 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 19 <= vib_timer )
+	} else if( 19 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -748,10 +773,10 @@ STATIC void vib_level_3(UH vib_timer)
 			vib_level_up_confirm();
 		}
 		reset_vib_timer();
-	} if( 29 <= vib_timer )
+	} else if( 29 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 27 <= vib_timer )
+	} else if( 27 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
@@ -784,15 +809,175 @@ STATIC void vib_level_4(UH vib_timer)
 			vib_level_up_confirm();
 		}
 		reset_vib_timer();
-	} if( 37 <= vib_timer )
+	} else if( 37 <= vib_timer )
 	{
 		VIB_ENA = 0;
-	} if( 35 <= vib_timer )
+	} else if( 35 <= vib_timer )
 	{
 		VIB_CTL = 0;
 	} else
 	{
 		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_1(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_CTL = 0;
+		VIB_ENA = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_2(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} else if( 6 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_3(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} else if( 11 <= vib_timer )
+	{
+		VIB_CTL = 1;
+	} else if( 6 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_4(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} else if( 9 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else if( 6 <= vib_timer )
+	{
+		VIB_CTL = 1;
+	} else if( 3 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else
+	{
+		VIB_CTL = 1;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_5(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} else if( 7 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else if( 2 <= vib_timer )
+	{
+		VIB_CTL = 1;
+	} else
+	{
+		VIB_CTL = 0;
+		VIB_ENA = 1;
+	}	
+}
+
+STATIC void vib_mode_during_repeat_6(UH vib_timer)
+{
+	if(	20 <= vib_timer )
+	{
+		vib_repeat_value += 1;
+		if(!(vib_repeat_value % VIB_ONE_SET))
+		{
+			vib_last_mode = vib_mode;
+			vib_mode = VIB_MODE_INTERVAL;
+		}
+		reset_vib_timer();
+	} else if( 13 <= vib_timer )
+	{
+		VIB_ENA = 0;
+	} else if( 11 <= vib_timer )
+	{
+		VIB_CTL = 1;
+	} else if( 7 <= vib_timer )
+	{
+		VIB_CTL = 0;
+	} else if( 2 <= vib_timer )
+	{
+		VIB_CTL = 1;
+	} else
+	{
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }

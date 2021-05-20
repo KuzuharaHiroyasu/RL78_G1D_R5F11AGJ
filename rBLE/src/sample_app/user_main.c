@@ -4076,3 +4076,8 @@ void set_kokyu_val_off(UB state)
 {
 	kokyu_val_off_flg = state;
 }
+
+UB set_suppress_max_time(void)
+{
+	return s_unit.alarm.info.dat.suppress_max_time;
+}
