@@ -544,40 +544,40 @@ void user_main_timer_cyc( void )
 			s_unit.tick_10ms_new = 0;
 		}
 	}else if(s_unit.system_mode == SYSTEM_MODE_IDLE_COM){
-		/* 自動測定判定 */
-		if(auto_sensing_ready_flg == ON)
-		{
-			if(s_unit.tick_auto_sensing_ready_10ms >= (uint16_t)PERIOD_50MSEC)
-			{
-				s_unit.meas.info.dat.photoref_val = main_photo_read();
-				/* 装着センサ判定 */
-				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
-				{
-					adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
-					user_main_calc_data_set_kyokyu_ibiki();
-					s_unit.tick_auto_sensing_ready_10ms = 0;
-				}else{
-					auto_sensing_ready_flg = OFF;
-				}
-			}
-		}else{
-			/* 20秒周期でポーリング */
-			if(s_unit.tick_auto_sensing_ready_20sec >= (uint16_t)PERIOD_20SEC)
-			{
-				s_unit.meas.info.dat.photoref_val = main_photo_read();
-				/* 装着センサ判定 */
-				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
-				{
-					/* 装着センサ反応あり */
-					auto_sensing_ready_flg = ON;
-					s_unit.tick_auto_sensing_ready_10ms = 0;
-					s_unit.kokyu_cnt = 0;
-					s_unit.ibiki_cnt = 0;
-					Reset(CALC_TYPE_BREATH);
-				}
-				s_unit.tick_auto_sensing_ready_20sec = 0;
-			}
-		}
+//		/* 自動測定判定 */
+//		if(auto_sensing_ready_flg == ON)
+//		{
+//			if(s_unit.tick_auto_sensing_ready_10ms >= (uint16_t)PERIOD_50MSEC)
+//			{
+//				s_unit.meas.info.dat.photoref_val = main_photo_read();
+//				/* 装着センサ判定 */
+//				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
+//				{
+//					adc_ibiki_kokyu( &s_unit.meas.info.dat.ibiki_val, &s_unit.meas.info.dat.kokyu_val );
+//					user_main_calc_data_set_kyokyu_ibiki();
+//					s_unit.tick_auto_sensing_ready_10ms = 0;
+//				}else{
+//					auto_sensing_ready_flg = OFF;
+//				}
+//			}
+//		}else{
+//			/* 20秒周期でポーリング */
+//			if(s_unit.tick_auto_sensing_ready_20sec >= (uint16_t)PERIOD_20SEC)
+//			{
+//				s_unit.meas.info.dat.photoref_val = main_photo_read();
+//				/* 装着センサ判定 */
+//				if(s_unit.meas.info.dat.photoref_val >= (PHOTO_SENSOR_WEARING_AD * 3))
+//				{
+//					/* 装着センサ反応あり */
+//					auto_sensing_ready_flg = ON;
+//					s_unit.tick_auto_sensing_ready_10ms = 0;
+//					s_unit.kokyu_cnt = 0;
+//					s_unit.ibiki_cnt = 0;
+//					Reset(CALC_TYPE_BREATH);
+//				}
+//				s_unit.tick_auto_sensing_ready_20sec = 0;
+//			}
+//		}
 	}
 	
 	// 20ms周期

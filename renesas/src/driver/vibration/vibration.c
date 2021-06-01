@@ -885,12 +885,9 @@ STATIC void vib_mode_during_repeat_3(UH vib_timer)
 	} else if( 11 <= vib_timer )
 	{
 		VIB_CTL = 1;
-	} else if( 6 <= vib_timer )
-	{
-		VIB_CTL = 0;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }

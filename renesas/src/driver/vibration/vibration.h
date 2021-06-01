@@ -13,6 +13,7 @@
 
 // バイブポート設定
 #define VIB_CTL						P0_bit.no1
+//#define VIB_CTL						P1_bit.no0
 #define VIB_ENA						P0_bit.no0
 
 // バイブ1セットの回数
