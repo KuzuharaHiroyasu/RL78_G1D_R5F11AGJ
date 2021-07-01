@@ -733,6 +733,9 @@ typedef struct{
 #define VUART_DIAG_START				0
 #define VUART_DIAG_END					1
 
+// 呼吸レスバイブ契機（カウント数*10秒毎にバイブ）
+#define APNEA_VIB_COUNT					3
+
 /******************/
 /*  外部参照宣言  */
 /******************/
