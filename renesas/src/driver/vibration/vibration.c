@@ -433,10 +433,10 @@ STATIC void vib_mode_during_repeat(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 11 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
@@ -470,10 +470,10 @@ STATIC void vib_mode_strength_repeat(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 27 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
@@ -681,10 +681,10 @@ STATIC void vib_level_1(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 11 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
@@ -717,10 +717,10 @@ STATIC void vib_level_2(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 19 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
@@ -753,10 +753,10 @@ STATIC void vib_level_3(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 27 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
@@ -789,10 +789,10 @@ STATIC void vib_level_4(UH vib_timer)
 		VIB_ENA = 0;
 	} if( 35 <= vib_timer )
 	{
-		VIB_CTL = 0;
+		VIB_CTL = 1;
 	} else
 	{
-		VIB_CTL = 1;
+		VIB_CTL = 0;
 		VIB_ENA = 1;
 	}	
 }
