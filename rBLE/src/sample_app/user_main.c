@@ -3727,7 +3727,7 @@ STATIC void eep_part_erase( void )
 /************************************************************************/
 STATIC void main_acl_init(void)
 {
-	UB rd_data[2];
+	UB rd_data[2] = {0};
 	
 	wait_ms( 30 );		// 加速度センサ　※電源ON待ち
 
@@ -3752,8 +3752,8 @@ STATIC void main_acl_init(void)
 /************************************************************************/
 STATIC void main_acl_stop(void)
 {
-	UB rd_data[2];
-	UB wr_data[2];
+	UB rd_data[2] = {0};
+	UB wr_data[2] = {0};
 	
 	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
 	wr_data[1] = 0x00;
@@ -3779,7 +3779,7 @@ STATIC void main_acl_stop(void)
 /************************************************************************/
 STATIC void main_acl_start(void)
 {
-	UB wr_data[2];
+	UB wr_data[2] = {0};
 	
 	// 動作モード初期化
 	wr_data[0] = ACL_REG_ADR_CTRL_REG1;
@@ -3813,13 +3813,16 @@ STATIC void main_acl_start(void)
 /************************************************************************/
 STATIC void main_acl_read(void)
 {
-	UB rd_data[10];
+	UB rd_data[10] = {0};
 	
 	// INT_SOURCE1		
 	i2c_read_sub_for_acl( ACL_DEVICE_ADR, ACL_REG_ADR_INT_SRC1, &rd_data[0], 1 );
 	if( 0 == ( rd_data[0] & BIT04 )){
 		// データ未達
 		err_info( ERR_ID_ACL );
+		// 加速度センサー再起動
+		main_acl_init();
+		main_acl_start();
 		return;
 	}
 	

@@ -131,6 +131,7 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 
 	if( 0 != R_IICA0_Master_Send( device_adrs, &adrs[0], adrs_size, I2C_WAIT )){
 		err_info(ERR_ID_EEP);
+		i2c_err_flg = ON;
 	}else{
 		while(1){
 			if( OFF == i2c_snd_flg ){
@@ -151,6 +152,7 @@ void i2c_read_sub( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	
 	if( 0 != R_IICA0_Master_Receive(device_adrs, read_data, len, I2C_WAIT)){
 		err_info(ERR_ID_EEP);
+		i2c_err_flg = ON;
 	}else{
 		while(1){
 			if( OFF == i2c_rcv_flg ){
@@ -202,6 +204,7 @@ void i2c_read_sub_for_acl( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 
 	if( 0 != R_IICA0_Master_Send( device_adrs, &adrs[0], adrs_size, I2C_WAIT )){
 		err_info(ERR_ID_EEP);
+		i2c_err_flg = ON;
 	}else{
 		while(1){
 			if( OFF == i2c_snd_flg ){
@@ -222,6 +225,7 @@ void i2c_read_sub_for_acl( UB device_adrs, UH read_adrs, UB* read_data, UH len )
 	
 	if( 0 != R_IICA0_Master_Receive(device_adrs, read_data, len, I2C_WAIT)){
 		err_info(ERR_ID_EEP);
+		i2c_err_flg = ON;
 	}else{
 		while(1){
 			if( OFF == i2c_rcv_flg ){
