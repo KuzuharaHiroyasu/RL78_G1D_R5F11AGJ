@@ -137,6 +137,7 @@ typedef enum{
 #define BODY_DIRECTION_UP					1	// 上向き
 #define BODY_DIRECTION_RIGHT				2	// 右向き
 #define BODY_DIRECTION_DOWN					3	// 下向き
+#define BODY_DIRECTION_DEFAULT				4	// デフォルト
 
 #define BODY_DIRECTION_MASK					3	// bitマスク用
 #define BODY_DIRECTION_BIT					2	// 使用bit数

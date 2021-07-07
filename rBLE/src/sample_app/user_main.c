@@ -173,6 +173,12 @@ static int diagScanDataSendCnt = 0;
 static UB auto_sensing_ready_flg = OFF;
 static UB apnea_vib_count = 0;	// 呼吸レス検知継続数
 
+static UB body_direct_prev = BODY_DIRECTION_DEFAULT;		// 1つ前の体の向き
+static UB body_direct_reference = BODY_DIRECTION_DEFAULT;	// 寝返り前の向き
+static UB turnOverflg = OFF;								// 寝返りフラグ（判定のきっかけ）
+static int keepTurnOverCnt = 0;								// 寝返りキープ時間
+static int turnOverCnt = 0;									// 寝返り回数
+	
 /********************/
 /*     定数定義     */
 /********************/
@@ -3466,10 +3472,10 @@ static UB main_calc_ibiki( void)
 /************************************************************************/
 static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-	UB	body_direct = BODY_DIRECTION_LEFT;
+	UB	body_direct = BODY_DIRECTION_LEFT;	// 体の向き
 	UB	clear_mask = BODY_DIRECTION_MASK;
 	UB	bit_shift = 0;
-
+	
 	// 体の向き判定
 	if( 0 <= s_unit.meas.info.dat.acl_x )
 	{// 上 or 右
@@ -3502,6 +3508,41 @@ static int_t main_calc_acl(ke_msg_id_t const msgid, void const *param, ke_task_i
 		acl_data_max = true;
 #endif
 	}
+	
+	// 最初の向きのセット
+	if(body_direct_prev == BODY_DIRECTION_DEFAULT)
+	{
+		body_direct_prev = body_direct;
+		body_direct_reference = body_direct;
+	}
+	
+	// 体の向きが変わったか
+	if(body_direct_prev != body_direct)
+	{
+		turnOverflg = ON;
+		keepTurnOverCnt = 0;
+		
+		// 体の向きが基準の向きと同じなら寝返り判定OFF（すぐに元の向きに戻ったときや向きの判定の境界にいるときなどのノイズ対策）
+		if(body_direct_reference == body_direct)
+		{
+			turnOverflg = OFF;
+		}
+	}else{
+		// 寝返り判定
+		if(turnOverflg == ON)
+		{
+			keepTurnOverCnt++;
+			if(keepTurnOverCnt >= 2)
+			{
+				turnOverCnt++;		// 寝返りカウント
+				turnOverflg = OFF;	// 寝返り完了
+				body_direct_reference = body_direct;	// 体の向きの基準を更新
+			}
+		}
+	}
+	
+	// 体の向き更新
+	body_direct_prev = body_direct;
 
 	return (KE_MSG_CONSUMED);
 }
