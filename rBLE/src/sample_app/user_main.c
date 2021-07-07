@@ -1370,6 +1370,12 @@ STATIC void user_main_mode_sensing_before( void )
 	
 	apnea_vib_count = 0;
 	
+	keepTurnOverCnt = 0;
+	turnOverCnt = 0;
+	turnOverflg = OFF;
+	body_direct_reference = BODY_DIRECTION_DEFAULT;
+	body_direct_prev = BODY_DIRECTION_DEFAULT;
+	
 	NO_OPERATION_BREAK_POINT();									// ブレイクポイント設置用
 }
 
