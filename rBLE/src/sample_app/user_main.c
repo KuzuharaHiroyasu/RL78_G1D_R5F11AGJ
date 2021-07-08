@@ -123,6 +123,8 @@ STATIC void main_acl_read(void);
 STATIC UH main_photo_read(void);
 #endif
 
+STATIC bool standing_judge(void);
+
 /********************/
 /*     外部参照     */
 /********************/
@@ -3233,22 +3235,25 @@ static int_t main_calc_kokyu(ke_msg_id_t const msgid, void const *param, ke_task
 			{// 抑制開始時間経過（センシング開始から20分）
 				if(s_unit.meas.info.dat.photoref_val >= PHOTO_SENSOR_WEARING_AD)
 				{// 装着センサー反応している
-					if(apnea_vib_count >= (APNEA_VIB_COUNT - 1) )
-					{// APNEA_VIB_COUNT*10秒 呼吸レスが継続している
-						apnea_vib_count = 0;
-						if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
-						{
-							set_vib_level(vib_level);
-							vib_level++;
-							if(vib_level > VIB_LEVEL_12)
+					if( standing_judge() == false )
+					{// 座っている or 立っていないこと
+						if(apnea_vib_count >= (APNEA_VIB_COUNT - 1) )
+						{// APNEA_VIB_COUNT*10秒 呼吸レスが継続している
+							apnea_vib_count = 0;
+							if(vib_power == VIB_SET_MODE_GRADUALLY_STRONGER)
 							{
-								vib_level = VIB_LEVEL_9;
+								set_vib_level(vib_level);
+								vib_level++;
+								if(vib_level > VIB_LEVEL_12)
+								{
+									vib_level = VIB_LEVEL_9;
+								}
 							}
+							set_vib(set_vib_mode(vib_power));
+							set_kokyu_val_off(ON);
+						}else{
+							apnea_vib_count++;
 						}
-						set_vib(set_vib_mode(vib_power));
-						set_kokyu_val_off(ON);
-					}else{
-						apnea_vib_count++;
 					}
 				}
 			}
@@ -4137,3 +4142,32 @@ void set_kokyu_val_off(UB state)
 {
 	kokyu_val_off_flg = state;
 }
+
+/************************************************************************/
+/* 関数     : standing_judge											*/
+/* 関数名   : 立っているかどうかの判定									*/
+/* 引数     : なし														*/
+/* 戻り値   : true:立っている false:寝ている							*/
+/* 変更履歴	: 2021.07.08 oneA 葛原 弘安	初版作成						*/
+/************************************************************************/
+/* 機能 : 																*/
+/************************************************************************/
+/* 注意事項 : なし														*/
+/************************************************************************/
+bool standing_judge(void)
+{
+	if( (s_unit.meas.info.dat.acl_x >= -20) && (s_unit.meas.info.dat.acl_x <= 10) )
+	{
+		if( (s_unit.meas.info.dat.acl_y >= 50) && (s_unit.meas.info.dat.acl_y <= 70) )
+		{
+			if( (s_unit.meas.info.dat.acl_z >= -10) && (s_unit.meas.info.dat.acl_z <= 10) )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+
