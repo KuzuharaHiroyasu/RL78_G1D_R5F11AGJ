@@ -176,8 +176,8 @@ static UB apnea_vib_count = 0;	// 呼吸レス検知継続数
 static UB body_direct_prev = BODY_DIRECTION_DEFAULT;		// 1つ前の体の向き
 static UB body_direct_reference = BODY_DIRECTION_DEFAULT;	// 寝返り前の向き
 static UB turnOverflg = OFF;								// 寝返りフラグ（判定のきっかけ）
-static int keepTurnOverCnt = 0;								// 寝返りキープ時間
-static int turnOverCnt = 0;									// 寝返り回数
+static UB keepTurnOverCnt = 0;								// 寝返りキープ時間
+static UB turnOverCnt = 0;									// 寝返り回数
 	
 /********************/
 /*     定数定義     */
@@ -1430,7 +1430,8 @@ STATIC void user_main_mode_sensing_after( void )
 	eep_write( wr_adrs, (UB*)&s_unit.ibiki_chg_detect_cnt, EEP_IBIKI_DETECT_CNT_SIZE, ON );
 	// 無呼吸検知数書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_MUKOKYU_DETECT_CNT;
-	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_chg_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+//	eep_write( wr_adrs, (UB*)&s_unit.mukokyu_chg_detect_cnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
+	eep_write( wr_adrs, &turnOverCnt, EEP_MUKOKYU_DETECT_CNT_SIZE, ON );
 	// いびき時間書き込み
 	wr_adrs = ( s_unit.frame_num.write * EEP_FRAME_SIZE ) + EEP_ADRS_TOP_FRAME_IBIKI_TIME;
 	eep_write( wr_adrs, (UB*)&s_unit.ibiki_time, EEP_IBIKI_TIME_SIZE, ON );
